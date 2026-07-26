@@ -15,7 +15,7 @@ Read [`../../CONSTITUTION.md`](../../CONSTITUTION.md), then the skill files and 
 
 ## Step 0 — reconstruct evidence
 
-For **post-issue**, inspect primary evidence: the live issue and comments, project branch/PR diff and commits, verification output, review corrections, and relevant raw session traces under `~/.claude/projects/`. Match proof to the claim: one reproducible mechanical escape can establish a validation gap; behavioral advice normally needs multiple independent runs.
+For **post-issue**, inspect primary evidence already produced by the implementation: the live issue and comments, project branch/PR diff and commits, verification output, and available raw session traces. Do not review project correctness or invoke `/peerreview`; that is a separate user-invoked workflow. Match proof to the claim: one reproducible mechanical escape can establish a validation gap; behavioral advice normally needs multiple independent runs.
 
 For **simplify**, measure skill sizes and find duplicated, unused, or tool-specific guidance. Prefer merge, replacement, compression, or deletion.
 
