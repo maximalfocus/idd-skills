@@ -72,12 +72,12 @@ Before delivery:
 - rerun the load-bearing issue checks after the final edit;
 - confirm docs and comments describe the behavior now implemented, not an intended future state.
 
-If any acceptance item is ambiguous or unproved, stop and say so; do not manufacture completion.
+If any acceptance item is ambiguous or unproved, stop claiming completion and say so; a reviewable implementation may still open a non-closing PR.
 
 ## Step 4 — commit and open the PR
 
 1. Stage only issue-owned paths explicitly. Commit with the repository's message convention and a concise issue-focused subject.
-2. Push the dedicated branch. Open a focused PR using the repository template. Include summary, verification commands/results, proven baseline failures, risks/follow-ups, and `Closes #N` only when the issue belongs to this repository (`Refs owner/repo#N` otherwise).
+2. Push the dedicated branch. Open a focused PR using the repository template. Include summary, verification commands/results, proven baseline failures, and risks/follow-ups. Use `Closes #N` only when every acceptance item is proved and the issue belongs to this repository; otherwise use a non-closing `Refs #N` (same repo) or `Refs owner/repo#N`.
 3. Read back the PR URL and state. Do not merge it, delete the branch, deploy, or close the issue directly. Merge policy and CI remain the repository's gate.
 
 ## Completion output
