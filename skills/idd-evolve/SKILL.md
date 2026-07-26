@@ -1,6 +1,7 @@
 ---
 name: idd-evolve
 description: "IDD methodology evolution — filter lessons from real issue implementations through the constitution: pass → edit and publish; fail → do nothing. No logs."
+compatibility: "Requires git; works with Claude Code, Codex, Pi, and OpenCode."
 disable-model-invocation: true
 argument-hint: "[post-issue|simplify]"
 ---
@@ -11,7 +12,7 @@ Improve the IDD methodology from real use without growing `/idd` into CDD. A can
 
 ## First: read the constitution
 
-Read [`../../CONSTITUTION.md`](../../CONSTITUTION.md), then the skill files and their history (`git log --oneline -- skills/<name>/SKILL.md`) before changing anything. The constitution governs scope, evidence, size, deterministic scripting, and publication.
+Resolve this installed skill directory to its physical source path, then read [`../../CONSTITUTION.md`](../../CONSTITUTION.md) from that source repository. Do not resolve the link relative to a harness symlink such as `~/.claude/skills/idd-evolve`. Then read the skill files and their history (`git log --oneline -- skills/<name>/SKILL.md`) before changing anything. The constitution governs scope, evidence, size, deterministic scripting, and publication.
 
 ## Step 0 — reconstruct evidence
 

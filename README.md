@@ -19,9 +19,16 @@ The workflow was initially derived from implementing [Reporting-Platform issue #
 bash scripts/install.sh
 ```
 
-This symlinks both portable Agent Skills sources into `~/.agents/skills/`, `~/.claude/skills/`, and `${CODEX_HOME:-~/.codex}/skills/`.
+This symlinks both portable Agent Skills sources into `~/.agents/skills/`, `~/.claude/skills/`, and `${CODEX_HOME:-~/.codex}/skills/`. OpenCode discovers the `~/.agents/skills/` installation natively, so the installer deliberately does not create a duplicate under `~/.config/opencode/skills/`.
 
-Pi exposes Agent Skills with its `skill:` command prefix when skill commands are enabled.
+| Runner | Invoke |
+|---|---|
+| Claude Code | `/idd 6` |
+| Codex | `$idd 6` |
+| Pi | `/skill:idd 6` (enable skill commands in settings) |
+| OpenCode | `Use the idd skill for issue 6` (loaded through its native `skill` tool) |
+
+The same forms apply to `idd-evolve`. Restart an already-running harness after installation so it rescans skills.
 
 ## Layout
 

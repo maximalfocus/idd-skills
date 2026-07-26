@@ -2,7 +2,7 @@
 
 ## Sources of truth
 
-Author `/idd` in `skills/idd/SKILL.md` and `/idd-evolve` in `skills/idd-evolve/SKILL.md`. `CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code, Codex, and Pi consume the same Agent Skills sources through symlinks created by `scripts/install.sh`.
+Author `/idd` in `skills/idd/SKILL.md` and `/idd-evolve` in `skills/idd-evolve/SKILL.md`. `CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code, Codex, Pi, and OpenCode consume the same Agent Skills sources through symlinks created by `scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/` links). Keep skill inputs portable: runners that do not inject `$ARGUMENTS` must be able to use the user's request.
 
 ## Scope
 

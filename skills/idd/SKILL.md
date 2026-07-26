@@ -1,6 +1,7 @@
 ---
 name: idd
 description: "Issue-Driven Development for an existing software repository: take one well-scoped GitHub issue from live issue intent through a focused implementation, repository-native tests, commit, push, and linked PR. Use when the user says /idd, asks to implement/fix issue N, or provides a GitHub issue URL and wants a lightweight alternative to CDD."
+compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
 disable-model-invocation: true
 argument-hint: "[issue-number|github-issue-url]"
 ---
@@ -13,7 +14,7 @@ An explicit `/idd` invocation authorizes a dedicated branch, commits, push, and 
 
 ## Input
 
-`$ARGUMENTS` is one issue number (`issue 6`, `#6`, or `6`) or a GitHub issue URL. Default repository: the current git repository. One run handles one issue.
+Take one issue number (`issue 6`, `#6`, or `6`) or GitHub issue URL from the invocation arguments or, on runners that do not inject arguments into skills, from the user's request. Default repository: the current git repository. One run handles one issue.
 
 ## Step 0 — establish a safe issue boundary
 

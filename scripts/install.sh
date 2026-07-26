@@ -26,3 +26,5 @@ for source_dir in "$root"/skills/*; do
   install_link "$source_dir" "$HOME/.claude/skills/$name"
   install_link "$source_dir" "${CODEX_HOME:-$HOME/.codex}/skills/$name"
 done
+
+echo "OpenCode uses the shared $HOME/.agents/skills links (no duplicate OpenCode links created)."
