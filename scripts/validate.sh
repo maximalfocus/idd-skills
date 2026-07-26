@@ -22,6 +22,7 @@ validate_skill() {
 }
 
 validate_skill idd 160
+validate_skill idd-land 120
 validate_skill idd-evolve 80
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
 grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must read the constitution" >&2; exit 1; }
@@ -29,7 +30,7 @@ grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "id
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd idd-evolve; do
+for name in idd idd-land idd-evolve; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -43,6 +44,13 @@ for name in idd idd-evolve; do
 done
 # Pi and OpenCode both discover the shared .agents installation.
 [ -L "$install_home/.agents/skills/idd" ] || { echo "Missing shared Pi/OpenCode install" >&2; exit 1; }
+
+bash -n "$root/scripts/land.sh"
+[ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }
+grep -q 'scripts/land.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must invoke land.sh" >&2; exit 1; }
+grep -q 'explicit invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must require explicit invocation" >&2; exit 1; }
+grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate residual acceptance" >&2; exit 1; }
+bash "$root/scripts/test-land.sh"
 
 git -C "$root" diff --check
 echo "idd skills valid for Claude Code, Codex, Pi, and OpenCode"

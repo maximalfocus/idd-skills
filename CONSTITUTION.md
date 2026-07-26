@@ -1,10 +1,10 @@
 # IDD Constitution
 
-The law governing `/idd`, `/idd-evolve`, and changes to this repository. Evolution is a filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no log.
+The law governing `/idd`, `/idd-land`, `/idd-evolve`, and changes to this repository. Evolution is a filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no log.
 
 ## Article 1 — Preserve the lightweight boundary
 
-IDD delivers one well-scoped issue in an existing software repository from live issue intent through native verification and a linked PR. It does not create PRDs, golden-file suites, sibling repositories, trace artifacts, mandatory review waves, deployment, auto-merge, or manual issue closure. `/idd-evolve` is a separate methodology-maintenance command; none of its machinery enters project repositories.
+`/idd` delivers one well-scoped issue in an existing software repository from live issue intent through native verification and a linked PR. It does not create PRDs, golden-file suites, sibling repositories, trace artifacts, mandatory review waves, deployment, auto-merge, or manual issue closure. `/idd-land` is the separate, explicitly invoked landing step: it may squash-merge one validated PR, close its issue, and clean its branches, but never bypass red gates. `/idd-evolve` is separate methodology maintenance; neither command adds artifacts to project repositories.
 
 ## Article 2 — Pass or nothing
 
@@ -24,8 +24,10 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 ## Article 5 — Size and structure gates
 
 - `skills/idd/SKILL.md` ≤ 160 lines.
+- `skills/idd-land/SKILL.md` ≤ 120 lines.
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and a quality gate.
+- `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
 - `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution.
 - Cross-references resolve and `bash scripts/validate.sh` passes.
 

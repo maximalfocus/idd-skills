@@ -2,15 +2,15 @@
 
 ## Sources of truth
 
-Author `/idd` in `skills/idd/SKILL.md` and `/idd-evolve` in `skills/idd-evolve/SKILL.md`. `CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code, Codex, Pi, and OpenCode consume the same Agent Skills sources through symlinks created by `scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/` links). Keep skill inputs portable: runners that do not inject `$ARGUMENTS` must be able to use the user's request.
+Author `/idd`, `/idd-land`, and `/idd-evolve` in their matching `skills/*/SKILL.md` sources. `CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code, Codex, Pi, and OpenCode consume the same Agent Skills sources through symlinks created by `scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/` links). Keep skill inputs portable: runners that do not inject `$ARGUMENTS` must be able to use the user's request.
 
 ## Scope
 
-IDD is the lightweight, existing-repository issue implementation workflow. `/idd` must not absorb CDD's PRD, golden-file, sibling-repository, trace, mandatory peer-review, acceptance-wave, auto-merge, or deploy machinery. Evolution stays in the separate `/idd-evolve` command and never adds artifacts to project repos. Prefer repository-native tests and git/PR history.
+IDD is the lightweight, existing-repository issue workflow. `/idd` must not absorb CDD's PRD, golden-file, sibling-repository, trace, mandatory peer-review, acceptance-wave, auto-merge, or deploy machinery. `/idd-land` is a separate explicit merge/closure command and must fail closed on red gates or undisclosed residuals. Evolution stays in `/idd-evolve`; none add artifacts to project repos. Prefer repository-native tests and git/PR history.
 
 ## Editing discipline
 
-- Keep `skills/idd/SKILL.md` at or below 160 lines and `skills/idd-evolve/SKILL.md` at or below 80.
+- Keep `skills/idd/SKILL.md` ≤160 lines, `skills/idd-land/SKILL.md` ≤120, and `skills/idd-evolve/SKILL.md` ≤80.
 - Script deterministic installation/validation work; keep implementation judgment in prose.
 - Stage only task-owned paths explicitly; never use `git add -A`.
 - Run `bash scripts/validate.sh` before committing.
