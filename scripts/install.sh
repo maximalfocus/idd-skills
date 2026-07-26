@@ -2,10 +2,10 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source_dir="$root/skills/idd"
 
 install_link() {
-  local dest="$1"
+  local source_dir="$1"
+  local dest="$2"
   mkdir -p "$(dirname "$dest")"
   if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$source_dir" ]; then
     echo "Already installed: $dest"
@@ -19,6 +19,10 @@ install_link() {
   echo "Installed: $dest -> $source_dir"
 }
 
-install_link "$HOME/.agents/skills/idd"
-install_link "$HOME/.claude/skills/idd"
-install_link "${CODEX_HOME:-$HOME/.codex}/skills/idd"
+for source_dir in "$root"/skills/*; do
+  [ -d "$source_dir" ] || continue
+  name="$(basename "$source_dir")"
+  install_link "$source_dir" "$HOME/.agents/skills/$name"
+  install_link "$source_dir" "$HOME/.claude/skills/$name"
+  install_link "$source_dir" "${CODEX_HOME:-$HOME/.codex}/skills/$name"
+done

@@ -51,7 +51,7 @@ Run the cheapest relevant checks first, then the repository's prescribed gate:
 3. integration or repository-wide tests required by repo instructions;
 4. the **actual changed boundary**: build/run the container, CLI, migration, runtime config, HTTP route, or browser flow when unit tests cannot prove deployment behavior.
 
-A green unit suite does not prove container startup, generated runtime files, routing, profile/bean selection, migration validity, or browser deep links. Exercise those directly when changed.
+A green unit suite does not prove container startup, generated runtime files, routing, profile/bean selection, migration validity, or browser deep links. Exercise those directly when changed. For a runtime flag, verify its default, valid override, invalid value, profile/config precedence, and the baked artifact when startup hooks can be bypassed; an unsupported deployment profile must not be overrideable into an incomplete feature.
 
 If a broad gate is red, classify it before proceeding:
 
