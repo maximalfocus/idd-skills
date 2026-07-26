@@ -70,7 +70,7 @@ Before delivery:
 - inspect `git diff --check`, `git diff`, and `git status`;
 - verify no unrelated files, generated junk, secrets, debug code, or accidental lockfile changes;
 - rerun the load-bearing issue checks after the final edit;
-- confirm docs and comments describe the behavior now implemented, not an intended future state.
+- when retiring a stub, flag, or profile restriction, exhaustively search source and maintained docs for superseded status markers; qualify same-named components across stacks.
 
 If any acceptance item is ambiguous or unproved, stop claiming completion and say so; a reviewable implementation may still open a non-closing PR.
 
