@@ -42,6 +42,15 @@ FAKE
 chmod +x "$tmp/bin/gh"
 
 run() { PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$root/scripts/land.sh" maximalfocus/test 3 13 >/dev/null; }
+
+# Fail before the remote merge when the eventual ff-only default-branch refresh is impossible.
+git branch -f main issue/3-test
+if run 2>/dev/null; then
+  echo "idd-land accepted a divergent local default branch" >&2; exit 1
+fi
+[ "$(cat "$tmp/pr-state")" = OPEN ] && [ "$(cat "$tmp/issue-state")" = OPEN ]
+git branch -f main origin/main
+
 run
 [ "$(git branch --show-current)" = main ]
 ! git show-ref --verify --quiet refs/heads/issue/3-test

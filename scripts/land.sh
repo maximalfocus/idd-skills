@@ -30,6 +30,17 @@ fi
   echo "Cross-repository PR branches require manual cleanup" >&2; exit 1;
 }
 
+# The post-merge refresh is ff-only. Prove it can succeed before mutating GitHub; otherwise a
+# local-only default-branch commit would let the remote merge/issue closure happen and fail cleanup.
+git fetch -q origin "$default_branch"
+git show-ref --verify --quiet "refs/heads/$default_branch" || {
+  echo "Local default branch $default_branch does not exist" >&2; exit 1;
+}
+git merge-base --is-ancestor "refs/heads/$default_branch" FETCH_HEAD || {
+  echo "Local $default_branch cannot fast-forward to origin/$default_branch; reconcile it before landing" >&2
+  exit 1
+}
+
 if [ "$state" = "OPEN" ]; then
   [ "$(gh pr view "$pr" --repo "$repo" --json isDraft --jq .isDraft)" = false ] || { echo "PR is a draft" >&2; exit 1; }
   review="$(gh pr view "$pr" --repo "$repo" --json reviewDecision --jq '.reviewDecision // ""')"
