@@ -1,10 +1,10 @@
 # IDD Constitution
 
-The law governing `/idd`, `/idd-land`, `/idd-evolve`, and changes to this repository. Evolution is a filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no log.
+The law governing `/idd-issue`, `/idd`, `/idd-land`, `/idd-evolve`, and changes to this repository. Evolution is a filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no log.
 
 ## Article 1 — Preserve the lightweight boundary
 
-`/idd` delivers one well-scoped issue in an existing software repository from live issue intent through native verification and a linked PR. It does not create PRDs, golden-file suites, sibling repositories, trace artifacts, mandatory review waves, deployment, auto-merge, or manual issue closure. `/idd-land` is the separate, explicitly invoked landing step: it may squash-merge one validated PR, close its issue, and clean its branches, but never bypass red gates. `/idd-evolve` is separate methodology maintenance; neither command adds artifacts to project repositories.
+`/idd-issue` creates one implementation-ready GitHub issue from evidence after explicit authorization; it does not implement, branch, or open a PR. `/idd` delivers one well-scoped live issue through native verification and a linked PR. Neither creates PRDs, golden-file suites, sibling repositories, trace artifacts, mandatory review waves, deployment, auto-merge, or manual issue closure. `/idd-land` is the separate, explicitly invoked landing step: it may squash-merge one validated PR, close its issue, and clean its branches, but never bypass red gates. `/idd-evolve` is separate methodology maintenance; no command adds methodology artifacts to project repositories.
 
 ## Article 2 — Pass or nothing
 
@@ -15,7 +15,7 @@ A candidate has two outcomes:
 
 ## Article 3 — Evidence and value
 
-A change passes only when it is high-value, proven, not already covered, and smaller than the friction it removes. A mechanically reproducible defect or established practice may be proven once; a behavioral generalization normally needs multiple independent runs. Prefer deletion or replacement over addition.
+A change passes only when it is high-value, proven, not already covered, and smaller than the friction it removes. A mechanically reproducible defect or established practice may be proven once; a behavioral generalization normally needs multiple independent runs. For `/idd-issue`, primary evidence is the source request, duplicate-search result, created issue and edits/comments, and downstream implementation friction when available. Issue creation never auto-invokes evolution or creates a lessons log; `/idd-evolve post-create` applies the same pass-or-nothing gate. Prefer deletion or replacement over addition.
 
 ## Article 4 — Put instructions at the right layer
 
@@ -23,12 +23,14 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 
 ## Article 5 — Size and structure gates
 
+- `skills/idd-issue/SKILL.md` ≤ 70 lines.
 - `skills/idd/SKILL.md` ≤ 160 lines.
 - `skills/idd-land/SKILL.md` ≤ 120 lines.
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and a quality gate.
+- `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back verification.
 - `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
-- `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution.
+- `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for implementation and issue-creation evidence.
 - Cross-references resolve and `bash scripts/validate.sh` passes.
 
 Over cap means compress in the same change or revert.

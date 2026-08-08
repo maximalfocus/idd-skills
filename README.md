@@ -2,15 +2,16 @@
 
 Lightweight Issue-Driven Development for existing software repositories.
 
-`/idd` takes one open GitHub issue through focused implementation, repository-native verification, commit, push, and a linked PR. It deliberately does **not** create the PRD, golden-file, sibling-repository, trace, or per-wave review artifacts used by CDD.
+`/idd-issue` creates one implementation-ready GitHub issue; `/idd` takes one open issue through focused implementation, repository-native verification, commit, push, and a linked PR. It deliberately does **not** create the PRD, golden-file, sibling-repository, trace, or per-wave review artifacts used by CDD.
 
 ## Skill
 
 | Skill | Purpose |
 |---|---|
+| `/idd-issue <request> [--repo OWNER/REPO]` | Create one evidence-backed, duplicate-checked GitHub issue |
 | `/idd <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
-| `/idd-evolve [post-issue\|simplify]` | Filter proven run lessons into IDD; rejected candidates leave no log |
+| `/idd-evolve [post-create\|post-issue\|simplify]` | Filter proven run lessons into IDD; rejected candidates leave no log |
 
 The workflow was initially derived from implementing [Reporting-Platform issue #6](https://github.com/yubin-[removed]/Reporting-Platform/issues/6): live issue/comments as intent, a clean issue branch, exhaustive entry-point search, repository-native tests, explicit separation of introduced versus baseline failures, and smoke-testing the built runtime boundary. Its first evolve pass absorbed an implementation-proven runtime-flag gap: verify precedence, invalid values, unsupported profiles, and baked behavior when startup hooks are bypassed.
 
@@ -24,15 +25,16 @@ This symlinks all portable Agent Skills sources into `~/.agents/skills/`, `~/.cl
 
 | Runner | Invoke |
 |---|---|
-| Claude Code | `/idd 6` · `/idd-land 6` |
-| Codex | `$idd 6` · `$idd-land 6` |
-| Pi | `/skill:idd 6` · `/skill:idd-land 6` (enable skill commands in settings) |
-| OpenCode | `Use the idd skill for issue 6` · `Use idd-land for issue 6` |
+| Claude Code | `/idd-issue fix the timeout` · `/idd 6` · `/idd-land 6` |
+| Codex | `$idd-issue fix the timeout` · `$idd 6` · `$idd-land 6` |
+| Pi | `/skill:idd-issue fix the timeout` · `/skill:idd 6` · `/skill:idd-land 6` |
+| OpenCode | `Use idd-issue to file the timeout bug` · `Use idd for issue 6` · `Use idd-land for issue 6` |
 
 The same runner-specific forms apply to `idd-evolve`. Restart an already-running harness after installation so it rescans skills.
 
 ## Layout
 
+- `skills/idd-issue/SKILL.md` — evidence-backed issue creation workflow
 - `skills/idd/SKILL.md` — issue implementation workflow
 - `skills/idd-land/SKILL.md` — explicit landing workflow
 - `skills/idd-evolve/SKILL.md` — pass-or-nothing evolution workflow
