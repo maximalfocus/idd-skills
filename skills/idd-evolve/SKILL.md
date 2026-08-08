@@ -1,9 +1,9 @@
 ---
 name: idd-evolve
-description: "IDD methodology evolution — filter lessons from real issue creation or implementation through the constitution: pass → edit and publish; fail → do nothing. No logs."
+description: "IDD methodology evolution — filter lessons from real planning, issue creation, or implementation through the constitution: pass → edit and publish; fail → do nothing. No logs."
 compatibility: "Requires git; works with Claude Code, Codex, Pi, and OpenCode."
 disable-model-invocation: true
-argument-hint: "[post-create|post-issue|simplify]"
+argument-hint: "[post-plan|post-create|post-issue|simplify]"
 ---
 
 # /idd-evolve — evolve Issue-Driven Development
@@ -16,9 +16,11 @@ Resolve this installed skill directory to its physical source path, then read [`
 
 ## Step 0 — reconstruct evidence
 
+For **post-plan**, inspect the PRD requirements and progress tracker, live issue/PR state, the recommended next issue, and any automatic post-landing reconciliation. Evaluate ordering, scope selection, lifecycle accuracy, and privacy—not project correctness.
+
 For **post-create**, inspect the source request, duplicate search, created issue and edits/comments, available session evidence, and downstream `/idd` or PR friction when it bears on issue quality. Evaluate the issue-authoring method, not project correctness.
 
-For **post-issue**, inspect the live issue/comments, project branch/PR diff and commits, verification output, and available session evidence. Do not review project correctness or invoke `/peerreview`; that is a separate user-invoked workflow. Match proof to the claim in either mode: one reproducible mechanical escape can establish a validation gap; behavioral advice normally needs multiple independent runs.
+For **post-issue**, inspect the live issue/comments, project branch/PR diff and commits, verification output, and available session evidence. Do not review project correctness or invoke `/peerreview`; that is a separate user-invoked workflow. Match proof to the claim in any mode: one reproducible mechanical escape can establish a validation gap; behavioral advice normally needs multiple independent runs.
 
 For **simplify**, measure skill sizes and find duplicated, unused, or tool-specific guidance. Prefer merge, replacement, compression, or deletion.
 

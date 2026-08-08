@@ -21,6 +21,7 @@ validate_skill() {
   echo "$name valid ($lines/$cap lines)"
 }
 
+validate_skill idd-plan 90
 validate_skill idd-issue 70
 validate_skill idd 160
 validate_skill idd-land 120
@@ -31,7 +32,7 @@ grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "id
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd-issue idd idd-land idd-evolve; do
+for name in idd-plan idd-issue idd idd-land idd-evolve; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -49,7 +50,16 @@ done
 grep -q 'explicit request' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must require explicit creation authority" >&2; exit 1; }
 grep -q 'open and closed issues' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must search open and closed issues" >&2; exit 1; }
 grep -q 'gh issue view' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must verify the created issue" >&2; exit 1; }
+grep -q 'post-plan' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover planning evidence" >&2; exit 1; }
 grep -q 'post-create' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover issue-creation evidence" >&2; exit 1; }
+grep -q 'at most one next issue' "$root/CONSTITUTION.md" || { echo "constitution must bound idd-plan output" >&2; exit 1; }
+grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
+grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
+
+bash -n "$root/scripts/resolve-prd-pair.sh"
+bash -n "$root/scripts/test-resolve-prd-pair.sh"
+[ -x "$root/scripts/resolve-prd-pair.sh" ] || { echo "resolve-prd-pair.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-resolve-prd-pair.sh"
 
 bash -n "$root/scripts/land.sh"
 [ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }
