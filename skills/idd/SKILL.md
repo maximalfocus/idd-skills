@@ -88,7 +88,9 @@ Return only:
 - key implementation points;
 - verification (green checks plus precisely named baseline/tooling limitations);
 - commit, PR URL, and current lifecycle state;
-- exactly one next action (`/idd-land #N` when the PR is ready, otherwise the named blocker);
+- exactly one next action (when the PR is ready, use the active runner's syntax: `$idd-land #N`
+  in Codex, `/idd-land #N` in Claude Code, `/skill:idd-land #N` in Pi, or
+  `Use idd-land for issue N` in OpenCode; otherwise return the named blocker);
 - excluded follow-ups, if any.
 
 A paused run stays on its issue branch. Resume by re-reading the live issue, branch diff, and PR state; never rely on a separate trace file.
