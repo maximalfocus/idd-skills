@@ -27,13 +27,14 @@ validate_skill idd 160
 validate_skill idd-land 120
 validate_skill idd-auto 120
 validate_skill idd-evolve 80
+validate_skill idd-publish 120
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
 grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must read the constitution" >&2; exit 1; }
 
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd-plan idd-issue idd idd-land idd-auto idd-evolve; do
+for name in idd-plan idd-issue idd idd-land idd-auto idd-evolve idd-publish; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -62,6 +63,8 @@ grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { 
 grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
 grep -q 'scripts/resolve-prd-pair.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require an exact PRD pair" >&2; exit 1; }
 grep -q 'Do not auto-apply `--accept-residuals`' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
+grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
+grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
 
 bash -n "$root/scripts/resolve-prd-pair.sh"
 bash -n "$root/scripts/test-resolve-prd-pair.sh"
