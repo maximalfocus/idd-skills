@@ -6,7 +6,7 @@ Author `/idd-plan`, `/idd-issue`, `/idd`, `/idd-land`, and `/idd-evolve` in thei
 
 ## Scope
 
-IDD is the lightweight, existing-repository issue workflow. `/idd-plan` only consumes an existing convention-linked PRD, recommends one next issue, and reconciles its existing tracker from live state; it never creates planning artifacts or issues. `/idd-issue` only creates one evidence-backed issue; `/idd` must not absorb CDD's PRD, golden-file, trace, mandatory peer-review, acceptance-wave, auto-merge, or deploy machinery. `/idd-land` is a separate explicit merge/closure command, must fail closed on red gates or undisclosed residuals, and automatically reconciles an exact associated PRD after landing. Evolution stays in `/idd-evolve`. Prefer repository-native tests and git/PR history.
+IDD is the lightweight issue workflow. `/idd-plan` may bootstrap only a private PRD plus progress tracker after product-requirement approval; otherwise it consumes an exact convention-linked pair, recommends one next issue, or reconciles verified tracker state. It never creates plan files or issues. `/idd-issue` creates one evidence-backed issue; `/idd` must not absorb CDD's golden-file, trace, mandatory peer-review, acceptance-wave, auto-merge, or deploy machinery. `/idd-land` is a separate explicit merge/closure command, fails closed on red gates or undisclosed residuals, and reconciles an exact associated PRD after landing. Evolution stays in `/idd-evolve`. Prefer repository-native tests and git/PR history.
 
 ## Editing discipline
 

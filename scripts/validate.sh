@@ -54,6 +54,7 @@ grep -q 'post-plan' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve mus
 grep -q 'post-create' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover issue-creation evidence" >&2; exit 1; }
 grep -Fq '`$idd-land #N`' "$root/skills/idd/SKILL.md" || { echo "idd must emit Codex next actions with dollar syntax" >&2; exit 1; }
 grep -q 'at most one next issue' "$root/CONSTITUTION.md" || { echo "constitution must bound idd-plan output" >&2; exit 1; }
+grep -q 'product-only clarification' "$root/CONSTITUTION.md" || { echo "constitution must bound greenfield questions" >&2; exit 1; }
 grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
 
@@ -61,6 +62,12 @@ bash -n "$root/scripts/resolve-prd-pair.sh"
 bash -n "$root/scripts/test-resolve-prd-pair.sh"
 [ -x "$root/scripts/resolve-prd-pair.sh" ] || { echo "resolve-prd-pair.sh must be executable" >&2; exit 1; }
 bash "$root/scripts/test-resolve-prd-pair.sh"
+
+bash -n "$root/scripts/init-prd.sh"
+bash -n "$root/scripts/test-init-prd.sh"
+[ -x "$root/scripts/init-prd.sh" ] || { echo "init-prd.sh must be executable" >&2; exit 1; }
+[ -x "$root/scripts/test-init-prd.sh" ] || { echo "test-init-prd.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-init-prd.sh"
 
 bash -n "$root/scripts/land.sh"
 [ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }

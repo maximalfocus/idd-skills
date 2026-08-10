@@ -4,7 +4,7 @@ The law governing `/idd-plan`, `/idd-issue`, `/idd`, `/idd-land`, `/idd-evolve`,
 
 ## Article 1 — Preserve the lightweight boundary
 
-`/idd-plan` consumes an existing convention-linked `{project}-prd` repository: default mode recommends at most one next issue without mutation; reconcile mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence. It never creates a PRD, plan artifact, sibling repository, issue, branch, or PR. `/idd-issue` creates one implementation-ready GitHub issue from evidence after explicit authorization; it does not implement, branch, or open a PR. `/idd` delivers one well-scoped live issue through native verification and a linked PR. None creates golden-file suites, trace artifacts, mandatory review waves, deployment, or auto-merge. `/idd-land` is the separate, explicitly invoked landing step: it may squash-merge one validated PR, close its issue, clean its branches, and then automatically reconcile an exact associated PRD tracker, but never bypass red gates. `/idd-evolve` is separate methodology maintenance; no command adds methodology artifacts to project repositories.
+`/idd-plan` has one bounded greenfield exception: after product-requirement discovery and explicit approval, bootstrap mode may create a private `{project}-prd` repository containing only `PRD.md` and `PROGRESS.md`. It never creates a plan file, implementation repository, issue, branch, or PR. For an existing convention-linked pair, default mode recommends at most one next issue without mutation; reconcile mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence. `/idd-issue` creates one implementation-ready GitHub issue from evidence after explicit authorization; it does not implement, branch, or open a PR. `/idd` delivers one well-scoped live issue through native verification and a linked PR. None creates golden-file suites, trace artifacts, mandatory review waves, deployment, or auto-merge. `/idd-land` is the separate, explicitly invoked landing step: it may squash-merge one validated PR, close its issue, clean its branches, and then automatically reconcile an exact associated PRD tracker, but never bypass red gates. `/idd-evolve` is separate methodology maintenance; no command adds methodology traces to project repositories.
 
 ## Article 2 — Pass or nothing
 
@@ -29,7 +29,7 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 - `skills/idd-land/SKILL.md` ≤ 120 lines.
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and a quality gate.
-- `/idd-plan` requires exact repository association, read-only default planning, at most one next issue, live-state authority, and tracker-only reconciliation.
+- `/idd-plan` requires approval before greenfield PRD publication, product-only clarification proportional to unresolved domain complexity, exact association for existing pairs, read-only default planning, at most one next issue, live-state authority, and tracker-only reconciliation.
 - `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back verification.
 - `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
 - `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for planning, implementation, and issue-creation evidence.
@@ -39,4 +39,4 @@ Over cap means compress in the same change or revert.
 
 ## Article 6 — Commit and publish
 
-Every kept evolution reaches `maximalfocus/idd-skills` on `main`. Stage only explicit task-owned paths; never `git add -A`. Pull/rebase before committing, use a meaningful `evolve:` or `fix:` message, never force-push, and push normally. An explicit `/idd-land` authorizes its automatic verified `PROGRESS.md` commit/push in the exact associated PRD repository; failure after merge is disclosed and resumable. Project repositories otherwise remain governed by their own review policy.
+Every kept evolution reaches `maximalfocus/idd-skills` on `main`. Stage only explicit task-owned paths; never `git add -A`. Pull/rebase before committing, use a meaningful `evolve:` or `fix:` message, never force-push, and push normally. Explicit bootstrap approval authorizes the initial private PRD commit/push; an explicit `/idd-land` authorizes its automatic verified `PROGRESS.md` commit/push in the exact associated PRD repository. Failure after merge is disclosed and resumable. Project repositories otherwise remain governed by their own review policy.

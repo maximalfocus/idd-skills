@@ -1,21 +1,27 @@
 ---
 name: idd-plan
-description: "Plan the next Issue-Driven Development step from an existing sibling {project}-prd repository, or reconcile its progress tracker with verified live GitHub state. Use when asked what to implement next, to plan from a PRD, or to repair PRD progress after landing."
+description: "Bootstrap a greenfield IDD product PRD, plan the next issue from an existing sibling {project}-prd repository, or reconcile its progress tracker with verified live GitHub state."
 compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
-argument-hint: "[--reconcile]"
+argument-hint: "[project-name|--reconcile]"
 ---
 
-# /idd-plan — choose the next issue from an existing PRD
+# /idd-plan — start or continue an issue-driven product
 
-Bridge an existing private `{project}-prd` repository to its public implementation repository without importing CDD's artifact pipeline. Default mode is read-only and recommends one next issue. Reconcile mode updates only the existing progress tracker; neither mode creates a PRD, plan file, implementation issue, branch, or PR.
+Bootstrap a concise product contract, or bridge an existing private `{project}-prd` repository to its implementation repository, without importing CDD's artifact pipeline. Greenfield mode may publish only `PRD.md` and `PROGRESS.md` after approval. Existing-project default mode is read-only and recommends one issue; reconcile mode updates only the tracker.
 
-An explicit `/idd-plan --reconcile` authorizes a tracker commit and push. A successful `/idd-land` invocation supplies the same authority automatically for its convention-linked sibling PRD repository; users do not invoke reconciliation separately in the normal lifecycle.
+An ordinary invocation authorizes discovery and drafting only. Explicit approval of the complete greenfield draft authorizes its private PRD repository, initial commit, and push. Creating the implementation repository or an issue remains separate. `/idd-plan --reconcile` authorizes a tracker commit/push; successful `/idd-land` supplies the same authority automatically.
 
-## Resolve the project pair
+## Orient and select the mode
 
-1. Resolve this skill's physical source repository and run `scripts/resolve-prd-pair.sh` from either checkout. The only automatic association is an exact sibling `{implementation-name}-prd` repository whose GitHub origin is `{owner}/{implementation-name}-prd` and which already contains `PRD.md` and `PROGRESS.md`. Never guess another path or create the repository/files.
-2. Read instructions in both repositories. Require clean working trees before reconcile; default planning may inspect an unrelated dirty tree but shall not modify it. Fetch live issue and PR states, comments, checks, closing links, and squash commits with `gh`; GitHub is lifecycle authority, while the PRD is requirement authority.
-3. Parse requirements, delivery slices, dependencies, release boundaries, existing tracker links, and explicit deferrals. Preserve uncertainty when requirement-to-slice mapping is absent or contradictory.
+1. Resolve this skill's physical source repository. From a checkout, run `scripts/resolve-prd-pair.sh`; the only automatic association is the exact sibling `{implementation-name}-prd` with matching GitHub origins plus `PRD.md` and `PROGRESS.md`. Read both repositories' instructions. GitHub is lifecycle authority and the PRD is requirement authority.
+2. Use greenfield mode only when the user asks to plan a new product and no PRD source exists. Resolve a unique project slug, GitHub owner, private visibility, and workspace parent; never overwrite a path or repository. `--reconcile` always requires an existing exact pair and clean trees.
+3. Existing modes fetch the live issue/PR state, comments, checks, closing links, and squash commits needed for each conclusion. Parse requirements, slices, dependencies, release boundaries, tracker links, and explicit deferrals; preserve contradictions.
+
+## Greenfield mode — clarify and author the product contract
+
+1. Clarify intended users, problem, outcomes, workflows, security/data/API behavior, scope, non-goals, release boundary, and observable acceptance. Scale discovery to unresolved domain complexity: a small product gets few questions; a large, ambiguous, or high-risk domain gets more. Ask one decision at a time only when its answer materially changes the product, offer real alternatives with a recommendation, and stop when acceptance is unambiguous. Select technology and implementation details autonomously from best practices unless they change product behavior/risk or the user states a preference.
+2. Draft one concise `PRD.md` with stable requirement IDs and dependency-ordered, independently reviewable delivery slices. Draft `PROGRESS.md` with the same IDs, explicit status semantics, and no invented GitHub evidence. Do not create a PLAN file or speculative issue backlog; recommend only the first ready slice as an issue contract.
+3. Present both complete drafts and the recommended first issue together. After explicit approval, write only those two files, run `scripts/init-prd.sh <path> <owner>/<project>-prd`, and read back the private remote and commit. Stop before implementation-repository or issue creation unless separately authorized.
 
 ## Default mode — recommend one next issue
 
@@ -31,8 +37,8 @@ An explicit `/idd-plan --reconcile` authorizes a tracker commit and push. A succ
 
 ## GATE — planning and reconciliation integrity
 
-Require an exact repository pair, complete live-state reads for every conclusion, one next issue at most, dependency-respecting order, and no invented lifecycle evidence. Reconcile must leave both repositories clean and synchronized, with only `PROGRESS.md` changed in its commit. A post-merge reconciliation failure is reported as `landed, PRD reconciliation incomplete`; it never rolls back the merge and is resumable through `/idd-land` or explicit `/idd-plan --reconcile` repair.
+Greenfield requires material product decisions settled, PRD/tracker ID agreement, private publication approval, and no technical-question drift. Existing modes require an exact pair and complete live-state reads. Every mode permits one next issue at most, dependency-respecting order, and no invented lifecycle evidence. Reconcile leaves both repositories clean and synchronized with only `PROGRESS.md` changed; failure after merge is reported as `landed, PRD reconciliation incomplete` and never rolls back the merge.
 
 ## Completion
 
-Default mode returns the live/tracker discrepancy summary, ordered remaining slices, one recommended issue contract, and exactly one next action (`/idd-issue …` or the named blocker). Reconcile mode returns the changed rows, evidence URLs and squash, PRD commit/push state, and any incomplete postcondition.
+Greenfield returns the approved PRD/tracker repository and one next issue contract. Existing default returns discrepancies, ordered remaining slices, and one issue contract. Reconcile returns changed rows, evidence URLs and squash, commit/push state, and incomplete postconditions. Every mode gives exactly one next action (`/idd-issue …`, implementation-repository authorization, or the named blocker).
