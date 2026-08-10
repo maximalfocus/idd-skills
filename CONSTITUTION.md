@@ -34,7 +34,7 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 - `/idd-plan` requires approval before greenfield PRD publication, product-only clarification proportional to unresolved domain complexity, exact association for existing pairs, read-only default planning, at most one next issue, live-state authority, and tracker-only reconciliation.
 - `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back verification.
 - `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
-- `/idd-auto` requires explicit invocation, an exact PRD pair, one active issue, current constituent gates, live-state resume, and a final completion audit.
+- `/idd-auto` requires explicit invocation, an exact PRD pair, one active issue, current constituent gates, live-state resume, a final completion audit, and no publication invocation.
 - `/idd-publish` requires explicit invocation, an exact private pair, one preparation issue, an exposure audit, implementation-only visibility mutation, anonymous readback, and private PRD verification.
 - `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for planning, implementation, and issue-creation evidence.
 - Cross-references resolve and `bash scripts/validate.sh` passes.

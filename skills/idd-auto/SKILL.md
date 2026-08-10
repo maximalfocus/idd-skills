@@ -8,7 +8,7 @@ argument-hint: "[project-name|repository-path]"
 
 # /idd-auto — finish one PRD-driven project
 
-Drive an existing exact `{project}` ↔ `{project}-prd` pair through repeated `/idd-plan` → `/idd-issue` → `/idd` → `/idd-land` cycles. Keep one active issue at a time and preserve every constituent duplicate, acceptance, verification, review, merge, cleanup, and reconciliation gate. If the remaining accepted scope is publication, stop after implementation landing and emit `$idd-publish <project>`; visibility changes require that separate explicit invocation.
+Drive an existing exact `{project}` ↔ `{project}-prd` pair through repeated `/idd-plan` → `/idd-issue` → `/idd` → `/idd-land` cycles. Keep one active issue at a time and preserve every constituent duplicate, acceptance, verification, review, merge, cleanup, and reconciliation gate. Publication is outside this command and is never invoked or scheduled by `/idd-auto`.
 
 An explicit `/idd-auto` invocation authorizes creation and delivery of sequential PRD-derived issues, including their branches, commits, pushes, linked PRs, squash merges, closures, branch cleanup, and verified `PROGRESS.md` reconciliation. It does not authorize deployment, force-push, bypassing a gate, accepting residuals, inventing requirements, parallel issue delivery, or changes outside the exact pair.
 
@@ -17,7 +17,7 @@ An explicit `/idd-auto` invocation authorizes creation and delivery of sequentia
 1. Resolve this skill's physical source repository and read the current `idd-plan`, `idd-issue`, `idd`, and `idd-land` skill sources in full. Execute their procedures and scripts rather than copying stale phase logic. Their standalone completion messages become internal phase transitions while this orchestrator remains active.
 2. Resolve the supplied project name/path or current checkout with `scripts/resolve-prd-pair.sh`. Require matching GitHub origins, authentication, repository instructions, and clean trees; an existing clean issue branch may be resumed only when live state binds it uniquely to the one active issue.
 3. Pull clean default branches with `--ff-only`. Read `PRD.md`, `PROGRESS.md`, live issues/comments, PRs/reviews/checks, closing links, and squash commits. GitHub owns lifecycle truth; the PRD owns accepted requirements and dependency/release boundaries; the tracker is reconciled evidence, not permission to skip either.
-4. Define completion as every accepted implementation requirement in the PRD mapped to landed or validated tracker evidence, with no corresponding open issue or PR. Preserve `Landed` versus `Validated`; deployment or a product decision that cannot be completed by this issue workflow is a blocker. A publication slice is completed only by `$idd-publish <project>`, never by changing visibility inside `/idd-auto`.
+4. Define completion as every accepted implementation requirement in the PRD mapped to landed or validated tracker evidence, with no corresponding open issue or PR. Preserve `Landed` versus `Validated`; deployment, publication, or a product decision that cannot be completed by this issue workflow is an external blocker. A user may separately invoke `$idd-publish <project>` after this command finishes.
 
 ## Run the one-issue loop
 
