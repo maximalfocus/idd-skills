@@ -25,6 +25,7 @@ validate_skill idd-plan 90
 validate_skill idd-issue 70
 validate_skill idd 160
 validate_skill idd-land 120
+validate_skill idd-auto 120
 validate_skill idd-evolve 80
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
 grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must read the constitution" >&2; exit 1; }
@@ -32,7 +33,7 @@ grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "id
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd-plan idd-issue idd idd-land idd-evolve; do
+for name in idd-plan idd-issue idd idd-land idd-auto idd-evolve; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -57,6 +58,10 @@ grep -q 'at most one next issue' "$root/CONSTITUTION.md" || { echo "constitution
 grep -q 'product-only clarification' "$root/CONSTITUTION.md" || { echo "constitution must bound greenfield questions" >&2; exit 1; }
 grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
+grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
+grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
+grep -q 'scripts/resolve-prd-pair.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require an exact PRD pair" >&2; exit 1; }
+grep -q 'Do not auto-apply `--accept-residuals`' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
 
 bash -n "$root/scripts/resolve-prd-pair.sh"
 bash -n "$root/scripts/test-resolve-prd-pair.sh"

@@ -2,9 +2,11 @@
 
 Lightweight Issue-Driven Development for greenfield and existing software repositories.
 
-`/idd-plan` can bootstrap a private `{project}-prd` containing a concise PRD and progress tracker, choose one next issue from an existing convention-linked pair, or reconcile verified progress; `/idd-issue` creates that implementation-ready GitHub issue; `/idd` takes it through focused implementation, repository-native verification, commit, push, and a linked PR. It deliberately does **not** create plan files, golden-file suites, trace artifacts, or per-wave reviews.
+`/idd-plan` can bootstrap a private `{project}-prd` containing a concise PRD and progress tracker, choose one next issue from an existing convention-linked pair, or reconcile verified progress; `/idd-issue` creates that implementation-ready GitHub issue; `/idd` takes it through focused implementation, repository-native verification, commit, push, and a linked PR. `/idd-auto` can explicitly orchestrate those same current gates one issue at a time until the PRD implementation scope is complete. IDD deliberately does **not** create plan files, golden-file suites, trace artifacts, or per-wave reviews.
 
 Normal lifecycle: `/idd-plan` → `/idd-issue` → `/idd` → optional `/peerreview` → `/idd-land`. Landing automatically commits verified lifecycle progress to the associated PRD repository; `/idd-plan --reconcile` exists only for repair or explicit resynchronization.
+
+Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocation repeatedly selects, creates, implements, verifies, lands, and reconciles one issue at a time. It stops rather than bypassing ambiguity, residual acceptance, red CI/reviews, external prerequisites, or material product decisions.
 
 ## Skill
 
@@ -14,6 +16,7 @@ Normal lifecycle: `/idd-plan` → `/idd-issue` → `/idd` → optional `/peerrev
 | `/idd-issue <request> [--repo OWNER/REPO]` | Create one evidence-backed, duplicate-checked GitHub issue |
 | `/idd <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
+| `/idd-auto <project-name-or-path>` | Sequentially finish an exact PRD-linked project through the existing gated lifecycle |
 | `/idd-evolve [post-plan\|post-create\|post-issue\|simplify]` | Filter proven run lessons into IDD; rejected candidates leave no log |
 
 The workflow was initially derived from implementing [Reporting-Platform issue #6](https://github.com/yubin-[removed]/Reporting-Platform/issues/6): live issue/comments as intent, a clean issue branch, exhaustive entry-point search, repository-native tests, explicit separation of introduced versus baseline failures, and smoke-testing the built runtime boundary. Its first evolve pass absorbed an implementation-proven runtime-flag gap: verify precedence, invalid values, unsupported profiles, and baked behavior when startup hooks are bypassed.
@@ -28,10 +31,10 @@ This symlinks all portable Agent Skills sources into `~/.agents/skills/`, `~/.cl
 
 | Runner | Invoke |
 |---|---|
-| Claude Code | `/idd-plan` · `/idd-issue fix the timeout` · `/idd 6` · `/idd-land 6` |
-| Codex | `$idd-plan` · `$idd-issue fix the timeout` · `$idd 6` · `$idd-land 6` |
-| Pi | `/skill:idd-plan` · `/skill:idd-issue fix the timeout` · `/skill:idd 6` · `/skill:idd-land 6` |
-| OpenCode | `Use idd-plan to choose the next issue` · `Use idd-issue to file it` · `Use idd for issue 6` · `Use idd-land for issue 6` |
+| Claude Code | `/idd-plan` · `/idd-issue fix the timeout` · `/idd 6` · `/idd-land 6` · `/idd-auto widget` |
+| Codex | `$idd-plan` · `$idd-issue fix the timeout` · `$idd 6` · `$idd-land 6` · `$idd-auto widget` |
+| Pi | `/skill:idd-plan` · `/skill:idd-issue fix the timeout` · `/skill:idd 6` · `/skill:idd-land 6` · `/skill:idd-auto widget` |
+| OpenCode | `Use idd-plan to choose the next issue` · `Use idd-issue to file it` · `Use idd for issue 6` · `Use idd-land for issue 6` · `Use idd-auto for widget` |
 
 The same runner-specific forms apply to `idd-evolve`. Restart an already-running harness after installation so it rescans skills.
 
@@ -41,6 +44,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-issue/SKILL.md` — evidence-backed issue creation workflow
 - `skills/idd/SKILL.md` — issue implementation workflow
 - `skills/idd-land/SKILL.md` — explicit landing workflow
+- `skills/idd-auto/SKILL.md` — autonomous one-issue-at-a-time PRD completion loop
 - `skills/idd-evolve/SKILL.md` — pass-or-nothing evolution workflow
 - `CONSTITUTION.md` — evolution law and size gates
 - `scripts/install.sh` — cross-runner symlink installer

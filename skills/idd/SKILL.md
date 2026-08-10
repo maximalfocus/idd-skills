@@ -10,7 +10,7 @@ argument-hint: "[issue-number|github-issue-url]"
 
 Deliver one independently reviewable GitHub issue in its existing repository. The live issue is the acceptance source; the repository's own instructions, architecture, tests, and PR policy are the implementation system. Do not create PRDs, golden suites, sibling repos, methodology traces, or mandatory peer-review rounds.
 
-An explicit `/idd` invocation authorizes a dedicated branch, commits, push, and a linked PR. It never authorizes merge, deployment, issue closure by hand, force-push, destructive git operations, or edits outside the issue's repository.
+An explicit `/idd` invocation authorizes a dedicated branch, commits, push, and a linked PR. An active explicitly invoked `/idd-auto` run supplies the same authority for its one current issue. Neither authorizes merge outside `/idd-land`, deployment, issue closure by hand, force-push, destructive git operations, or edits outside the issue's repository.
 
 ## Input
 

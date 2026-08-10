@@ -9,7 +9,7 @@ argument-hint: "[request] [--repo OWNER/REPO]"
 
 Turn a concrete problem or change request into one live GitHub issue. Keep it small enough for one `/idd` run. Do not create branches, edit project files, prescribe speculative implementation, or start delivery.
 
-An explicit request to **file**, **create**, or **open** the issue authorizes one GitHub issue creation. A request to draft, review, or suggest does not.
+An explicit request to **file**, **create**, or **open** the issue authorizes one GitHub issue creation. An active explicitly invoked `/idd-auto` run supplies that authority for its one verified next-issue contract. A request to draft, review, or suggest does not.
 
 ## Establish the boundary
 
