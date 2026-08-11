@@ -49,7 +49,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `CONSTITUTION.md` — evolution law and size gates
 - `scripts/install.sh` — cross-runner symlink installer
 - `scripts/resolve-prd-pair.sh` — deterministic `{project}` ↔ `{project}-prd` association
-- `scripts/init-prd.sh` — validate, commit, and privately publish an approved greenfield PRD/tracker
+- `scripts/init-prd.sh` — validate, commit, and privately publish a greenfield PRD/tracker
 - `scripts/land.sh` — deterministic squash/close/branch-cleanup lifecycle
 - `scripts/test-land.sh` — isolated mock lifecycle + idempotency test
 - `scripts/validate.sh` — structural and lifecycle validation

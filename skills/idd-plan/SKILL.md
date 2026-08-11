@@ -7,9 +7,9 @@ argument-hint: "[project-name|--reconcile]"
 
 # /idd-plan — start or continue an issue-driven product
 
-Bootstrap a concise product contract, or bridge an existing private `{project}-prd` repository to its implementation repository, without importing CDD's artifact pipeline. Greenfield mode may publish only `PRD.md` and `PROGRESS.md` after approval. Existing-project default mode is read-only and recommends one issue; reconcile mode updates only the tracker.
+Bootstrap a concise product contract, or bridge an existing private `{project}-prd` repository to its implementation repository, without importing CDD's artifact pipeline. Greenfield mode publishes only `PRD.md` and `PROGRESS.md` to a private repository by default. Existing-project default mode is read-only and recommends one issue; reconcile mode updates only the tracker.
 
-An ordinary invocation authorizes discovery and drafting only. Explicit approval of the complete greenfield draft authorizes its private PRD repository, initial commit, and push. Creating the implementation repository or an issue remains separate. `/idd-plan --reconcile` authorizes a tracker commit/push; successful `/idd-land` supplies the same authority automatically.
+A greenfield invocation authorizes discovery, drafting, private PRD repository creation, initial commit, and push unless the user explicitly asks for draft-only output. Creating the implementation repository or an issue remains separate. `/idd-plan --reconcile` authorizes a tracker commit/push; successful `/idd-land` supplies the same authority automatically.
 
 ## Orient and select the mode
 
@@ -21,7 +21,7 @@ An ordinary invocation authorizes discovery and drafting only. Explicit approval
 
 1. Clarify intended users, problem, outcomes, workflows, security/data/API behavior, scope, non-goals, release boundary, and observable acceptance. Scale discovery to unresolved domain complexity: a small product gets few questions; a large, ambiguous, or high-risk domain gets more. Ask one decision at a time only when its answer materially changes the product, offer real alternatives with a recommendation, and stop when acceptance is unambiguous. Select technology and implementation details autonomously from best practices unless they change product behavior/risk or the user states a preference.
 2. Draft one concise `PRD.md` with stable requirement IDs and dependency-ordered, independently reviewable delivery slices. Draft `PROGRESS.md` with the same IDs, explicit status semantics, and no invented GitHub evidence. Do not create a PLAN file or speculative issue backlog; recommend only the first ready slice as an issue contract.
-3. Present both complete drafts and the recommended first issue together. After explicit approval, write only those two files, run `scripts/init-prd.sh <path> <owner>/<project>-prd`, and read back the private remote and commit. Stop before implementation-repository or issue creation unless separately authorized.
+3. Once the complete contract is settled, write only those two files, run `scripts/init-prd.sh <path> <owner>/<project>-prd`, and read back the private remote and commit. If the user requested draft-only output, present both complete drafts and the recommended first issue without writing or publishing. Stop before implementation-repository or issue creation unless separately authorized.
 
 ## Default mode — recommend one next issue
 
@@ -37,7 +37,7 @@ An ordinary invocation authorizes discovery and drafting only. Explicit approval
 
 ## GATE — planning and reconciliation integrity
 
-Greenfield requires material product decisions settled, PRD/tracker ID agreement, private publication approval, and no technical-question drift. Existing modes require an exact pair and complete live-state reads. Every mode permits one next issue at most, dependency-respecting order, and no invented lifecycle evidence. Reconcile leaves both repositories clean and synchronized with only `PROGRESS.md` changed; failure after merge is reported as `landed, PRD reconciliation incomplete` and never rolls back the merge.
+Greenfield requires material product decisions settled, PRD/tracker ID agreement, private visibility readback unless draft-only, and no technical-question drift. Existing modes require an exact pair and complete live-state reads. Every mode permits one next issue at most, dependency-respecting order, and no invented lifecycle evidence. Reconcile leaves both repositories clean and synchronized with only `PROGRESS.md` changed; failure after merge is reported as `landed, PRD reconciliation incomplete` and never rolls back the merge.
 
 ## Completion
 
