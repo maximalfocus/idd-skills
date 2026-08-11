@@ -18,7 +18,7 @@ An explicit `/idd-publish` invocation authorizes the final visibility mutation f
 
 ## Publication gate
 
-Audit the complete public exposure surface: current files and reachable history, branches/tags/releases, repository metadata, issues, comments, reviews, edit revisions, Actions runs/logs/artifacts, and package or documentation links. Secret-scan the repository. Resolve or remove unsafe public-facing history before proceeding; never expose credentials, personal data, private PRD links, or private operational rationale. Do not deploy, host, or publish packages.
+Audit the complete public exposure surface: current files and reachable history, branches/tags/releases, repository metadata, issues, comments, reviews, edit revisions, Actions runs/logs/artifacts, and package or documentation links. Secret-scan the repository. Find and remove or fictionalize unapproved references to real governments, public authorities, agencies, and other organizations—including aliases and abbreviations—across every public surface; preserve a real identity only when the accepted publication requirement explicitly allows it. Resolve or remove unsafe public-facing history before proceeding; never expose credentials, personal data, private PRD links, or private operational rationale. Do not deploy, host, or publish packages.
 
 Change visibility only after all gates pass, using the provider's explicit visibility command for `{project}`. Do not change `{project}-prd`. Verify anonymous HTML/raw/clone access for the implementation repository and anonymous denial for the PRD; verify public issue/PR pages contain no private links. Enable repository security reporting only when required by the accepted publication requirements.
 
