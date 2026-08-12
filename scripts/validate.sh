@@ -28,13 +28,14 @@ validate_skill idd-land 120
 validate_skill idd-auto 120
 validate_skill idd-evolve 80
 validate_skill idd-publish 120
+validate_skill idd-acceptance 120
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
 grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must read the constitution" >&2; exit 1; }
 
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd-plan idd-issue idd idd-land idd-auto idd-evolve idd-publish; do
+for name in idd-plan idd-issue idd idd-land idd-auto idd-evolve idd-publish idd-acceptance; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -67,6 +68,8 @@ grep -q 'scripts/resolve-prd-pair.sh' "$root/skills/idd-auto/SKILL.md" || { echo
 grep -q 'scripts/init-implementation.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must bootstrap a uniquely missing implementation sibling" >&2; exit 1; }
 grep -q 'Do not auto-apply `--accept-residuals`' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
 grep -q 'never invoked' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must not invoke publication" >&2; exit 1; }
+grep -q 'idd-acceptance' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require final integrated acceptance" >&2; exit 1; }
+grep -q 'real product boundary' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must use a real product boundary" >&2; exit 1; }
 grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
 grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
 
@@ -86,6 +89,9 @@ bash -n "$root/scripts/test-init-implementation.sh"
 [ -x "$root/scripts/init-implementation.sh" ] || { echo "init-implementation.sh must be executable" >&2; exit 1; }
 [ -x "$root/scripts/test-init-implementation.sh" ] || { echo "test-init-implementation.sh must be executable" >&2; exit 1; }
 bash "$root/scripts/test-init-implementation.sh"
+
+bash -n "$root/skills/idd-acceptance/scripts/static-gate.sh"
+[ -x "$root/skills/idd-acceptance/scripts/static-gate.sh" ] || { echo "acceptance static gate must be executable" >&2; exit 1; }
 
 bash -n "$root/scripts/land.sh"
 [ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }

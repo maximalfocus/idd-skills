@@ -1,0 +1,4 @@
+interface:
+  display_name: "IDD Acceptance"
+  short_description: "Run final integrated acceptance for a completed IDD project"
+  default_prompt: "Run the project’s final user-facing acceptance boundary and report pass, failure class, and evidence."

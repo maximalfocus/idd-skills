@@ -28,6 +28,7 @@ At the start of every iteration, reconstruct state from the pair and GitHub. Nev
 3. **Create exactly one issue.** Execute `idd-issue` with that public-safe contract and target implementation repository. Honor its open-and-closed duplicate search and read-back gate. A duplicate becomes the active issue; never create a second issue in the same iteration.
 4. **Implement and publish.** Execute `idd` for the active issue through focused implementation, repository-native verification, explicit staging, commit, push, and one linked PR. Wait for reported checks and reviews. Repair introduced failures through the same issue branch; stop on an unrelated required red gate, conflict, requested changes needing user intent, or unproved acceptance.
 5. **Land and reconcile.** When every acceptance item and required check is green, execute `idd-land` without residual acceptance. Verify squash merge, closure, default-branch refresh, local/remote branch deletion, and automatic PRD reconciliation, then begin the next iteration from fresh live state.
+6. When `idd-plan` reports no remaining implementation outcome, invoke `/idd-acceptance <project>` from clean default branches. Treat its result as a required final gate: a product failure returns to one normal repair issue; a test/spec or environment failure is reported as a precise blocker. Do not declare completion from issue-level checks alone.
 
 ## GATE — fail closed or finish
 

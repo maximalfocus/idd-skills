@@ -6,6 +6,8 @@ The law governing `/idd-plan`, `/idd-issue`, `/idd`, `/idd-land`, `/idd-auto`, `
 
 `/idd-plan` has one bounded greenfield exception: after product-requirement discovery, bootstrap mode creates and pushes a private `{project}-prd` repository containing only `PRD.md` and `PROGRESS.md` by default; an explicit draft-only request suppresses publication. It never creates a plan file, implementation repository, issue, branch, or PR. For an existing convention-linked pair, default mode recommends at most one next issue without mutation; reconcile mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence. `/idd-issue` creates one implementation-ready GitHub issue from evidence after explicit authorization; it does not implement, branch, or open a PR. `/idd` delivers one well-scoped live issue through native verification and a linked PR. `/idd-land` is the separate landing phase: direct invocation or one active explicit `/idd-auto` run may authorize it to squash-merge one validated PR, close its issue, clean its branches, and automatically reconcile an exact associated PRD tracker, but never bypass red gates. `/idd-auto` is the only full-loop implementation exception: one explicit invocation may privately bootstrap the exact missing implementation sibling of an existing clean PRD repository, then repeat the current plan, create, implement, and land phases for that exact pair, one issue at a time, until PRD implementation completion or a fail-closed blocker. `/idd-publish` is the separate publication phase: one explicit invocation may complete one publication-preparation issue and then make only the implementation repository public after exposure and anonymous-readback gates; its companion PRD remains private. No command creates golden-file suites, trace artifacts, mandatory review waves, deployment, speculative backlogs, or parallel delivery. `/idd-evolve` is separate methodology maintenance; no command adds methodology traces to project repositories.
 
+`/idd-acceptance` is the separate final integrated acceptance phase: it verifies the completed product at its real user-facing boundary and never deploys or changes the contract.
+
 ## Article 2 — Pass or nothing
 
 A candidate has two outcomes:
@@ -30,12 +32,14 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 - `skills/idd-auto/SKILL.md` ≤ 120 lines.
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - `skills/idd-publish/SKILL.md` ≤ 120 lines.
+- `skills/idd-acceptance/SKILL.md` ≤ 120 lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and a quality gate.
 - `/idd-plan` requires private-by-default greenfield publication with a draft-only opt-out, product-only clarification proportional to unresolved domain complexity, exact association for existing pairs, read-only default planning, at most one next issue, live-state authority, and tracker-only reconciliation.
 - `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back verification.
 - `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
 - `/idd-auto` requires explicit invocation, an exact PRD source and pair (privately bootstrapping only its uniquely missing implementation sibling), one active issue, current constituent gates, live-state resume, a final completion audit, and no publication invocation.
 - `/idd-publish` requires explicit invocation, an exact private pair, one preparation issue, an exposure audit, implementation-only visibility mutation, anonymous readback, and private PRD verification.
+- `/idd-acceptance` requires an exact completed pair, a real product boundary, complete applicable journeys, readiness and teardown evidence, failure classification, and no deployment or residual acceptance.
 - `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for planning, implementation, and issue-creation evidence.
 - Cross-references resolve and `bash scripts/validate.sh` passes.
 
