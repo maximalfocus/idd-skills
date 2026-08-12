@@ -64,6 +64,7 @@ grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" 
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
 grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
 grep -q 'scripts/resolve-prd-pair.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require an exact PRD pair" >&2; exit 1; }
+grep -q 'scripts/init-implementation.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must bootstrap a uniquely missing implementation sibling" >&2; exit 1; }
 grep -q 'Do not auto-apply `--accept-residuals`' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
 grep -q 'never invoked' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must not invoke publication" >&2; exit 1; }
 grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
@@ -79,6 +80,12 @@ bash -n "$root/scripts/test-init-prd.sh"
 [ -x "$root/scripts/init-prd.sh" ] || { echo "init-prd.sh must be executable" >&2; exit 1; }
 [ -x "$root/scripts/test-init-prd.sh" ] || { echo "test-init-prd.sh must be executable" >&2; exit 1; }
 bash "$root/scripts/test-init-prd.sh"
+
+bash -n "$root/scripts/init-implementation.sh"
+bash -n "$root/scripts/test-init-implementation.sh"
+[ -x "$root/scripts/init-implementation.sh" ] || { echo "init-implementation.sh must be executable" >&2; exit 1; }
+[ -x "$root/scripts/test-init-implementation.sh" ] || { echo "test-init-implementation.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-init-implementation.sh"
 
 bash -n "$root/scripts/land.sh"
 [ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }
