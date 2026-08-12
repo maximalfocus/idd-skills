@@ -72,6 +72,7 @@ grep -q 'idd-acceptance' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto mu
 grep -q 'Do not invoke `/idd-evolve` for a project defect' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must separate project defects from methodology evolution" >&2; exit 1; }
 grep -q 'real product boundary' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must use a real product boundary" >&2; exit 1; }
 grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
+grep -q 'defaulting to MIT' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must default unspecified licenses to MIT" >&2; exit 1; }
 grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
 
 bash -n "$root/scripts/resolve-prd-pair.sh"
