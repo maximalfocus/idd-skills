@@ -69,6 +69,7 @@ grep -q 'scripts/init-implementation.sh' "$root/skills/idd-auto/SKILL.md" || { e
 grep -q 'Do not auto-apply `--accept-residuals`' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
 grep -q 'never invoked' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must not invoke publication" >&2; exit 1; }
 grep -q 'idd-acceptance' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require final integrated acceptance" >&2; exit 1; }
+grep -q 'Do not invoke `/idd-evolve` for a project defect' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must separate project defects from methodology evolution" >&2; exit 1; }
 grep -q 'real product boundary' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must use a real product boundary" >&2; exit 1; }
 grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
 grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
