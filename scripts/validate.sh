@@ -74,6 +74,8 @@ grep -q 'real product boundary' "$root/skills/idd-acceptance/SKILL.md" || { echo
 grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
 grep -q 'defaulting to MIT' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must default unspecified licenses to MIT" >&2; exit 1; }
 grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
+grep -q 'companion PRD owner/name' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must denylist the private companion identity" >&2; exit 1; }
+grep -q 'advance its lifecycle status only when' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must preserve tracker lifecycle semantics" >&2; exit 1; }
 
 bash -n "$root/scripts/resolve-prd-pair.sh"
 bash -n "$root/scripts/test-resolve-prd-pair.sh"
