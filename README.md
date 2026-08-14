@@ -2,7 +2,7 @@
 
 Lightweight Issue-Driven Development for greenfield and existing software repositories.
 
-`/idd-plan` can bootstrap a private `{project}-prd` containing a concise PRD and progress tracker, choose one next issue from an existing convention-linked pair, or reconcile verified progress; `/idd-issue` creates that implementation-ready GitHub issue; `/idd` takes it through focused implementation, repository-native verification, commit, push, and a linked PR. `/idd-auto` can explicitly orchestrate those same current gates one issue at a time until the PRD implementation scope is complete. IDD deliberately does **not** create plan files, golden-file suites, trace artifacts, or per-wave reviews.
+`/idd-plan` can bootstrap a private `{project}-prd` containing a concise PRD and progress tracker — from requirements for a new product, or reconstructed from an already-implemented repository — choose one next issue from an existing convention-linked pair, or reconcile verified progress; `/idd-issue` creates that implementation-ready GitHub issue; `/idd` takes it through focused implementation, repository-native verification, commit, push, and a linked PR. `/idd-auto` can explicitly orchestrate those same current gates one issue at a time until the PRD implementation scope is complete. IDD deliberately does **not** create plan files, golden-file suites, trace artifacts, or per-wave reviews.
 
 Normal lifecycle: `/idd-plan` → `/idd-issue` → `/idd` → optional `/peerreview` → `/idd-land`. Landing automatically commits verified lifecycle progress to the associated PRD repository; `/idd-plan --reconcile` exists only for repair or explicit resynchronization.
 
@@ -12,7 +12,7 @@ Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocatio
 
 | Skill | Purpose |
 |---|---|
-| `/idd-plan [project-name\|--reconcile]` | Bootstrap a private product contract, recommend one next issue, or repair its tracker |
+| `/idd-plan [project-name\|--reconstruct\|--reconcile]` | Bootstrap a private product contract from requirements or implemented source, recommend one next issue, or repair its tracker |
 | `/idd-issue <request> [--repo OWNER/REPO]` | Create one evidence-backed, duplicate-checked GitHub issue |
 | `/idd <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
@@ -40,7 +40,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 
 ## Layout
 
-- `skills/idd-plan/SKILL.md` — greenfield product-contract bootstrap, next-issue planning, and reconciliation
+- `skills/idd-plan/SKILL.md` — greenfield and reconstructed product-contract bootstrap, next-issue planning, and reconciliation
 - `skills/idd-issue/SKILL.md` — evidence-backed issue creation workflow
 - `skills/idd/SKILL.md` — issue implementation workflow
 - `skills/idd-land/SKILL.md` — explicit landing workflow

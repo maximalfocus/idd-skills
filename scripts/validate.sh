@@ -60,6 +60,9 @@ grep -q 'at most one next issue' "$root/CONSTITUTION.md" || { echo "constitution
 grep -q 'product-only clarification' "$root/CONSTITUTION.md" || { echo "constitution must bound greenfield questions" >&2; exit 1; }
 grep -q 'draft-only opt-out' "$root/CONSTITUTION.md" || { echo "constitution must define greenfield publication default" >&2; exit 1; }
 grep -q 'unless the user explicitly asks for draft-only output' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must publish greenfield PRDs by default" >&2; exit 1; }
+grep -q '^## Reconstruct mode' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must reconstruct a PRD from implemented source" >&2; exit 1; }
+grep -q 'never invent issue numbers' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must not invent lifecycle evidence" >&2; exit 1; }
+grep -q 'reconstruct' "$root/CONSTITUTION.md" || { echo "constitution must authorize the reconstruct bootstrap" >&2; exit 1; }
 grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
