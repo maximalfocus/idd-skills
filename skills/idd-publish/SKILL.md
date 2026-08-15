@@ -14,7 +14,7 @@ An explicit `/idd-publish` invocation authorizes the final visibility mutation f
 
 1. Resolve the exact pair with `scripts/resolve-prd-pair.sh`. Require matching origins, authenticated GitHub access, clean default branches, and both repositories currently private. Read `PRD.md`, `PROGRESS.md`, live issues/PRs, and repository instructions.
 2. Resume one uniquely active publication issue/PR; otherwise execute `/idd-plan` for the next publication requirement, then `/idd-issue`, `/idd`, and `/idd-land`. Preserve every constituent duplicate, acceptance, verification, review, merge, cleanup, and reconciliation gate. Never parallelize or invent requirements.
-3. Before publication, require a license, defaulting to MIT when the project does not specify one, plus public-safe documentation, a green repository-native gate and end-to-end check, and no unresolved product or legal decision. The preparation issue must be landed while the implementation repository is still private.
+3. Before publication, require a license, defaulting to MIT when the project does not specify one, plus public-safe documentation, a green repository-native gate and end-to-end check, and no unresolved product or legal decision. The preparation issue must be landed while the implementation repository is still private. Run the publication gate's denylist and secret scan over the preparation change before pushing it, including any guard or test that names a forbidden term in order to forbid it; once merged, a match survives in the provider's retained pull-request refs, which no history rewrite can reach.
 
 ## Publication gate
 
