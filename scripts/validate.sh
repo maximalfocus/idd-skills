@@ -64,6 +64,8 @@ grep -q '^## Reconstruct mode' "$root/skills/idd-plan/SKILL.md" || { echo "idd-p
 grep -q 'never invent issue numbers' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must not invent lifecycle evidence" >&2; exit 1; }
 grep -q 'reconstruct' "$root/CONSTITUTION.md" || { echo "constitution must authorize the reconstruct bootstrap" >&2; exit 1; }
 grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
+grep -q 'current status rather than an accumulated delivery log' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must keep the tracker current, not append-only" >&2; exit 1; }
+grep -q 'current-status checkpoint rather than an append-only log' "$root/CONSTITUTION.md" || { echo "constitution must bound tracker growth" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
 grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }

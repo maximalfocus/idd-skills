@@ -34,7 +34,7 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 - `skills/idd-publish/SKILL.md` ≤ 120 lines.
 - `skills/idd-acceptance/SKILL.md` ≤ 120 lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and a quality gate.
-- `/idd-plan` requires private-by-default bootstrap publication with a draft-only opt-out, product-only clarification proportional to unresolved domain complexity, source-traceable descriptive requirements and evidence-bound historical slices when reconstructing from an implemented repository, exact association for existing pairs, read-only default planning, at most one next issue, live-state authority, and tracker-only reconciliation.
+- `/idd-plan` requires private-by-default bootstrap publication with a draft-only opt-out, product-only clarification proportional to unresolved domain complexity, source-traceable descriptive requirements and evidence-bound historical slices when reconstructing from an implemented repository, exact association for existing pairs, read-only default planning, at most one next issue, live-state authority, and tracker-only reconciliation that keeps the tracker a current-status checkpoint rather than an append-only log.
 - `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back verification.
 - `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
 - `/idd-auto` requires explicit invocation, an exact PRD source and pair (privately bootstrapping only its uniquely missing implementation sibling), one active issue, current constituent gates, live-state resume, a final completion audit, and no publication invocation.
