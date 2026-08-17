@@ -39,7 +39,7 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 - `/idd-land` requires explicit invocation, an acceptance/residual gate, and verified postconditions.
 - `/idd-auto` requires explicit invocation, an exact PRD source and pair (privately bootstrapping only its uniquely missing implementation sibling), one active issue, current constituent gates, live-state resume, a final completion audit, and no publication invocation.
 - `/idd-auto` acceptance failures must distinguish an accepted-requirement repair issue from a genuinely new or changed requirement; only the latter pauses for explicit scope authorization and PRD/slice revision, and project defects never invoke `/idd-evolve`.
-- `/idd-publish` requires explicit invocation, an exact private pair, one preparation issue, an exposure audit, implementation-only visibility mutation, anonymous readback, and private PRD verification.
+- `/idd-publish` requires explicit invocation, an exact private pair, one preparation issue, a scripted exposure audit covering every commit message and retained pull-request ref with denylist terms matched by bare stem, implementation-only visibility mutation, anonymous readback, and private PRD verification.
 - `/idd-acceptance` requires an exact completed pair, a real product boundary, complete applicable journeys, readiness and teardown evidence, failure classification, and no deployment or residual acceptance.
 - `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for planning, implementation, and issue-creation evidence.
 - Cross-references resolve and `bash scripts/validate.sh` passes.

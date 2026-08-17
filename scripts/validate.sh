@@ -80,6 +80,11 @@ grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md"
 grep -q 'defaulting to MIT' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must default unspecified licenses to MIT" >&2; exit 1; }
 grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
 grep -q 'companion PRD owner/name' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must denylist the private companion identity" >&2; exit 1; }
+grep -q 'scripts/scan-exposure.sh' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must run the scripted exposure scan" >&2; exit 1; }
+grep -q 'bare stem, never anchored to a file extension' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must match denylist terms by bare stem" >&2; exit 1; }
+grep -q 'A commit-message match is always that blocker' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must treat a commit-message match as unpurgeable" >&2; exit 1; }
+grep -q 'permanent provider surfaces' "$root/skills/idd/SKILL.md" || { echo "idd must keep private companion material out of permanent provider text" >&2; exit 1; }
+grep -q 'matched by bare stem' "$root/CONSTITUTION.md" || { echo "constitution must bound denylist term form" >&2; exit 1; }
 grep -q 'advance its lifecycle status only when' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must preserve tracker lifecycle semantics" >&2; exit 1; }
 
 bash -n "$root/scripts/resolve-prd-pair.sh"
@@ -101,6 +106,12 @@ bash "$root/scripts/test-init-implementation.sh"
 
 bash -n "$root/skills/idd-acceptance/scripts/static-gate.sh"
 [ -x "$root/skills/idd-acceptance/scripts/static-gate.sh" ] || { echo "acceptance static gate must be executable" >&2; exit 1; }
+
+bash -n "$root/scripts/scan-exposure.sh"
+bash -n "$root/scripts/test-scan-exposure.sh"
+[ -x "$root/scripts/scan-exposure.sh" ] || { echo "scan-exposure.sh must be executable" >&2; exit 1; }
+[ -x "$root/scripts/test-scan-exposure.sh" ] || { echo "test-scan-exposure.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-scan-exposure.sh"
 
 bash -n "$root/scripts/land.sh"
 [ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }

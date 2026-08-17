@@ -52,4 +52,6 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `scripts/init-prd.sh` — validate, commit, and privately publish a greenfield PRD/tracker
 - `scripts/land.sh` — deterministic squash/close/branch-cleanup lifecycle
 - `scripts/test-land.sh` — isolated mock lifecycle + idempotency test
+- `scripts/scan-exposure.sh` — fail-closed publication scan of every commit message and blob across all refs
+- `scripts/test-scan-exposure.sh` — isolated denylist, commit-message, and secret-pattern test
 - `scripts/validate.sh` — structural and lifecycle validation
