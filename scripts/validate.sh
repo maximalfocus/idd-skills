@@ -62,10 +62,12 @@ grep -q 'draft-only opt-out' "$root/CONSTITUTION.md" || { echo "constitution mus
 grep -q 'unless the user explicitly asks for draft-only output' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must publish greenfield PRDs by default" >&2; exit 1; }
 grep -q '^## Reconstruct mode' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must reconstruct a PRD from implemented source" >&2; exit 1; }
 grep -q 'never invent issue numbers' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must not invent lifecycle evidence" >&2; exit 1; }
+grep -q 'one verified implementation baseline' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must collapse implemented scope to one baseline" >&2; exit 1; }
+grep -q 'never turn each past commit' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must not create historical delivery rows" >&2; exit 1; }
 grep -q 'reconstruct' "$root/CONSTITUTION.md" || { echo "constitution must authorize the reconstruct bootstrap" >&2; exit 1; }
 grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
-grep -q 'current status rather than an accumulated delivery log' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must keep the tracker current, not append-only" >&2; exit 1; }
-grep -q 'current-status checkpoint rather than an append-only log' "$root/CONSTITUTION.md" || { echo "constitution must bound tracker growth" >&2; exit 1; }
+grep -q 'implementation control panel' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must keep progress implementation-focused" >&2; exit 1; }
+grep -q 'implementation control panel rather than a commit or delivery log' "$root/CONSTITUTION.md" || { echo "constitution must keep progress out of history tracking" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
 grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
