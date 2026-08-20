@@ -45,7 +45,7 @@ Development fallback for contributors working from a persistent checkout:
 bash scripts/install.sh
 ```
 
-This fallback creates absolute symlinks in `~/.agents/skills/`, `~/.claude/skills/`, and `${CODEX_HOME:-~/.codex}/skills/`; moving or deleting the checkout breaks those links. OpenCode and Pi discover the shared `~/.agents/skills/` installation natively.
+This fallback creates absolute symlinks in `~/.agents/skills/`, `~/.claude/skills/`, and `${CODEX_HOME:-~/.codex}/skills/`; moving or deleting the checkout breaks those links. It preflights the complete destination set before mutation and rolls back links created by a failed invocation. OpenCode and Pi discover the shared `~/.agents/skills/` installation natively.
 
 | Runner | Invoke |
 |---|---|
@@ -67,6 +67,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `CONSTITUTION.md` — evolution law and size gates
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them
 - `scripts/install.sh` — development-only cross-runner symlink installer
+- `scripts/test-install.sh` — isolated preflight, rollback, clean-install, and idempotency regression gate
 - `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh` — checkout compatibility wrappers for bundled scripts
 - `scripts/test-land.sh` — isolated mock lifecycle + idempotency test
 - `scripts/scan-exposure.sh`, `scripts/test-scan-exposure.sh` — checkout wrappers for the bundled publication scan and tests
