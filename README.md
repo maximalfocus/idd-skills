@@ -19,7 +19,7 @@ Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocatio
 | `/idd-auto <project-name-or-path>` | Sequentially finish an exact PRD-linked project through the existing gated lifecycle |
 | `/idd-evolve [post-plan\|post-create\|post-issue\|simplify]` | Filter proven run lessons into IDD; rejected candidates leave no log |
 
-The workflow was initially derived from implementing [Reporting-Platform issue #6](https://github.com/yubin-[removed]/Reporting-Platform/issues/6): live issue/comments as intent, a clean issue branch, exhaustive entry-point search, repository-native tests, explicit separation of introduced versus baseline failures, and smoke-testing the built runtime boundary. Its first evolve pass absorbed an implementation-proven runtime-flag gap: verify precedence, invalid values, unsupported profiles, and baked behavior when startup hooks are bypassed.
+The workflow was initially derived from a production implementation issue: live issue/comments as intent, a clean issue branch, exhaustive entry-point search, repository-native tests, explicit separation of introduced versus baseline failures, and smoke-testing the built runtime boundary. Its first evolve pass absorbed an implementation-proven runtime-flag gap: verify precedence, invalid values, unsupported profiles, and baked behavior when startup hooks are bypassed.
 
 ## Install
 
