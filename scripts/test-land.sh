@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+land_script="${LAND_SCRIPT:-$root/scripts/land.sh}"
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 mkdir "$tmp/bin"
 git init --bare "$tmp/origin.git" -q
@@ -41,7 +42,7 @@ fi
 FAKE
 chmod +x "$tmp/bin/gh"
 
-run() { PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$root/scripts/land.sh" maximalfocus/test 3 13 >/dev/null; }
+run() { PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 >/dev/null; }
 
 # Fail before the remote merge when the eventual ff-only default-branch refresh is impossible.
 git branch -f main issue/3-test
