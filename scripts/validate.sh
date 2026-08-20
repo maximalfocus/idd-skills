@@ -49,6 +49,12 @@ done
 # Pi and OpenCode both discover the shared .agents installation.
 [ -L "$install_home/.agents/skills/idd" ] || { echo "Missing shared Pi/OpenCode install" >&2; exit 1; }
 
+bash -n "$root/scripts/install.sh"
+bash -n "$root/scripts/test-install.sh"
+[ -x "$root/scripts/install.sh" ] || { echo "install.sh must be executable" >&2; exit 1; }
+[ -x "$root/scripts/test-install.sh" ] || { echo "test-install.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-install.sh"
+
 grep -q 'explicit request' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must require explicit creation authority" >&2; exit 1; }
 grep -q 'open and closed issues' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must search open and closed issues" >&2; exit 1; }
 grep -q 'gh issue view' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must verify the created issue" >&2; exit 1; }
