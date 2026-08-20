@@ -2,7 +2,6 @@
 name: idd-issue
 description: "Create one implementation-ready GitHub issue in an existing repository from user-provided evidence. Use when the user explicitly asks to file, create, or open an issue; drafting alone never mutates GitHub."
 compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
-argument-hint: "[request] [--repo OWNER/REPO]"
 ---
 
 # /idd-issue — create one implementation-ready issue

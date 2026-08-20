@@ -1,9 +1,7 @@
 ---
 name: idd-auto
-description: "Autonomously finish an exact convention-linked IDD project by planning, creating, implementing, and landing one issue at a time until its PRD implementation scope is complete or a fail-closed blocker requires the user."
+description: "User-invoked autonomous completion of an exact convention-linked IDD project, delivering one issue at a time until PRD implementation scope is complete or a fail-closed blocker requires the user."
 compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
-disable-model-invocation: true
-argument-hint: "[project-name|repository-path]"
 ---
 
 # /idd-auto — finish one PRD-driven project
@@ -14,8 +12,8 @@ An explicit `/idd-auto` invocation authorizes private creation of the uniquely m
 
 ## Orient and bind the completion target
 
-1. Resolve this skill's physical source repository and read the current `idd-plan`, `idd-issue`, `idd`, and `idd-land` skill sources in full. Execute their procedures and scripts rather than copying stale phase logic. Their standalone completion messages become internal phase transitions while this orchestrator remains active.
-2. Resolve the supplied project name/path or current checkout with `scripts/resolve-prd-pair.sh`. When starting from an existing clean PRD repository whose exact implementation sibling alone is absent, run `scripts/init-implementation.sh` and read back its private remote, initial commit, and clean sibling checkout; ambiguity or any other missing pair state still stops. Require matching GitHub origins, authentication, repository instructions, and clean trees; an existing clean issue branch may be resumed only when live state binds it uniquely to the one active issue.
+1. Resolve this installed skill directory and its sibling `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance` directories in the same installation root. Read their current skill sources in full and execute their procedures and bundled scripts rather than copying stale phase logic. A missing sibling is an incomplete composite installation and stops with the exact required skill names. Their standalone completion messages become internal phase transitions while this orchestrator remains active.
+2. Resolve the supplied project name/path or current checkout with the sibling `idd-plan/scripts/resolve-prd-pair.sh`. When starting from an existing clean PRD repository whose exact implementation sibling alone is absent, run `idd-plan/scripts/init-implementation.sh` and read back its private remote, initial commit, and clean sibling checkout; ambiguity or any other missing pair state still stops. Require matching GitHub origins, authentication, repository instructions, and clean trees; an existing clean issue branch may be resumed only when live state binds it uniquely to the one active issue.
 3. Pull clean default branches with `--ff-only`. Read `PRD.md`, `PROGRESS.md`, live issues/comments, PRs/reviews/checks, closing links, and squash commits. GitHub owns lifecycle truth; the PRD owns accepted requirements and dependency/release boundaries; the tracker is reconciled evidence, not permission to skip either.
 4. Define completion as every accepted implementation requirement in the PRD mapped to landed or validated tracker evidence, with no corresponding open issue or PR. Preserve `Landed` versus `Validated`; deployment, publication, or a product decision that cannot be completed by this issue workflow is an external blocker. A user may separately invoke `$idd-publish <project>` after this command finishes.
 

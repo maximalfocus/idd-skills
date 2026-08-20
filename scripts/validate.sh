@@ -12,7 +12,6 @@ validate_skill() {
   [ "$(head -1 "$skill")" = "---" ] || { echo "Missing YAML frontmatter: $name" >&2; exit 1; }
   grep -q "^name: $name$" "$skill" || { echo "Invalid skill name: $name" >&2; exit 1; }
   grep -q '^description: ' "$skill" || { echo "Missing description: $name" >&2; exit 1; }
-  grep -q '^argument-hint: ' "$skill" || { echo "Missing argument hint: $name" >&2; exit 1; }
   grep -q '^compatibility: ' "$skill" || { echo "Missing compatibility declaration: $name" >&2; exit 1; }
   grep -Eq '^## (GATE|.*[Gg]ate)' "$skill" || { echo "Missing quality gate: $name" >&2; exit 1; }
   local lines
@@ -30,7 +29,7 @@ validate_skill idd-evolve 80
 validate_skill idd-publish 120
 validate_skill idd-acceptance 120
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
-grep -q '../../CONSTITUTION.md' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must read the constitution" >&2; exit 1; }
+grep -q 'explicit target or current checkout' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must resolve the target methodology checkout" >&2; exit 1; }
 
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
@@ -121,6 +120,10 @@ grep -q 'scripts/land.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land m
 grep -q 'explicit invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must require explicit invocation" >&2; exit 1; }
 grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate residual acceptance" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
+
+bash -n "$root/scripts/test-portable-install.sh"
+[ -x "$root/scripts/test-portable-install.sh" ] || { echo "test-portable-install.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-portable-install.sh"
 
 git -C "$root" diff --check
 echo "idd skills valid for Claude Code, Codex, Pi, and OpenCode"

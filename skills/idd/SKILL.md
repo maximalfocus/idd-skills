@@ -2,8 +2,6 @@
 name: idd
 description: "Issue-Driven Development for an existing software repository: take one well-scoped GitHub issue from live issue intent through a focused implementation, repository-native tests, commit, push, and linked PR. Use when the user says /idd, asks to implement/fix issue N, or provides a GitHub issue URL and wants a lightweight alternative to CDD."
 compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
-disable-model-invocation: true
-argument-hint: "[issue-number|github-issue-url]"
 ---
 
 # /idd — implement one issue, without the CDD artifact pipeline

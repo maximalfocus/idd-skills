@@ -1,9 +1,7 @@
 ---
 name: idd-evolve
-description: "IDD methodology evolution — filter lessons from real planning, issue creation, or implementation through the constitution: pass → edit and publish; fail → do nothing. No logs."
+description: "User-invoked IDD methodology evolution for an idd-skills checkout: filter proven lessons through its constitution; pass edits and publishes, fail does nothing. No logs."
 compatibility: "Requires git; works with Claude Code, Codex, Pi, and OpenCode."
-disable-model-invocation: true
-argument-hint: "[post-plan|post-create|post-issue|simplify]"
 ---
 
 # /idd-evolve — evolve Issue-Driven Development
@@ -12,7 +10,7 @@ Improve the IDD methodology from real use without growing `/idd` into CDD. A can
 
 ## First: read the constitution
 
-Resolve this installed skill directory to its physical source path, then read [`../../CONSTITUTION.md`](../../CONSTITUTION.md) from that source repository. Do not resolve the link relative to a harness symlink such as `~/.claude/skills/idd-evolve`. Then read the skill files and their history (`git log --oneline -- skills/<name>/SKILL.md`) before changing anything. The constitution governs scope, evidence, size, deterministic scripting, and publication.
+Resolve the explicit target or current checkout as the `idd-skills` methodology source repository; require its root `CONSTITUTION.md`, `skills/`, `scripts/validate.sh`, git history, and matching remote before changing anything. Read that target repository's constitution, skill files, and history (`git log --oneline -- skills/<name>/SKILL.md`). The installed skill is the workflow definition, never an implicit mutation target. The target constitution governs scope, evidence, size, deterministic scripting, and publication.
 
 ## Step 0 — reconstruct evidence
 

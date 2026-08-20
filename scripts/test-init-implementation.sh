@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+init_implementation_script="${INIT_IMPLEMENTATION_SCRIPT:-$root/scripts/init-implementation.sh}"
 tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
 mkdir "$tmp/bin" "$tmp/widget-prd"
 git -C "$tmp/widget-prd" init -q -b main
@@ -31,7 +32,7 @@ esac
 EOF
 chmod +x "$tmp/bin/gh"
 export PATH="$tmp/bin:$PATH" MOCK_CREATED="$tmp/created" MOCK_PARENT="$tmp"
-output="$(bash "$root/scripts/init-implementation.sh" "$tmp/widget-prd")"
+output="$(bash "$init_implementation_script" "$tmp/widget-prd")"
 grep -q "^implementation=$tmp/widget$" <<<"$output"
 grep -q '^repository=https://github.com/example/widget$' <<<"$output"
 grep -q '^visibility=PRIVATE$' <<<"$output"

@@ -23,11 +23,29 @@ The workflow was initially derived from a production implementation issue: live 
 
 ## Install
 
+Install the complete suite with the cross-agent Skills CLI:
+
+```sh
+npx skills add maximalfocus/idd-skills --skill '*'
+```
+
+Add `-g` for a user-wide installation or `-a codex -a claude-code -a opencode -a pi` to select agents explicitly. The default copied installation is self-contained and remains usable after the downloaded source or temporary clone is removed.
+
+Selective install is supported for standalone skills:
+
+```sh
+npx skills add maximalfocus/idd-skills --skill idd-issue
+```
+
+Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance`; `idd-land` requires `idd-plan`; `idd-publish` requires `idd-plan`, `idd-issue`, `idd`, and `idd-land`. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
+
+Development fallback for contributors working from a persistent checkout:
+
 ```sh
 bash scripts/install.sh
 ```
 
-This symlinks all portable Agent Skills sources into `~/.agents/skills/`, `~/.claude/skills/`, and `${CODEX_HOME:-~/.codex}/skills/`. OpenCode discovers the `~/.agents/skills/` installation natively, so the installer deliberately does not create a duplicate under `~/.config/opencode/skills/`.
+This fallback creates absolute symlinks in `~/.agents/skills/`, `~/.claude/skills/`, and `${CODEX_HOME:-~/.codex}/skills/`; moving or deleting the checkout breaks those links. OpenCode and Pi discover the shared `~/.agents/skills/` installation natively.
 
 | Runner | Invoke |
 |---|---|
@@ -47,11 +65,10 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-auto/SKILL.md` — autonomous one-issue-at-a-time PRD completion loop
 - `skills/idd-evolve/SKILL.md` — pass-or-nothing evolution workflow
 - `CONSTITUTION.md` — evolution law and size gates
-- `scripts/install.sh` — cross-runner symlink installer
-- `scripts/resolve-prd-pair.sh` — deterministic `{project}` ↔ `{project}-prd` association
-- `scripts/init-prd.sh` — validate, commit, and privately publish a greenfield PRD/tracker
-- `scripts/land.sh` — deterministic squash/close/branch-cleanup lifecycle
+- `skills/*/scripts/` — runtime resources bundled with the skills that own them
+- `scripts/install.sh` — development-only cross-runner symlink installer
+- `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh` — checkout compatibility wrappers for bundled scripts
 - `scripts/test-land.sh` — isolated mock lifecycle + idempotency test
-- `scripts/scan-exposure.sh` — fail-closed publication scan of every commit message and blob across all refs
-- `scripts/test-scan-exposure.sh` — isolated denylist, commit-message, and secret-pattern test
+- `scripts/scan-exposure.sh`, `scripts/test-scan-exposure.sh` — checkout wrappers for the bundled publication scan and tests
+- `scripts/test-portable-install.sh` — isolated standard-copy and installed-runtime regression gate
 - `scripts/validate.sh` — structural and lifecycle validation

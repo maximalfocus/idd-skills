@@ -1,9 +1,7 @@
 ---
 name: idd-land
-description: "Land one completed IDD issue after direct explicit invocation or as the gated landing phase of an explicitly invoked idd-auto run: validate its linked PR and acceptance state, squash-merge, close the issue, update the default branch, and delete the remote/local feature branch."
+description: "User-invoked landing of one completed IDD issue, or the gated landing phase of idd-auto: validate its PR, squash-merge, close, refresh, and delete its feature branch."
 compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
-disable-model-invocation: true
-argument-hint: "[issue-number|github-issue-url] [--pr N] [--accept-residuals]"
 ---
 
 # /idd-land — explicitly land one completed issue
@@ -20,7 +18,7 @@ Take one issue number/URL from the invocation or user request. Optional `--pr N`
 2. Read the live issue and comments. Allow `OPEN`; allow `CLOSED` only when resuming a partially completed landing whose linked PR is already merged.
 3. Resolve PRs from the issue's cross-references and closing references. Require exactly one same-repository PR unless `--pr N` was supplied, and verify the chosen PR actually references the issue. Never guess between multiple candidates.
 4. Read the chosen PR's body, reviews, checks, merge state, draft state, base/head refs, and linked issue. Require `OPEN` or already `MERGED`, same-repository head branch, expected default base, no requested changes, `mergeable=MERGEABLE`, and every reported check completed successfully/skipped/neutral. A closed-unmerged PR stops.
-5. Resolve this skill's physical source repository and run `scripts/resolve-prd-pair.sh`. Exit 3 means no associated PRD and landing proceeds without reconciliation. When a pair is found, require the PRD checkout to be clean, on its default branch, correctly associated, and able to fast-forward; pre-resolve the issue's exact tracker row or an explicit no-applicable-row result. Ambiguity stops before GitHub mutation.
+5. Resolve the sibling `idd-plan` skill in the same installation root and run its bundled `scripts/resolve-prd-pair.sh`. Exit 3 means no associated PRD and landing proceeds without reconciliation. A missing sibling is an incomplete installation and stops. When a pair is found, require the PRD checkout to be clean, on its default branch, correctly associated, and able to fast-forward; pre-resolve the issue's exact tracker row or an explicit no-applicable-row result. Ambiguity stops before GitHub mutation.
 
 ## Step 1 — acceptance and residual gate
 
@@ -35,10 +33,10 @@ Reconcile every issue checkbox/acceptance item against the PR body, verification
 Immediately before mutation, re-read PR state/checks and `git status`. Confirm the issue number, PR number, repository, base branch, and feature branch in chat. Then invoke the deterministic landing script:
 
 ```sh
-bash /absolute/path/to/idd-skills/scripts/land.sh OWNER/REPO ISSUE PR
+bash /absolute/path/to/installed/idd-land/scripts/land.sh OWNER/REPO ISSUE PR
 ```
 
-Resolve the script from this skill's physical source repository, not from the project checkout. Do not hand-reimplement its sequence.
+Resolve the script from this installed skill directory, not from the project checkout. Do not hand-reimplement its sequence.
 
 ## Step 2 — verify the landed state
 

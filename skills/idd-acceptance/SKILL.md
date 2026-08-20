@@ -1,9 +1,7 @@
 ---
 name: idd-acceptance
-description: "Run the final integrated, user-facing acceptance boundary for a completed IDD project and return evidence-backed pass or a classified failure."
+description: "User-invoked final integrated acceptance for a completed IDD project, returning an evidence-backed pass or classified failure. Use only after implementation scope has landed."
 compatibility: "Requires the repository's native test/runtime tools; use Playwright, HTTP, CLI, library, container, or migration checks as the product boundary requires."
-disable-model-invocation: true
-argument-hint: "[project-name|repository-path]"
 ---
 
 # /idd-acceptance — final integrated acceptance

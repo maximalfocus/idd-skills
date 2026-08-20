@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+init_prd_script="${INIT_PRD_SCRIPT:-$root/scripts/init-prd.sh}"
 tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
 mkdir "$tmp/bin" "$tmp/demo-prd"; : >"$tmp/demo-prd/PRD.md"; : >"$tmp/demo-prd/PROGRESS.md"
 git init -q --bare "$tmp/remote.git"
@@ -24,7 +25,7 @@ chmod +x "$tmp/bin/gh"
 export PATH="$tmp/bin:$PATH" MOCK_CREATED="$tmp/created" MOCK_REMOTE="$tmp/remote.git"
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.com
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.com
-output="$(bash "$root/scripts/init-prd.sh" "$tmp/demo-prd" example/demo-prd)"
+output="$(bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd)"
 grep -q '^repository=https://github.com/example/demo-prd$' <<<"$output"
 [ "$(git -C "$tmp/demo-prd" ls-files | tr '\n' ' ')" = "PRD.md PROGRESS.md " ]
 [ "$(git --git-dir="$tmp/remote.git" rev-parse main)" = "$(git -C "$tmp/demo-prd" rev-parse HEAD)" ]
