@@ -49,3 +49,9 @@ Over cap means compress in the same change or revert.
 ## Article 6 — Commit and publish
 
 Every kept evolution reaches `maximalfocus/idd-skills` on `main`. Stage only explicit task-owned paths; never `git add -A`. Pull/rebase before committing, use a meaningful `evolve:` or `fix:` message, never force-push, and push normally. Greenfield `/idd-plan` authorizes the initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land` or `/idd-auto` authority permits automatic verified `PROGRESS.md` commit/push in the exact associated PRD repository. Failure after merge is disclosed and resumable. Project repositories otherwise remain governed by their own review policy.
+
+## Article 7 — Preserve conceptual integrity
+
+Treat the PRD as one coherent design contract: its concepts and names are consistent, its domain boundary and non-goals are explicit, and its slices partition that domain instead of adding convenience rooms. Every slice states how it preserves or extends the model, is independently deliverable, and never requires a later slice's deliverable.
+
+Issues and implementations are model-consistent by default. Prefer the smallest coherent change that keeps established patterns and public contracts whole over a cheaper one-off; a novel concept, special case, boundary move, or fragmenting convenience feature is a named design decision and recorded model extension, never a quiet deviation. Final acceptance judges the integrated product at its real boundary for contradictions, out-of-domain surplus, and surprise paths, not merely journey-by-journey success. Planning, creation, implementation, landing, automation, acceptance, and evolution must reject unrecorded fragmentation. This is a judgment gate, not authority to create plan files, checklists, trace records, or another artifact pipeline.

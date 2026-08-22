@@ -26,7 +26,7 @@ For **simplify**, measure skill sizes and find duplicated, unused, or tool-speci
 
 For each candidate:
 
-1. Apply every constitution article. Reject anything speculative, already covered, project-specific, or incompatible with IDD's lightweight boundary; record nothing.
+1. Apply every constitution article. Reject anything speculative, already covered, project-specific, incompatible with IDD's lightweight boundary, or weakening conceptual integrity by adding a convenience feature or cheap one-off without a recorded design decision; record nothing.
 2. Make the smallest edit that fixes the proven gap, replacing existing prose where possible. Put mechanically deterministic behavior in `scripts/`, not prose.
 3. Run `bash scripts/validate.sh`; verify references, diff, and size caps. Revert a candidate that fails or adds more complexity than capability.
 4. Pull/rebase `origin/main`, stage only explicit changed paths, commit with a meaningful `evolve:` or `fix:` message, and push `main`. Never force-push.
