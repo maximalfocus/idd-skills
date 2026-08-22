@@ -24,6 +24,8 @@ Take one issue number/URL from the invocation or user request. Optional `--pr N`
 
 Reconcile every issue checkbox/acceptance item against the PR body, verification evidence, and current repository state. Search explicitly for `Refs`, remaining gates, skipped/not-run checks, caveats, and residuals.
 
+Confirm the completed change fits the product model before merge: established concepts, naming, domain boundary, and public contracts remain coherent; any novel concept, special case, boundary move, or fragmenting convenience feature is an explicit design decision in the issue or PR. An unrecorded departure is an unproved acceptance item, not a cheap fix to land.
+
 - All acceptance proved: proceed.
 - Any item unproved: stop, list it, and require a fresh explicit `/idd-land … --accept-residuals` invocation.
 - With `--accept-residuals`: restate the exact accepted gaps, then proceed. Never reinterpret the flag as proof or hide the gaps from the completion report.

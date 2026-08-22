@@ -29,8 +29,10 @@ Follow the repository template. If none exists, use only the sections that add i
 
 Use existing labels only when clearly justified. Exclude credentials, account names, home paths, and unrelated follow-ups. Write multiline bodies through `gh issue create --body-file`, not shell interpolation.
 
+Default to an outcome that fits the product's established concepts, names, domain boundary, and public contracts. If the request introduces a novel concept, special case, boundary move, or convenience feature that would fragment that model, name it as a design decision and model extension in the issue; never encode an ad-hoc bump or quiet deviation.
+
 ## GATE — create and verify exactly one issue
 
-Before creation, require a coherent single issue, a completed duplicate search, evidence-backed claims, and acceptance criteria sufficient to judge completion. If creation returns an ambiguous result, search before retrying so a timeout cannot create a duplicate.
+Before creation, require a coherent single issue, a completed duplicate search, evidence-backed claims, acceptance criteria sufficient to judge completion, and either model consistency or an explicit recorded design decision for the departure. If creation returns an ambiguous result, search before retrying so a timeout cannot create a duplicate.
 
 Create once, then read the issue back with `gh issue view`. Verify its repository, title, body, labels, `OPEN` state, and canonical URL. Report only the created issue number, title, URL, and any deliberately omitted uncertainty.

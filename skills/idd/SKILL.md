@@ -36,7 +36,7 @@ Inspect code and discoverable facts before asking questions. Ask only when confl
 ## Step 2 — inspect narrowly, then implement
 
 1. Trace the affected path end-to-end before editing: entry point → logic/config → dependency boundary → user-visible or operational result. Search every entry point named by the issue; “hide/disable all” requires an exhaustive search, not one obvious button.
-2. Follow existing patterns and keep the smallest coherent diff. Preserve public contracts unless the issue changes them. Update repository documentation only where it is a maintained source of truth or the issue requires a recorded decision.
+2. Preserve the conceptual model over the cheapest change. Follow existing patterns and keep the smallest coherent diff that keeps those patterns and public contracts whole; when two paths fit, prefer the one that extends the established model rather than one that introduces a one-off room. Preserve public contracts unless the issue changes them. If a change requires a novel concept, special case, boundary move, or fragmenting convenience feature, treat it as a model extension and state the design decision in the PR or commit, never as a quiet deviation. Update repository documentation only where it is a maintained source of truth or the issue requires a recorded decision.
 3. Add tests at the acceptance boundary. Prefer a regression test for a bug and focused behavior tests for a feature. Do not rewrite tests to bless incorrect behavior or broaden into unrelated cleanup.
 4. Treat security, auth, secrets, migrations, runtime flags, and destructive operations as high-risk. Fail closed where the issue requires it; never commit credentials or weaken safeguards to make a test pass.
 5. Keep scope honest. If implementation reveals a distinct follow-up, leave it out and report it; do not silently turn one issue into a refactor campaign.
@@ -69,6 +69,7 @@ Before delivery:
 - verify no unrelated files, generated junk, secrets, debug code, or accidental lockfile changes;
 - rerun the load-bearing issue checks after the final edit;
 - when retiring a stub, flag, or profile restriction, exhaustively search source and maintained docs for superseded status markers; qualify same-named components across stacks.
+- verify the change fits the existing model: no new concept, special case, boundary move, or fragmenting convenience feature that the issue did not record as a design decision; no surprise path added as a side effect; and nothing that covers more domain than the model intends.
 
 If any acceptance item is ambiguous or unproved, stop claiming completion and say so; a reviewable implementation may still open a non-closing PR.
 

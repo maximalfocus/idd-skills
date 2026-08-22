@@ -8,6 +8,8 @@ Normal lifecycle: `/idd-plan` → `/idd-issue` → `/idd` → optional `/peerrev
 
 Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocation repeatedly selects, creates, implements, verifies, lands, and reconciles one issue at a time. It stops rather than bypassing ambiguity, residual acceptance, red CI/reviews, external prerequisites, or material product decisions.
 
+Across both lifecycles, IDD treats the PRD as one coherent design contract and preserves its conceptual model over a cheap one-off change. New concepts, special cases, or fragmenting convenience features require an explicit recorded design decision; final acceptance verifies that the integrated product fits the model at its real boundary.
+
 ## Skill
 
 | Skill | Purpose |

@@ -11,7 +11,7 @@ Use this only after the implementation scope has landed, or when explicitly aske
 ## Orient and bind
 
 1. Resolve the exact `{project}` ↔ `{project}-prd` pair and read `PRD.md`, `PROGRESS.md`, repository instructions, and the final acceptance language. Require clean default branches, no active feature branch, and no open implementation issue or PR. If the pair or completion state is ambiguous, stop with the exact evidence needed to resume.
-2. Translate each applicable PRD acceptance outcome into a user-observable journey. Do not invent scenarios or silently mark an outcome not applicable.
+2. Translate each applicable PRD acceptance outcome into a user-observable journey. Also derive whole-product checks from its concepts, domain boundary, and non-goals; do not invent scenarios or silently mark an outcome not applicable.
 
 ## Select the real boundary
 
@@ -21,6 +21,8 @@ Use this only after the implementation scope has landed, or when explicitly aske
 - Container, worker, or migration product: build/start the real artifact, wait on health/readiness, exercise the observable boundary, and use disposable state.
 
 Unit tests alone are never the final boundary. Run the complete applicable acceptance set against the real product boundary, not a hand-picked happy path.
+
+Verify the whole, not merely the parts: exercise cross-slice behavior and inspect the reachable public surface for contradictory concepts or naming, behavior outside the declared domain, and surprise paths that no accepted journey or model permits. Passing each journey is insufficient when the integrated product does not match its coherent design contract.
 
 ## Bring up, exercise, and tear down
 
@@ -37,4 +39,4 @@ When a browser suite exists, run `scripts/static-gate.sh <suite-directory>` befo
 - **Test/spec:** the assertion or acceptance wording is contradictory or unobservable; stop and request a clarified contract.
 - **Environment/tooling:** dependency, credential, port, or readiness failure; report the precise blocker and preserve resumability.
 
-Completion requires every applicable journey to pass, no skipped required outcome, teardown confirmation, and a clean default branch. Report `PASS` or `FAIL` with the boundary, commands, evidence, failure class (if any), and exactly one next action.
+Completion requires every applicable journey and whole-product model check to pass, no contradiction, out-of-domain surplus, or surprise path, no skipped required outcome, teardown confirmation, and a clean default branch. Report `PASS` or `FAIL` with the boundary, commands, evidence, failure class (if any), and exactly one next action.
