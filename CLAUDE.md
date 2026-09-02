@@ -45,14 +45,16 @@ Adopted 2026-09-03. Cite the rule IDs in issues and review comments.
   a `Delivery-Type:` field in the PR body, set the squash subject by hand at
   merge time, or accept the untyped one. Do not "fix" it by putting a type
   prefix on the PR title — that breaks N-2 instead.
-- **Private material.** This repository is public. Never name `idd-skills-prd`,
-  one of its documents, or one of its sections in a branch, commit, issue, or
-  PR. A requirement or slice identifier (`R-###`, `S-###`, `SLICE-###`,
-  `FR-###`, `NFR-###`) is forbidden only when it is defined *solely* in that
-  private companion. `R-###`/`S-###` exist only there, so they never appear on a
-  surface in this repository. Never rely on a history rewrite as cleanup —
-  commits survive in provider-retained PR refs, and issue/PR text is provider
-  metadata outside git entirely.
+- **Private material.** This repository is public. Never name the private
+  companion product-contract repository (this project's `{project}-prd`
+  sibling), one of its documents, or one of its sections in a branch, commit,
+  issue, or PR — not even in order to say what must not be named. A requirement
+  or slice identifier
+  (`R-###`, `S-###`, `SLICE-###`, `FR-###`, `NFR-###`) is forbidden only where
+  it is defined *solely* in that companion. `R-###`/`S-###` are defined only
+  there, so they never belong on any surface in this repository. Never rely on a
+  history rewrite as cleanup — commits survive in provider-retained PR refs, and
+  issue/PR text is provider metadata outside git entirely.
 - **Labels.** None by default. Add one only when a repository template requires
   it or it names a partition someone actually queries; a label applied uniformly
   to every issue partitions nothing.
