@@ -30,6 +30,16 @@ Confirm the completed change fits the product model before merge: established co
 - Any item unproved: stop, list it, and require a fresh explicit `/idd-land … --accept-residuals` invocation.
 - With `--accept-residuals`: restate the exact accepted gaps, then proceed. Never reinterpret the flag as proof or hide the gaps from the completion report.
 
+## Delivery type and the landed subject
+
+GitHub derives a squash subject from the pull-request title, which the title conventions deliberately leave untyped, so the landed commit's type is otherwise the provider's choice. The pull request declares it instead, in exactly one body field:
+
+```
+Delivery-Type: <type>
+```
+
+Landing composes `<type>: <issue title with its initial ASCII letter lowercased> (#<PR>)` and passes it to the squash merge. It stops rather than guessing when the field is absent, declared more than once, not a lowercase type token, or not in the type vocabulary the repository declares in its own `AGENTS.md`/`CLAUDE.md` (`Types:` line); a repository that declares none is not constrained to any list. The authored portion, excluding the trailing ` (#N)`, is capped at 72 characters and is never truncated — an over-budget subject is a title to shorten, not a rule to bend. Issue and pull-request titles stay untyped.
+
 ## GATE — pre-merge snapshot
 
 Immediately before mutation, re-read PR state/checks and `git status`. Confirm the issue number, PR number, repository, base branch, and feature branch in chat. Then invoke the deterministic landing script:
@@ -48,9 +58,10 @@ Require all of the following from the script and independently read them back:
 - issue is `CLOSED` after the merge;
 - local checkout is the updated default branch with a clean tree;
 - same-repository remote feature ref is absent;
-- local feature ref is absent.
+- local feature ref is absent;
+- the landed subject is the composed one, when this invocation performed the merge.
 
-The script is resumable after a partial failure: an already-merged PR skips merging and continues closure/cleanup. Any failed postcondition is reported precisely and is never called complete.
+The script is resumable after a partial failure: an already-merged PR skips merging and continues closure/cleanup, and does not re-check a subject it did not write. Any failed postcondition is reported precisely and is never called complete.
 
 ## Step 3 — automatically reconcile associated PRD progress
 

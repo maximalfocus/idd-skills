@@ -74,6 +74,8 @@ grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "id
 grep -q 'implementation control panel' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must keep progress implementation-focused" >&2; exit 1; }
 grep -q 'implementation control panel rather than a commit or delivery log' "$root/CONSTITUTION.md" || { echo "constitution must keep progress out of history tracking" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
+grep -q 'Delivery-Type' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must document the declared delivery type" >&2; exit 1; }
+grep -q -- '--subject' "$root/skills/idd-land/scripts/land.sh" || { echo "idd-land must compose the squash subject, not accept the provider default" >&2; exit 1; }
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
 grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
 grep -q 'scripts/resolve-prd-pair.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require an exact PRD pair" >&2; exit 1; }
