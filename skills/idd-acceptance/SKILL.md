@@ -26,7 +26,7 @@ Verify the whole, not merely the parts: exercise cross-slice behavior and inspec
 
 ## Verify the preserved-artifact manifest
 
-Run the sibling `idd-plan/scripts/manifest.sh verify <contract-path> <implementation-path>`: every row must exist at its named path, and a PRD without a `Preserved artifacts` section is a test/spec failure. Then read each artifact against the identity statement its row makes. Never execute a golden or compare input-output pairs; a product whose primary standard needs that is a CDD project, and acceptance stops at naming the artifact.
+Run the sibling `idd-plan/scripts/manifest.sh verify <contract-path> <implementation-path>`: every row must exist at its named path, and a PRD without a `Preserved artifacts` section is a test/spec failure. Then read each artifact against the identity statement its row makes. Never execute a golden or compare input-output pairs; a product whose primary standard needs that is a CDD project, and acceptance stops at naming the artifact. Also run the sibling `idd-plan/scripts/prd-fold-gate.sh <contract-path>/PRD.md <contract-path>/PROGRESS.md`: a validated slice that still owns a PRD section is reported as `PRD slices unfolded` with its size, a `prd` commit for the user and never a product failure.
 
 ## Bring up, exercise, and tear down
 

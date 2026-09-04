@@ -135,7 +135,7 @@ grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
 
-for name in tracker-gate manifest; do
+for name in tracker-gate manifest prd-fold-gate; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
   [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }
@@ -150,6 +150,11 @@ grep -q 'None declared' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan mus
 grep -q 'manifest.sh candidates' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must propose manifest candidates mechanically" >&2; exit 1; }
 grep -q 'manifest.sh drift' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report manifest drift" >&2; exit 1; }
 grep -q 'manifest.sh verify' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must verify manifest rows" >&2; exit 1; }
+grep -q 'prd-fold-gate.sh' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must report unfolded validated slices" >&2; exit 1; }
+grep -q 'scripts/prd-fold-gate.sh PRD.md PROGRESS.md' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report unfolded validated slices" >&2; exit 1; }
+grep -q 'collapses to one row' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must fold validated slices into requirements" >&2; exit 1; }
+grep -q 'keeps no section of its own' "$root/CONSTITUTION.md" || { echo "constitution must keep validated slices out of the PRD body" >&2; exit 1; }
+grep -q 'folding' "$root/skills/idd-plan/SKILL.md" && grep -q 'folding the tracker' "$root/skills/idd-land/SKILL.md" || { echo "a stopped tracker gate must name the folding reconcile as its repair" >&2; exit 1; }
 grep -q 'never executes goldens' "$root/CONSTITUTION.md" || { echo "constitution must keep acceptance from executing goldens" >&2; exit 1; }
 grep -q 'only artifacts its manifest names' "$root/CONSTITUTION.md" || { echo "constitution must bound what a contract repository tracks" >&2; exit 1; }
 

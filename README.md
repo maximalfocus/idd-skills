@@ -78,9 +78,9 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them
 - `scripts/install.sh` — development-only cross-runner symlink installer
 - `scripts/test-install.sh` — isolated preflight, rollback, clean-install, and idempotency regression gate
-- `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh`, `scripts/tracker-gate.sh`, `scripts/manifest.sh` — checkout compatibility wrappers for bundled scripts
+- `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh`, `scripts/tracker-gate.sh`, `scripts/manifest.sh`, `scripts/prd-fold-gate.sh` — checkout compatibility wrappers for bundled scripts
 - `scripts/test-land.sh` — isolated mock lifecycle, idempotency, and rewritten-source test
-- `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, and the acceptance static gate
+- `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-prd-fold-gate.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, the PRD fold gate, and the acceptance static gate
 - `scripts/scan-exposure.sh`, `scripts/test-scan-exposure.sh` — checkout wrappers for the bundled publication scan and tests
 - `scripts/test-portable-install.sh` — isolated standard-copy and installed-runtime regression gate
 - `scripts/validate.sh` — structural and lifecycle validation
