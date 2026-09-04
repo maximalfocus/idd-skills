@@ -116,6 +116,10 @@ bash "$root/scripts/test-init-implementation.sh"
 
 bash -n "$root/skills/idd-acceptance/scripts/static-gate.sh"
 [ -x "$root/skills/idd-acceptance/scripts/static-gate.sh" ] || { echo "acceptance static gate must be executable" >&2; exit 1; }
+! grep -q "\brg\b" "$root/skills/idd-acceptance/scripts/static-gate.sh" || { echo "acceptance static gate must not depend on ripgrep" >&2; exit 1; }
+bash -n "$root/scripts/test-static-gate.sh"
+[ -x "$root/scripts/test-static-gate.sh" ] || { echo "test-static-gate.sh must be executable" >&2; exit 1; }
+bash "$root/scripts/test-static-gate.sh"
 
 bash -n "$root/scripts/scan-exposure.sh"
 bash -n "$root/scripts/test-scan-exposure.sh"
