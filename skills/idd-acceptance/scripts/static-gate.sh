@@ -4,12 +4,15 @@ set -euo pipefail
 suite="${1:?usage: static-gate.sh <browser-suite-directory>}"
 [[ -d "$suite" ]] || { printf 'FAIL: suite directory does not exist: %s\n' "$suite" >&2; exit 2; }
 
-if rg -n --glob '*.js' --glob '*.jsx' --glob '*.ts' --glob '*.tsx' 'waitForTimeout[[:space:]]*\(' "$suite"; then
+# grep, never ripgrep: a tool that is absent must not turn this gate green.
+scan() { grep -rEn --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' -e "$1" "$suite"; }
+
+if scan 'waitForTimeout[[:space:]]*\('; then
   printf 'FAIL: fixed browser wait found; wait for observable state instead.\n' >&2
   exit 1
 fi
 
-if rg -n --glob '*.js' --glob '*.jsx' --glob '*.ts' --glob '*.tsx' "locator\\([[:space:]]*[\"'][^\"']*\\.[A-Za-z_-]" "$suite"; then
+if scan "locator\\([[:space:]]*[\"'][^\"']*\\.[A-Za-z_-]"; then
   printf 'FAIL: brittle class-based locator found; use semantic selectors.\n' >&2
   exit 1
 fi

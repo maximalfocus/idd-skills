@@ -73,6 +73,8 @@ TRACKER_GATE_SCRIPT="$agents_root/idd-plan/scripts/tracker-gate.sh" \
   bash "$root/scripts/test-tracker-gate.sh"
 MANIFEST_SCRIPT="$agents_root/idd-plan/scripts/manifest.sh" \
   bash "$root/scripts/test-manifest.sh"
+STATIC_GATE_SCRIPT="$agents_root/idd-acceptance/scripts/static-gate.sh" \
+  bash "$root/scripts/test-static-gate.sh"
 bash "$agents_root/idd-publish/scripts/test-scan-exposure.sh"
 
 grep -q 'npx skills add' "$root/README.md" || { echo "Missing ecosystem install command" >&2; exit 1; }
