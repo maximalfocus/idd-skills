@@ -10,7 +10,7 @@ Use this only after the implementation scope has landed, or when explicitly aske
 
 ## Orient and bind
 
-1. Resolve the exact `{project}` ↔ `{project}-prd` pair and read `PRD.md`, `PROGRESS.md`, repository instructions, and the final acceptance language. Require clean default branches, no active feature branch, and no open implementation issue or PR. If the pair or completion state is ambiguous, stop with the exact evidence needed to resume.
+1. Resolve the exact `{project}` ↔ `{project}-prd` pair with the sibling `idd-plan` skill's bundled `scripts/resolve-prd-pair.sh`; a missing sibling is an incomplete installation and stops. Read `PRD.md`, `PROGRESS.md`, repository instructions, and the final acceptance language. Require clean default branches, no active feature branch, and no open implementation issue or PR. If the pair or completion state is ambiguous, stop with the exact evidence needed to resume.
 2. Translate each applicable PRD acceptance outcome into a user-observable journey. Also derive whole-product checks from its concepts, domain boundary, and non-goals; do not invent scenarios or silently mark an outcome not applicable.
 
 ## Select the real boundary
@@ -23,6 +23,10 @@ Use this only after the implementation scope has landed, or when explicitly aske
 Unit tests alone are never the final boundary. Run the complete applicable acceptance set against the real product boundary, not a hand-picked happy path.
 
 Verify the whole, not merely the parts: exercise cross-slice behavior and inspect the reachable public surface for contradictory concepts or naming, behavior outside the declared domain, and surprise paths that no accepted journey or model permits. Passing each journey is insufficient when the integrated product does not match its coherent design contract.
+
+## Verify the preserved-artifact manifest
+
+Run the sibling `idd-plan/scripts/manifest.sh verify <contract-path> <implementation-path>`: every row must exist at its named path, and a PRD without a `Preserved artifacts` section is a test/spec failure. Then read each artifact against the identity statement its row makes. Never execute a golden or compare input-output pairs; a product whose primary standard needs that is a CDD project, and acceptance stops at naming the artifact.
 
 ## Bring up, exercise, and tear down
 

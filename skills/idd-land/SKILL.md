@@ -48,7 +48,7 @@ Immediately before mutation, re-read PR state/checks and `git status`. Confirm t
 bash /absolute/path/to/installed/idd-land/scripts/land.sh OWNER/REPO ISSUE PR
 ```
 
-Resolve the script from this installed skill directory, not from the project checkout. Do not hand-reimplement its sequence.
+Resolve the script from this installed skill directory, not from the project checkout. Do not hand-reimplement its sequence. The script runs as one function parsed whole before execution, so a checkout that rewrites its source mid-landing cannot change the running sequence.
 
 ## Step 2 — verify the landed state
 
@@ -65,8 +65,8 @@ The script is resumable after a partial failure: an already-merged PR skips merg
 
 ## Step 3 — automatically reconcile associated PRD progress
 
-When Step 0 found an associated PRD, read the physical sibling `skills/idd-plan/SKILL.md` and execute its Reconcile mode with the verified issue, PR, and squash commit. This is mandatory and requires no separate user invocation. Verify the PRD commit and push, then return to the implementation checkout. If reconciliation fails after merge, do not undo or conceal the landing: report `landed, PRD reconciliation incomplete` and make the same `/idd-land` invocation resumable. If no associated PRD exists, report `PRD reconciliation: not configured`.
+When Step 0 found an associated PRD, run the sibling `idd-plan/scripts/tracker-gate.sh` on its `PROGRESS.md` first: a stopped gate is `landed, PRD reconciliation incomplete` with the reported line and cell, and the tracker is never rewritten to pass. Then read the physical sibling `skills/idd-plan/SKILL.md` and execute its Reconcile mode with the verified issue, PR, and squash commit. This is mandatory and requires no separate user invocation. When the landed change makes requirement prose in `PRD.md` inaccurate, report `landed, PRD text stale` naming the requirement; the repair is a `prd` commit by the user, never a reconcile edit. Verify the PRD commit and push, then return to the implementation checkout. If reconciliation fails after merge, do not undo or conceal the landing: report `landed, PRD reconciliation incomplete` and make the same `/idd-land` invocation resumable. If no associated PRD exists, report `PRD reconciliation: not configured`.
 
 ## Completion output
 
-Return only the issue/PR URLs, squash commit, closure state, deleted branch names, current default branch, accepted residuals (if any), PRD reconciliation path/commit/push state, and any incomplete postcondition.
+Return only the issue/PR URLs, squash commit, closure state, deleted branch names, current default branch, accepted residuals (if any), PRD reconciliation path/commit/push state, any stale-requirement report, and any incomplete postcondition.

@@ -38,6 +38,8 @@ for path in \
   idd-plan/scripts/resolve-prd-pair.sh \
   idd-plan/scripts/init-prd.sh \
   idd-plan/scripts/init-implementation.sh \
+  idd-plan/scripts/tracker-gate.sh \
+  idd-plan/scripts/manifest.sh \
   idd-land/scripts/land.sh \
   idd-publish/scripts/scan-exposure.sh \
   idd-publish/scripts/test-scan-exposure.sh; do
@@ -45,13 +47,15 @@ for path in \
   bash -n "$agents_root/$path"
 done
 
-if rg -n '(\.\./\.\./CONSTITUTION\.md|idd-skills/scripts/|physical source repository)' "$agents_root"; then
+if grep -rEn '(\.\./\.\./CONSTITUTION\.md|idd-skills/scripts/|physical source repository)' "$agents_root"; then
   echo "Installed workflow still escapes to repository-root resources" >&2
   exit 1
 fi
 
 grep -q 'sibling `idd-plan`' "$agents_root/idd-land/SKILL.md" || {
   echo "idd-land must resolve its installed idd-plan dependency" >&2; exit 1; }
+grep -q 'sibling `idd-plan`' "$agents_root/idd-acceptance/SKILL.md" || {
+  echo "idd-acceptance must resolve its installed idd-plan dependency" >&2; exit 1; }
 grep -q 'sibling `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance`' "$agents_root/idd-auto/SKILL.md" || {
   echo "idd-auto must declare its complete installed dependency set" >&2; exit 1; }
 grep -q 'explicit target or current checkout' "$agents_root/idd-evolve/SKILL.md" || {
@@ -65,6 +69,10 @@ INIT_IMPLEMENTATION_SCRIPT="$agents_root/idd-plan/scripts/init-implementation.sh
   bash "$root/scripts/test-init-implementation.sh"
 LAND_SCRIPT="$agents_root/idd-land/scripts/land.sh" \
   bash "$root/scripts/test-land.sh"
+TRACKER_GATE_SCRIPT="$agents_root/idd-plan/scripts/tracker-gate.sh" \
+  bash "$root/scripts/test-tracker-gate.sh"
+MANIFEST_SCRIPT="$agents_root/idd-plan/scripts/manifest.sh" \
+  bash "$root/scripts/test-manifest.sh"
 bash "$agents_root/idd-publish/scripts/test-scan-exposure.sh"
 
 grep -q 'npx skills add' "$root/README.md" || { echo "Missing ecosystem install command" >&2; exit 1; }

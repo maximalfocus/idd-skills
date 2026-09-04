@@ -169,4 +169,36 @@ printf 'A completely different title written after landing' > "$tmp/issue-title"
 run
 [ "$(merges)" = "$after_first" ] || { echo "resume merged a second time" >&2; exit 1; }
 
+# --- landing from a mutable source ------------------------------------------
+# When the installed skill resolves into the repository being landed, the
+# mid-sequence `git checkout <default>` rewrites the running script on disk.
+# Bash reads a script incrementally, so everything after that checkout must
+# already be parsed; a tail read from the rewritten file is a real failure.
+fresh
+real_git="$(command -v git)"
+bundled="$land_script"
+case "$(head -5 "$land_script")" in
+  *'exec bash "$root/skills/idd-land/scripts/land.sh"'*)
+    bundled="$(cd "$(dirname "$land_script")/.." && pwd)/skills/idd-land/scripts/land.sh";;
+esac
+cp "$bundled" "$tmp/land-copy.sh"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = checkout ] && [ -n "\${LAND_TEST_REWRITE:-}" ]; then
+  yes 'exit 99' | head -4000 > "\$LAND_TEST_REWRITE"
+fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+if out="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" LAND_TEST_REWRITE="$tmp/land-copy.sh" \
+    bash "$tmp/land-copy.sh" maximalfocus/test 3 13 2>&1)"; then
+  case "$out" in
+    *LANDED*) ;;
+    *) echo "landing from a rewritten source did not report completion: $out" >&2; exit 1;;
+  esac
+else
+  echo "idd-land failed once its own source was rewritten mid-landing: $out" >&2; exit 1
+fi
+rm "$tmp/bin/git"
+
 echo "idd-land lifecycle valid"

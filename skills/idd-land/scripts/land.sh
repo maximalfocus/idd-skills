@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# The whole sequence is one function so that bash parses it completely before
+# executing anything. When the installed skill resolves into the repository being
+# landed, the mid-sequence checkout rewrites this file; a script read
+# incrementally would then execute the rewritten tail.
+land_main() {
 usage() { echo "usage: land.sh OWNER/REPO ISSUE PR" >&2; exit 64; }
 [ "$#" -eq 3 ] || usage
 repo="$1"; issue="$2"; pr="$3"
@@ -164,3 +169,6 @@ git fetch --prune origin
 ! git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1 || { echo "Remote branch still exists" >&2; exit 1; }
 
 printf 'LANDED issue=%s pr=%s squash=%s base=%s deleted=%s subject=%s\n' "$issue" "$pr" "$merge_oid" "$default_branch" "$head" "$squash_subject"
+}
+
+land_main "$@"; exit $?

@@ -128,7 +128,26 @@ bash -n "$root/scripts/land.sh"
 grep -q 'scripts/land.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must invoke land.sh" >&2; exit 1; }
 grep -q 'explicit invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must require explicit invocation" >&2; exit 1; }
 grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate residual acceptance" >&2; exit 1; }
+grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
+
+for name in tracker-gate manifest; do
+  bash -n "$root/scripts/$name.sh"
+  bash -n "$root/scripts/test-$name.sh"
+  [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }
+  [ -x "$root/scripts/test-$name.sh" ] || { echo "test-$name.sh must be executable" >&2; exit 1; }
+  bash "$root/scripts/test-$name.sh"
+done
+grep -q 'scripts/tracker-gate.sh PROGRESS.md' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must run the tracker gate" >&2; exit 1; }
+grep -q 'tracker-gate.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must run the tracker gate before reconciliation" >&2; exit 1; }
+grep -q 'PRD text stale' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report stale requirement prose" >&2; exit 1; }
+grep -q 'landed, PRD text stale' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must name the stale-prose outcome" >&2; exit 1; }
+grep -q 'None declared' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must write an explicit empty manifest" >&2; exit 1; }
+grep -q 'manifest.sh candidates' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must propose manifest candidates mechanically" >&2; exit 1; }
+grep -q 'manifest.sh drift' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report manifest drift" >&2; exit 1; }
+grep -q 'manifest.sh verify' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must verify manifest rows" >&2; exit 1; }
+grep -q 'never executes goldens' "$root/CONSTITUTION.md" || { echo "constitution must keep acceptance from executing goldens" >&2; exit 1; }
+grep -q 'only artifacts its manifest names' "$root/CONSTITUTION.md" || { echo "constitution must bound what a contract repository tracks" >&2; exit 1; }
 
 bash -n "$root/scripts/test-portable-install.sh"
 [ -x "$root/scripts/test-portable-install.sh" ] || { echo "test-portable-install.sh must be executable" >&2; exit 1; }
