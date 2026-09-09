@@ -44,10 +44,16 @@ types='feat|fix|docs|test|refactor|perf|chore|build|ci|evolve'
 subject="$title (#$pr)"
 head_oid="$(field headRefOid)"
 # Squash deletion is destructive for local commits not represented by the PR.
-git fetch -q origin "$default"
+# The pull ref carries the PR head's history even after its branch is deleted,
+# and even when another clone pushed it.
+git fetch -q origin "$default" "refs/pull/$pr/head"
 if git show-ref --verify --quiet "refs/heads/$head"; then
-  git merge-base --is-ancestor "$head" "$head_oid" 2>/dev/null || {
-    echo "$head has local commits absent from the PR head $head_oid; preserve or publish them before landing" >&2; exit 1; }
+  git merge-base --is-ancestor "$head" "$head_oid" && ancestry=0 || ancestry=$?
+  case "$ancestry" in
+    0) ;;
+    1) echo "$head has local commits absent from the PR head $head_oid; preserve or publish them before landing" >&2; exit 1;;
+    *) echo "Cannot compare $head with the PR head $head_oid (git merge-base exited $ancestry)" >&2; exit 1;;
+  esac
 fi
 if git show-ref --verify --quiet "refs/heads/$default"; then
   git merge-base --is-ancestor "$default" "origin/$default" || {
@@ -92,7 +98,9 @@ tip="$(remote_tip)" || exit 1
 if [ -n "$tip" ]; then
   # Delete only the branch the PR merged: a recreated or advanced branch is someone's unmerged work.
   [ "$tip" = "$head_oid" ] || { echo "origin/$head is at $tip, not the PR head $head_oid; left in place for you to inspect" >&2; exit 1; }
-  git push -q origin --delete "$head"
+  # The lease makes the deletion conditional on origin still holding the PR head at push time.
+  git push -q origin --force-with-lease="refs/heads/$head:$head_oid" ":refs/heads/$head" || {
+    echo "origin/$head moved while landing; left in place for you to inspect" >&2; exit 1; }
 fi
 tip="$(remote_tip)" || exit 1
 [ -z "$tip" ] || { echo "origin still has $head" >&2; exit 1; }

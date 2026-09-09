@@ -71,6 +71,7 @@ fresh() { # origin with main plus a one-commit evolve branch, a clone on main ho
     git switch -q main )
   echo OPEN > "$tmp/pr-state"; echo main > "$tmp/pr-base"; echo evolve/reviewed > "$tmp/pr-head"; echo false > "$tmp/pr-draft"
   git -C "$tmp/work" rev-parse evolve/reviewed > "$tmp/pr-head-oid"
+  git -C "$tmp/origin.git" update-ref refs/pull/5/head "$(cat "$tmp/pr-head-oid")"
   printf 'evolve: route kept evolutions through pull requests' > "$tmp/pr-title"; echo CLEAN > "$tmp/pr-merge-state"
   printf 'Evidence: reviewed.\n\nKept: one branch.' > "$tmp/pr-body"
 }
@@ -100,6 +101,34 @@ fresh; git -C "$tmp/work" switch -q evolve/reviewed
 LANDEV_TEST_KEEP_REMOTE=1 run >/dev/null
 [ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || { echo "must switch to main before deleting the branch" >&2; exit 1; }
 ! git -C "$tmp/origin.git" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the script must delete a remote branch the provider kept" >&2; exit 1; }
+
+# The PR head may have been pushed from another clone: the local branch is an
+# ancestor whose newer objects are absent here until the pull ref is fetched.
+fresh
+git clone -q "$tmp/origin.git" "$tmp/other" 2>/dev/null; git -C "$tmp/other" switch -q evolve/reviewed
+printf 'fix\n' > "$tmp/other/fix.txt"; git -C "$tmp/other" add fix.txt; git -C "$tmp/other" commit -qm "fix: review follow-up"; git -C "$tmp/other" push -q origin evolve/reviewed
+git -C "$tmp/other" rev-parse HEAD > "$tmp/pr-head-oid"; git -C "$tmp/origin.git" update-ref refs/pull/5/head "$(cat "$tmp/pr-head-oid")"; rm -rf "$tmp/other"
+! git -C "$tmp/work" cat-file -e "$(cat "$tmp/pr-head-oid")" 2>/dev/null || { echo "fixture must lack the other clone's commit" >&2; exit 1; }
+run >/dev/null 2>&1
+[ "$(cat "$tmp/work/fix.txt")" = fix ] || { echo "a head pushed from another clone must land" >&2; exit 1; }
+! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the ancestor local branch must be deleted" >&2; exit 1; }
+
+# A branch replaced between the lookup and the delete survives: the delete is lease-protected.
+fresh; real_git="$(command -v git)"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = ls-remote ] && [ -n "\${LANDEV_TEST_STALE_TIP:-}" ]; then printf '%s\trefs/heads/evolve/reviewed\n' "\$LANDEV_TEST_STALE_TIP"; exit 0; fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+git -C "$tmp/work" switch -q evolve/reviewed; printf 'race\n' > "$tmp/work/race.txt"; git -C "$tmp/work" add race.txt; git -C "$tmp/work" commit -qm "evolve: replaced during landing"
+git -C "$tmp/work" push -q origin evolve/reviewed; git -C "$tmp/work" switch -q main; git -C "$tmp/work" branch -q -D evolve/reviewed
+replaced="$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)"
+if out="$(LANDEV_TEST_STALE_TIP="$(cat "$tmp/pr-head-oid")" run 2>&1)"; then echo "a branch replaced after the lookup must not be deleted" >&2; exit 1; fi
+case "$out" in *"moved while landing"*) ;; *) echo "wrong diagnostic for a replaced branch: $out" >&2; exit 1;; esac
+[ "$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)" = "$replaced" ] || { echo "the replaced remote branch must survive the lease" >&2; exit 1; }
+rm -f "$tmp/bin/git" "$tmp/merge-count"
 
 # Reading only the subject must still drain a large API response under pipefail.
 fresh
