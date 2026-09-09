@@ -26,7 +26,7 @@ The change must satisfy both the product contract slice **and** every constituti
 
 > "idd-skills should verify that a delivered product keeps conceptual integrity — that the product contract is one coherent design contract and that acceptance checks the whole, not just each room."
 
-This is a **capability** because it has an observable acceptance: the contract is coherent, and final acceptance verifies the whole model. It is delivered as a requirement (R-013) by updating the product contract, then the normal lifecycle.
+This is a **capability** because it has an observable acceptance: the contract is coherent, and final acceptance verifies the whole model. It is delivered as a requirement by updating the product contract, then the normal lifecycle.
 
 ## Lesson → evolution path
 

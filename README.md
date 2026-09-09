@@ -44,7 +44,7 @@ Selective install is supported for standalone skills:
 npx skills add maximalfocus/idd-skills --skill idd-issue
 ```
 
-Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd` routes to whichever sibling the request selects and needs that sibling installed. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
+Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-implement` requires `idd-plan` when the companion contract is partitioned; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd` routes to whichever sibling the request selects and needs that sibling installed. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
 
 Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
 

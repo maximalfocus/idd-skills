@@ -25,15 +25,15 @@ You are the IDD router. Detect the user's intent and the repository state, then 
 | Names landing, merging, or closing one issue or PR | `idd-land` |
 | Names an autonomous or unattended run to completion | `idd-auto` |
 | Names publishing or making a repository public | `idd-publish` |
-| Names evolving the methodology or a lesson from a run | `idd-evolve` |
+| Explicitly asks to evolve the methodology, including from a lesson from a run | `idd-evolve` |
 
 The first three rows may be reached by inference. The last five are reached only when the request names that action itself; state, history, or an earlier turn never stands in for the words.
 
 ## GATE — routing adds no authority
 
-- Routing adds no authority: the dispatched phase holds exactly the authority the user's request gives it and no more. A phase whose constitution entry requires explicit invocation runs through `/idd` only when the request names its action; a request that merely implies it (for example "finish issue 6") routes to the non-destructive phase, or asks.
+- Routing adds no authority: the dispatched phase holds exactly the authority the user's request gives it and no more. A phase whose constitution entry requires explicit invocation runs through `/idd` only when the request names its action; a request that merely implies it (for example "finish issue 6") routes to `idd-implement`, or asks.
 - When two rows fit or none fits, ask one question that names the candidate phases. Never guess, and never run two phases for one request.
-- One request, one phase. Chaining phases is `idd-auto`'s job and needs its own explicit invocation; `/idd` never starts it by inference.
+- One request, one routed phase. The selected phase may execute only the constituent sequence its own contract authorizes, preserving every constituent gate; `/idd` never starts `idd-auto` or `idd-publish` by inference.
 - Say in one line which phase was chosen and why before executing it, so the dispatch is auditable in the transcript.
 
 ## Completion

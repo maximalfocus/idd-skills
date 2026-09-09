@@ -2,7 +2,7 @@
 
 ## Sources of truth
 
-Author `/idd`, `/idd-plan`, `/idd-issue`, `/idd-implement`, `/idd-land`, `/idd-auto`, and `/idd-evolve` in their matching `skills/*/SKILL.md` sources. `CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code, Codex, Pi, and OpenCode consume the same Agent Skills sources through symlinks created by `scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/` links). Keep skill inputs portable: runners that do not inject `$ARGUMENTS` must be able to use the user's request.
+Author `/idd`, `/idd-plan`, `/idd-issue`, `/idd-implement`, `/idd-land`, `/idd-auto`, `/idd-acceptance`, `/idd-publish`, and `/idd-evolve` in their matching `skills/*/SKILL.md` sources. `CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code, Codex, Pi, and OpenCode consume the same Agent Skills sources through symlinks created by `scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/` links). Keep skill inputs portable: runners that do not inject `$ARGUMENTS` must be able to use the user's request.
 
 ## Scope
 
@@ -10,7 +10,7 @@ IDD is the lightweight issue workflow. `/idd-plan` may bootstrap only a private 
 
 ## Editing discipline
 
-- Keep `skills/idd/SKILL.md` ≤60 lines, `skills/idd-plan/SKILL.md` ≤90 lines, `skills/idd-issue/SKILL.md` ≤70 lines, `skills/idd-implement/SKILL.md` ≤160, `skills/idd-land/SKILL.md` ≤120, `skills/idd-auto/SKILL.md` ≤120, and `skills/idd-evolve/SKILL.md` ≤80.
+- Keep `skills/idd/SKILL.md` ≤60 lines, `skills/idd-plan/SKILL.md` ≤90 lines, `skills/idd-issue/SKILL.md` ≤70 lines, `skills/idd-implement/SKILL.md` ≤160, `skills/idd-land/SKILL.md` ≤120, `skills/idd-auto/SKILL.md` ≤120, `skills/idd-acceptance/SKILL.md` ≤120, `skills/idd-publish/SKILL.md` ≤120, and `skills/idd-evolve/SKILL.md` ≤80.
 - Script deterministic installation/validation work; keep implementation judgment in prose.
 - Stage only task-owned paths explicitly; never use `git add -A`.
 - Run `bash scripts/validate.sh` before committing.

@@ -16,7 +16,7 @@ codex_root="$work/codex/skills"
 copy_suite "$agents_root"
 copy_suite "$codex_root"
 
-required_skills=(idd-plan idd-issue idd idd-land idd-auto idd-evolve idd-publish idd-acceptance)
+required_skills=(idd-plan idd-issue idd idd-implement idd-land idd-auto idd-evolve idd-publish idd-acceptance)
 for install_root in "$agents_root" "$codex_root"; do
   for name in "${required_skills[@]}"; do
     skill="$install_root/$name/SKILL.md"
