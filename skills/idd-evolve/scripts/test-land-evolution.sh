@@ -148,6 +148,33 @@ git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { ech
 [ "$(git -C "$tmp/wt" symbolic-ref --short HEAD)" = evolve/reviewed ] || { echo "the worktree must keep its branch" >&2; exit 1; }
 git -C "$tmp/work" worktree remove --force "$tmp/wt"; rm -f "$tmp/merge-count"
 
+# The worktree guard fails closed: an unreadable inventory refuses, and a huge inventory still finds the branch.
+fresh; real_git="$(command -v git)"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = worktree ] && [ "\$2" = list ]; then echo "fatal: simulated worktree failure" >&2; exit 128; fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "an unreadable worktree list must refuse the delete" >&2; exit 1; fi
+case "$out" in *"Cannot read the worktree list"*) ;; *) echo "wrong diagnostic for a failed worktree list: $out" >&2; exit 1;; esac
+git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the branch must survive a failed inventory" >&2; exit 1; }
+rm -f "$tmp/bin/git" "$tmp/merge-count"
+fresh
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = worktree ] && [ "\$2" = list ]; then
+  awk 'BEGIN { for (i=0; i<100000; i++) printf "worktree /w%d\\nHEAD 0000000000000000000000000000000000000000\\nbranch refs/heads/other%d\\n\\n", i, i; print "worktree /held"; print "HEAD 0000000000000000000000000000000000000000"; print "branch refs/heads/evolve/reviewed"; print "" }'
+  exit 0
+fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "a branch listed late in a huge inventory must still be protected" >&2; exit 1; fi
+case "$out" in *"checked out in another worktree"*) ;; *) echo "wrong diagnostic for a huge inventory: $out" >&2; exit 1;; esac
+git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the branch must survive a huge inventory" >&2; exit 1; }
+rm -f "$tmp/bin/git" "$tmp/merge-count"
+
 # A local branch that moved or appeared after the ancestry check is never deleted.
 race_git() { # $1 = action performed right after the real `git pull` (between check and delete)
   cat > "$tmp/bin/git" <<FAKE

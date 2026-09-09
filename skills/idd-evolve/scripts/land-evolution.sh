@@ -93,8 +93,10 @@ git merge-base --is-ancestor "$oid" HEAD || { echo "Local $default at $(git rev-
 # Delete exactly the local tip the ancestry check validated; a branch that moved or appeared since is someone's work.
 if git show-ref --verify --quiet "refs/heads/$head"; then
   [ -n "$local_oid" ] || { echo "local $head appeared while landing; left in place for you to inspect" >&2; exit 1; }
-  ! git worktree list --porcelain | grep -Fxq "branch refs/heads/$head" || {
-    echo "local $head is checked out in another worktree; left in place for you to inspect" >&2; exit 1; }
+  # No pipeline here: a failed inventory or a SIGPIPE'd producer would fail open under pipefail.
+  worktrees="$(git worktree list --porcelain)" || { echo "Cannot read the worktree list; local $head left in place" >&2; exit 1; }
+  case $'\n'"$worktrees"$'\n' in *$'\n'"branch refs/heads/$head"$'\n'*)
+    echo "local $head is checked out in another worktree; left in place for you to inspect" >&2; exit 1;; esac
   git update-ref -d "refs/heads/$head" "$local_oid" 2>/dev/null || { echo "local $head moved while landing; left in place for you to inspect" >&2; exit 1; }
 fi
 remote_tip() { # prints origin's tip of $head, nothing when absent; a failed lookup is not absence
