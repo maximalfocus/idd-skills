@@ -8,6 +8,11 @@ set -euo pipefail
 #
 #   protect-main.sh apply  [OWNER/REPO]   create or update the ruleset and settings
 #   protect-main.sh verify [OWNER/REPO]   exit 1 and name every drift from that shape
+#
+# GitHub Free enforces rulesets only on public repositories. On a private one,
+# apply sets the merge settings and defers the ruleset, and verify passes on the
+# settings alone while saying so; once the repository is public, verify fails
+# until apply is rerun, which completes the protection.
 
 usage() { echo "usage: protect-main.sh apply|verify [OWNER/REPO]" >&2; exit 64; }
 [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage
@@ -46,13 +51,19 @@ write() { # $1 = method, $2 = path, stdin = JSON body
   err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)" || refused "$err"
 }
 
+visibility="$(gh api "repos/$repo" --jq .visibility)"
+
 if [ "$mode" = apply ]; then
   printf '%s' "$settings_json" | write PATCH "repos/$repo"
-  id="$(ruleset_id)"
-  if [ -n "$id" ]; then
-    printf '%s' "$ruleset_json" | write PUT "repos/$repo/rulesets/$id"
+  if [ "$visibility" = private ]; then
+    echo "ruleset deferred: $repo is private and GitHub Free enforces rulesets only on public repositories; rerun apply once it is public" >&2
   else
-    printf '%s' "$ruleset_json" | write POST "repos/$repo/rulesets"
+    id="$(ruleset_id)"
+    if [ -n "$id" ]; then
+      printf '%s' "$ruleset_json" | write PUT "repos/$repo/rulesets/$id"
+    else
+      printf '%s' "$ruleset_json" | write POST "repos/$repo/rulesets"
+    fi
   fi
 fi
 
@@ -60,6 +71,11 @@ drift=0
 settings="$(gh api "repos/$repo" --jq "$settings_query")"
 [ "$settings" = "$expected_settings" ] || {
   echo "settings drift: $repo has [$settings], want [$expected_settings] (squash-only, delete on merge, PR title/body)" >&2; drift=1; }
+if [ "$visibility" = private ]; then
+  [ "$drift" -eq 0 ] || { echo "$repo default branch is not protected; run: bash scripts/protect-main.sh apply $repo" >&2; exit 1; }
+  echo "$repo default branch: squash-only settings enforced; ruleset DEFERRED while private (branch and PR discipline only); rerun apply once public"
+  exit 0
+fi
 id="$(ruleset_id)"
 if [ -z "$id" ]; then
   echo "ruleset drift: $repo has no ruleset named $ruleset_name" >&2; drift=1
