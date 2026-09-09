@@ -1,6 +1,6 @@
 ---
 name: idd-evolve
-description: "User-invoked IDD methodology evolution for an idd-skills checkout: filter proven lessons through its constitution; pass edits and publishes, fail does nothing. No logs."
+description: "User-invoked IDD methodology evolution for an idd-skills checkout: filter proven lessons through its constitution; pass edits and proposes a reviewed PR, fail does nothing; land merges one reviewed PR on instruction. No logs."
 compatibility: "Requires git; works with Claude Code, Codex, Pi, and OpenCode."
 ---
 
@@ -10,7 +10,7 @@ Improve the IDD methodology from real use without growing `/idd` into CDD. A can
 
 ## First: read the constitution
 
-Resolve the explicit target or current checkout as the `idd-skills` methodology source repository; require its root `CONSTITUTION.md`, `skills/`, `scripts/validate.sh`, git history, and matching remote before changing anything. Read that target repository's constitution, skill files, and history (`git log --oneline -- skills/<name>/SKILL.md`). The installed skill is the workflow definition, never an implicit mutation target. The target constitution governs scope, evidence, size, deterministic scripting, and publication.
+Resolve the explicit target or current checkout as the `idd-skills` methodology source repository; require its root `CONSTITUTION.md`, `skills/`, `scripts/validate.sh`, git history, and matching remote before changing anything. Read that target repository's constitution, skill files, and history (`git log --oneline -- skills/<name>/SKILL.md`). The installed skill is the workflow definition, never an implicit mutation target. The target constitution governs scope, evidence, size, deterministic scripting, and publication. Run `bash scripts/protect-main.sh verify` there; if `main` is not protected, stop before editing and report `bash scripts/protect-main.sh apply` as the maintainer's repair.
 
 ## Step 0 — reconstruct evidence
 
@@ -29,8 +29,12 @@ For each candidate:
 1. Apply every constitution article. Reject anything speculative, already covered, project-specific, incompatible with IDD's lightweight boundary, or weakening conceptual integrity by adding a convenience feature or cheap one-off without a recorded design decision; record nothing.
 2. Make the smallest edit that fixes the proven gap, replacing existing prose where possible. Put mechanically deterministic behavior in `scripts/`, not prose.
 3. Run `bash scripts/validate.sh`; verify references, diff, and size caps. Revert a candidate that fails or adds more complexity than capability.
-4. Pull/rebase `origin/main`, stage only explicit changed paths, commit with a meaningful `evolve:` or `fix:` message, and push `main`. Never force-push.
+4. From a `main` checkout equal to `origin/main`, write the `evolve:` or `fix:` message (N-4 subject, evidence and kept change in the body) to a temporary file and run `bash scripts/propose.sh <slug> <message-file> <changed paths...>`. It commits only those paths on `evolve/<slug>`, pushes, opens the PR, and returns the checkout to `main`. Never merge it, never write `main` directly, never force-push; the installed, symlinked skills keep serving `main` until the maintainer reviews and instructs the agent to squash-merge.
+
+## Land — on the maintainer's explicit instruction only
+
+`/idd-evolve land <PR>` after review (the maintainer's own or `/peerreview`'s): run `bash scripts/land-evolution.sh <PR>`. It validates the open `evolve/<slug>` PR and its N-4 title, squash-merges with that title as subject and the PR body as body, verifies the landed commit, fast-forwards `main` here, and deletes the branch locally and on origin. A `BLOCKED` state means an unresolved review thread: resolve it and rerun, never bypass. Landing is never implied by proposing.
 
 ## Completion
 
-Report the evidence, kept change and why it passed, validation result, commit SHA, and push status. Rejected candidates produce no artifact. If this run exposes a defect in the evolve gate itself, fix it through the same constitution; otherwise do nothing.
+Report the evidence, kept change and why it passed, validation result, and the PR URL awaiting the maintainer's review; a landing reports the landed subject and SHA. Rejected candidates produce no artifact. If this run exposes a defect in the evolve gate itself, fix it through the same constitution; otherwise do nothing.

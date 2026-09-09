@@ -21,7 +21,7 @@ A product too large for one coherent contract partitions its `{project}-prd` int
 | `/idd <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
 | `/idd-auto <project-name-or-path>` | Sequentially finish an exact PRD-linked project through the existing gated lifecycle |
-| `/idd-evolve [post-plan\|post-create\|post-issue\|simplify]` | Filter proven run lessons into IDD; rejected candidates leave no log |
+| `/idd-evolve [post-plan\|post-create\|post-issue\|simplify\|land <PR>]` | Filter proven run lessons into IDD as a reviewed PR, or land one reviewed evolution PR; rejected candidates leave no log |
 | `/idd-acceptance <project-name-or-path>` | Exercise the completed product at its real CLI, API, browser, service, container, or migration boundary |
 | `/idd-publish <project-name-or-path>` | Prepare one private pair, audit every public surface, and make only the implementation repository public |
 
@@ -44,6 +44,8 @@ npx skills add maximalfocus/idd-skills --skill idd-issue
 ```
 
 Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-publish` requires `idd-plan`, `idd-issue`, `idd`, and `idd-land`. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
+
+Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
 
 Development fallback for contributors working from a persistent checkout:
 
@@ -76,7 +78,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-evolve/SKILL.md` — pass-or-nothing evolution workflow
 - `skills/idd-acceptance/SKILL.md` — final integrated user-boundary acceptance workflow
 - `skills/idd-publish/SKILL.md` — fail-closed implementation-repository publication workflow
-- `CONSTITUTION.md` — evolution law and size gates
+- `CONSTITUTION.md` — evolution law and size gates; every kept evolution is proposed by `scripts/propose.sh` as a PR, squash-merged after review by `scripts/land-evolution.sh`, and `scripts/protect-main.sh` makes GitHub refuse anything else on `main`
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them
 - `scripts/install.sh` — development-only cross-runner symlink installer
 - `scripts/test-install.sh` — isolated preflight, rollback, clean-install, and idempotency regression gate
