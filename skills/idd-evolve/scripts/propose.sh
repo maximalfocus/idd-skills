@@ -10,6 +10,11 @@ set -euo pipefail
 #
 #   propose.sh SLUG MESSAGE_FILE PATH...
 
+# The whole sequence is one function so that bash parses it completely before
+# executing anything: the mid-sequence branch switch may rewrite this very file
+# when the checkout serves the installed skill, and a script read incrementally
+# would then execute the rewritten tail.
+propose_main() {
 usage() { echo "usage: propose.sh SLUG MESSAGE_FILE PATH..." >&2; exit 64; }
 [ "$#" -ge 3 ] || usage
 slug="$1"; message="$2"; shift 2; paths=("$@")
@@ -63,3 +68,5 @@ state="$(gh pr view "$branch" --repo "$repo" --json state --jq .state)"
 git switch -q "$default"
 trap - ERR
 echo "$pr_url"
+}
+propose_main "$@"; exit $?

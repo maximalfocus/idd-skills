@@ -9,6 +9,11 @@ set -euo pipefail
 #
 #   land-evolution.sh PR
 
+# The whole sequence is one function so that bash parses it completely before
+# executing anything: the mid-sequence branch switch may rewrite this very file
+# when the checkout serves the installed skill, and a script read incrementally
+# would then execute the rewritten tail.
+land_evolution_main() {
 usage() { echo "usage: land-evolution.sh PR" >&2; exit 64; }
 [ "$#" -eq 1 ] && [[ "$1" =~ ^[0-9]+$ ]] || usage
 pr="$1"
@@ -60,3 +65,5 @@ if git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1; then git pu
 ! git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1 || { echo "origin still has $head" >&2; exit 1; }
 git fetch -q --prune origin
 echo "landed $repo#$pr as $(git rev-parse --short "$oid"): $landed"
+}
+land_evolution_main "$@"; exit $?

@@ -174,6 +174,8 @@ grep -q 'scripts/propose.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-e
 grep -q 'scripts/land-evolution.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must land a reviewed PR only through land-evolution.sh" >&2; exit 1; }
 grep -q 'explicit instruction' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve landing must require the maintainer's explicit instruction" >&2; exit 1; }
 grep -q -- '--subject' "$root/skills/idd-evolve/scripts/land-evolution.sh" || { echo "land-evolution.sh must compose the squash subject" >&2; exit 1; }
+grep -q '^propose_main "\$@"; exit \$?$' "$root/skills/idd-evolve/scripts/propose.sh" || { echo "propose.sh must run as one parsed function" >&2; exit 1; }
+grep -q '^land_evolution_main "\$@"; exit \$?$' "$root/skills/idd-evolve/scripts/land-evolution.sh" || { echo "land-evolution.sh must run as one parsed function" >&2; exit 1; }
 ! grep -Eq 'push (`)?main' "$root/skills/idd-evolve/SKILL.md" "$root/CONSTITUTION.md" "$root/CLAUDE.md" || { echo "no methodology text may push main directly" >&2; exit 1; }
 grep -q 'evolve/<' "$root/CLAUDE.md" || { echo "CLAUDE.md must name the evolve branch convention" >&2; exit 1; }
 

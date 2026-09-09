@@ -117,4 +117,20 @@ fresh
 if err="$(cd "$tmp/work" && LANDEV_TEST_WRONG_SUBJECT='wrong subject' bash "$script" 5 2>&1 >/dev/null)"; then echo "a wrong landed subject must fail" >&2; exit 1; fi
 case "$err" in *"Landed subject is 'wrong subject (#5)'"*) ;; *) echo "wrong reason for a wrong landed subject: $err" >&2; exit 1;; esac
 
+# --- running from a mutable source ---------------------------------------------
+# The checkout may serve the installed skill, so the mid-sequence branch switch
+# can rewrite this very script on disk; everything after it must already be parsed.
+fresh; git -C "$tmp/work" switch -q evolve/reviewed
+real_git="$(command -v git)"
+cp "$script" "$tmp/copy.sh"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = switch ] && [ -n "\${REWRITE_TARGET:-}" ]; then yes 'exit 99' | head -4000 > "\$REWRITE_TARGET"; fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+out="$(cd "$tmp/work" && REWRITE_TARGET="$tmp/copy.sh" bash "$tmp/copy.sh" 5 2>&1)" || { echo "the script failed once its own source was rewritten mid-run: $out" >&2; exit 1; }
+case "$out" in "landed example/demo#5 as "*) ;; *) echo "a rewritten source did not report completion: $out" >&2; exit 1;; esac
+rm -f "$tmp/bin/git"
+
 echo "land-evolution tests passed"

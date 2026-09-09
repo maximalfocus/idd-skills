@@ -94,4 +94,20 @@ fresh; git -C "$tmp/work" push -q origin main:refs/heads/evolve/slug; refuses "a
 [ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || { echo "a refusal must leave the checkout on main" >&2; exit 1; }
 [ "$(git -C "$tmp/origin.git" for-each-ref --format='%(refname:short)' refs/heads | sort | tr '\n' ' ')" = "evolve/slug main " ] || { echo "a refusal must push nothing" >&2; exit 1; }
 
+# --- running from a mutable source ---------------------------------------------
+# The checkout may serve the installed skill, so the mid-sequence branch switch
+# can rewrite this very script on disk; everything after it must already be parsed.
+fresh
+real_git="$(command -v git)"
+cp "$script" "$tmp/copy.sh"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = switch ] && [ -n "\${REWRITE_TARGET:-}" ]; then yes 'exit 99' | head -4000 > "\$REWRITE_TARGET"; fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+out="$(cd "$tmp/work" && REWRITE_TARGET="$tmp/copy.sh" bash "$tmp/copy.sh" rewritten "$tmp/msg" a.txt 2>&1)" || { echo "the script failed once its own source was rewritten mid-run: $out" >&2; exit 1; }
+case "$out" in *"pull/5") ;; *) echo "a rewritten source did not report completion: $out" >&2; exit 1;; esac
+rm -f "$tmp/bin/git"
+
 echo "propose tests passed"
