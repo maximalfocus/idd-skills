@@ -130,6 +130,29 @@ case "$out" in *"moved while landing"*) ;; *) echo "wrong diagnostic for a repla
 [ "$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)" = "$replaced" ] || { echo "the replaced remote branch must survive the lease" >&2; exit 1; }
 rm -f "$tmp/bin/git" "$tmp/merge-count"
 
+# A local branch that moved or appeared after the ancestry check is never deleted.
+race_git() { # $1 = action performed right after the real `git pull` (between check and delete)
+  cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = pull ]; then "$real_git" "\$@"; rc=\$?; $1; exit \$rc; fi
+exec "$real_git" "\$@"
+FAKE
+  chmod +x "$tmp/bin/git"
+}
+fresh; real_git="$(command -v git)"
+race_git "\"$real_git\" update-ref refs/heads/evolve/reviewed \$(\"$real_git\" commit-tree HEAD^{tree} -p refs/heads/evolve/reviewed -m 'evolve: advanced during landing')"
+if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "a local branch advanced during landing must not be deleted" >&2; exit 1; fi
+case "$out" in *"local evolve/reviewed moved while landing"*) ;; *) echo "wrong diagnostic for an advanced local branch: $out" >&2; exit 1;; esac
+git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the advanced local branch must survive" >&2; exit 1; }
+[ "$(git -C "$tmp/work" log -1 --format=%s evolve/reviewed)" = "evolve: advanced during landing" ] || { echo "the advanced tip must be intact" >&2; exit 1; }
+rm -f "$tmp/bin/git" "$tmp/merge-count"
+fresh; git -C "$tmp/work" branch -q -D evolve/reviewed
+race_git "\"$real_git\" branch evolve/reviewed origin/main"
+if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "a local branch created during landing must not be deleted" >&2; exit 1; fi
+case "$out" in *"local evolve/reviewed appeared while landing"*) ;; *) echo "wrong diagnostic for a recreated local branch: $out" >&2; exit 1;; esac
+git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the recreated local branch must survive" >&2; exit 1; }
+rm -f "$tmp/bin/git" "$tmp/merge-count"
+
 # Reading only the subject must still drain a large API response under pipefail.
 fresh
 awk 'BEGIN { for (i=0; i<20000; i++) print "body" }' > "$tmp/pr-body"

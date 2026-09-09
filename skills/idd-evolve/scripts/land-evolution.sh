@@ -47,8 +47,10 @@ head_oid="$(field headRefOid)"
 # The pull ref carries the PR head's history even after its branch is deleted,
 # and even when another clone pushed it.
 git fetch -q origin "$default" "refs/pull/$pr/head"
+local_oid=""
 if git show-ref --verify --quiet "refs/heads/$head"; then
-  git merge-base --is-ancestor "$head" "$head_oid" && ancestry=0 || ancestry=$?
+  local_oid="$(git rev-parse "refs/heads/$head")"
+  git merge-base --is-ancestor "$local_oid" "$head_oid" && ancestry=0 || ancestry=$?
   case "$ancestry" in
     0) ;;
     1) echo "$head has local commits absent from the PR head $head_oid; preserve or publish them before landing" >&2; exit 1;;
@@ -87,7 +89,11 @@ git fetch -q origin "$default"
 git pull -q --ff-only origin "$default"
 # A resumed landing may find later landings on top; the landed commit must be reachable, not the tip.
 git merge-base --is-ancestor "$oid" HEAD || { echo "Local $default at $(git rev-parse --short HEAD) does not contain the landed $oid" >&2; exit 1; }
-! git show-ref --verify --quiet "refs/heads/$head" || git branch -q -D "$head"
+# Delete exactly the local tip the ancestry check validated; a branch that moved or appeared since is someone's work.
+if git show-ref --verify --quiet "refs/heads/$head"; then
+  [ -n "$local_oid" ] || { echo "local $head appeared while landing; left in place for you to inspect" >&2; exit 1; }
+  git update-ref -d "refs/heads/$head" "$local_oid" 2>/dev/null || { echo "local $head moved while landing; left in place for you to inspect" >&2; exit 1; }
+fi
 remote_tip() { # prints origin's tip of $head, nothing when absent; a failed lookup is not absence
   local out status
   if out="$(git ls-remote --exit-code --heads origin "$head")"; then printf '%s' "${out%%[[:space:]]*}"; return 0; else status=$?; fi
