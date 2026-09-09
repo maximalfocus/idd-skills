@@ -20,7 +20,8 @@ pr="$1"
 
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repository" >&2; exit 1; }
 cd "$root"
-[ -z "$(git status --porcelain)" ] || { echo "Refusing to land with a dirty working tree" >&2; exit 1; }
+tree="$(git status --porcelain)" || { echo "Cannot read the working tree state" >&2; exit 1; }
+[ -z "$tree" ] || { echo "Refusing to land with a dirty working tree" >&2; exit 1; }
 git remote get-url origin >/dev/null
 repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 default="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
@@ -78,16 +79,23 @@ landed="$(gh api "repos/$repo/commits/$oid" --jq '.commit.message' | sed -n '1p'
 git fetch -q origin "$default"
 [ "$(git symbolic-ref --short -q HEAD || true)" = "$default" ] || git switch -q "$default"
 git pull -q --ff-only origin "$default"
-[ "$(git rev-parse HEAD)" = "$oid" ] || { echo "Local $default is $(git rev-parse --short HEAD), not the landed $oid" >&2; exit 1; }
+# A resumed landing may find later landings on top; the landed commit must be reachable, not the tip.
+git merge-base --is-ancestor "$oid" HEAD || { echo "Local $default at $(git rev-parse --short HEAD) does not contain the landed $oid" >&2; exit 1; }
 ! git show-ref --verify --quiet "refs/heads/$head" || git branch -q -D "$head"
-remote_branch_exists() {
-  local status
-  if git ls-remote --exit-code --heads origin "$head" >/dev/null; then return 0; else status=$?; fi
-  [ "$status" -eq 2 ] && return 1
+remote_tip() { # prints origin's tip of $head, nothing when absent; a failed lookup is not absence
+  local out status
+  if out="$(git ls-remote --exit-code --heads origin "$head")"; then printf '%s' "${out%%[[:space:]]*}"; return 0; else status=$?; fi
+  [ "$status" -eq 2 ] && return 0
   echo "Cannot verify origin branch $head (git ls-remote exited $status)" >&2; exit 1
 }
-if remote_branch_exists; then git push -q origin --delete "$head"; fi
-! remote_branch_exists || { echo "origin still has $head" >&2; exit 1; }
+tip="$(remote_tip)" || exit 1
+if [ -n "$tip" ]; then
+  # Delete only the branch the PR merged: a recreated or advanced branch is someone's unmerged work.
+  [ "$tip" = "$head_oid" ] || { echo "origin/$head is at $tip, not the PR head $head_oid; left in place for you to inspect" >&2; exit 1; }
+  git push -q origin --delete "$head"
+fi
+tip="$(remote_tip)" || exit 1
+[ -z "$tip" ] || { echo "origin still has $head" >&2; exit 1; }
 git fetch -q --prune origin
 echo "landed $repo#$pr as $(git rev-parse --short "$oid"): $landed"
 }

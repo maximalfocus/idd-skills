@@ -104,7 +104,7 @@ LANDEV_TEST_KEEP_REMOTE=1 run >/dev/null
 # Reading only the subject must still drain a large API response under pipefail.
 fresh
 awk 'BEGIN { for (i=0; i<20000; i++) print "body" }' > "$tmp/pr-body"
-run >/dev/null
+run >/dev/null 2>&1
 
 # --- refusals leave everything untouched --------------------------------------------
 fresh; echo CLOSED > "$tmp/pr-state"; refuses "a closed PR" "is CLOSED, not OPEN" run
@@ -119,6 +119,7 @@ fresh; echo DIRTY > "$tmp/pr-merge-state"; refuses "a conflicting PR" "conflicts
 fresh; echo UNKNOWN > "$tmp/pr-merge-state"; refuses "an uncomputed merge state" "not CLEAN" run
 fresh; printf 'dirty\n' > "$tmp/work/a.txt"; refuses "a dirty working tree" "dirty working tree" run
 refuses "a non-numeric PR" "usage:" bash -c "cd '$tmp/work' && bash '$script' abc"
+fresh; refuses "an unreadable index" "Cannot read the working tree state" env GIT_INDEX_FILE=/dev/null bash -c "cd '$tmp/work' && bash '$script' 5"
 [ "$(git -C "$tmp/origin.git" rev-list --count main)" = 1 ] || { echo "refusals must leave origin main alone" >&2; exit 1; }
 
 # A clean local evolve branch may still contain work absent from the PR.
@@ -142,6 +143,26 @@ grep -q "already MERGED; resuming" "$tmp/resume-err" || { echo "resume must disc
 [ "$(cat "$tmp/merge-count")" = x ] || { echo "resume must not merge a second time" >&2; exit 1; }
 [ "$(git -C "$tmp/work" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse main)" ] || { echo "resume must fast-forward main" >&2; exit 1; }
 ! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume must delete the local evolve branch" >&2; exit 1; }
+# A resumed landing succeeds after other landings moved main past the squash commit.
+fresh
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+landed_oid="$(cat "$tmp/merge-oid")"
+git clone -q "$tmp/origin.git" "$tmp/other" 2>/dev/null; printf 'later\n' > "$tmp/other/later.txt"; git -C "$tmp/other" add later.txt; git -C "$tmp/other" commit -qm "evolve: land something later (#6)"; git -C "$tmp/other" push -q origin main; rm -rf "$tmp/other"
+run >/dev/null 2>&1
+[ "$(git -C "$tmp/work" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse main)" ] || { echo "resume must fast-forward to origin's current main" >&2; exit 1; }
+git -C "$tmp/work" merge-base --is-ancestor "$landed_oid" HEAD || { echo "resume must keep the landed commit reachable" >&2; exit 1; }
+! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume after later landings must still delete the local branch" >&2; exit 1; }
+# A resumed landing never deletes a remote branch that is no longer the PR head.
+fresh
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+git -C "$tmp/work" switch -q evolve/reviewed; printf 'new\n' > "$tmp/work/new.txt"; git -C "$tmp/work" add new.txt; git -C "$tmp/work" commit -qm "evolve: someone recreated the branch"
+git -C "$tmp/work" push -q origin evolve/reviewed; git -C "$tmp/work" switch -q main; git -C "$tmp/work" branch -q -D evolve/reviewed
+recreated="$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)"
+if out="$(run 2>&1)"; then echo "a recreated remote branch must not be deleted silently" >&2; exit 1; fi
+case "$out" in *"origin/evolve/reviewed is at $recreated, not the PR head"*) ;; *) echo "wrong diagnostic for a recreated remote branch: $out" >&2; exit 1;; esac
+[ "$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)" = "$recreated" ] || { echo "the recreated remote branch must survive" >&2; exit 1; }
+[ "$(git -C "$tmp/work" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse main)" ] || { echo "the local landing steps must still complete before the remote refusal" >&2; exit 1; }
+rm -f "$tmp/merge-count"
 # A resumed landing still refuses to delete local work the PR never carried.
 fresh
 (cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
