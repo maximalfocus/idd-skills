@@ -34,14 +34,17 @@ elif [ "$1 $2" = "pr view" ]; then
     *) echo "unexpected pr view key: $key" >&2; exit 2;;
   esac
 elif [ "$1 $2" = "pr merge" ]; then
-  subject=""; body=""
+  subject=""; body=""; match=""
   while [ "$#" -gt 0 ]; do
-    case "$1" in --subject) subject="$2"; shift;; --body) body="$2"; shift;; esac
+    case "$1" in --subject) subject="$2"; shift;; --body) body="$2"; shift;; --match-head-commit) match="$2"; shift;; esac
     shift
   done
   [ -z "${LANDEV_TEST_WRONG_SUBJECT:-}" ] || subject="$LANDEV_TEST_WRONG_SUBJECT"
   head="$(cat "$root/pr-head")"
   git fetch -q origin
+  # GitHub refuses the merge when the head no longer matches the required commit.
+  [ -n "$match" ] || { echo "merge without --match-head-commit" >&2; exit 1; }
+  [ "$match" = "$(git rev-parse "origin/$head")" ] || { echo "GraphQL: Head branch was modified. Review and try the merge again. (mergePullRequest)" >&2; exit 1; }
   tree="$(git rev-parse "origin/$head^{tree}")"
   # GitHub takes an explicit subject verbatim: no " (#N)" is appended here.
   oid="$(git commit-tree "$tree" -p "$(git rev-parse origin/main)" -m "$subject" -m "$body")"
@@ -121,7 +124,7 @@ if [ "\$1" = ls-remote ] && [ -n "\${LANDEV_TEST_STALE_TIP:-}" ]; then printf '%
 exec "$real_git" "\$@"
 FAKE
 chmod +x "$tmp/bin/git"
-(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --match-head-commit "$(cat "$tmp/pr-head-oid")" --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
 git -C "$tmp/work" switch -q evolve/reviewed; printf 'race\n' > "$tmp/work/race.txt"; git -C "$tmp/work" add race.txt; git -C "$tmp/work" commit -qm "evolve: replaced during landing"
 git -C "$tmp/work" push -q origin evolve/reviewed; git -C "$tmp/work" switch -q main; git -C "$tmp/work" branch -q -D evolve/reviewed
 replaced="$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)"
@@ -129,6 +132,21 @@ if out="$(LANDEV_TEST_STALE_TIP="$(cat "$tmp/pr-head-oid")" run 2>&1)"; then ech
 case "$out" in *"moved while landing"*) ;; *) echo "wrong diagnostic for a replaced branch: $out" >&2; exit 1;; esac
 [ "$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)" = "$replaced" ] || { echo "the replaced remote branch must survive the lease" >&2; exit 1; }
 rm -f "$tmp/bin/git" "$tmp/merge-count"
+
+# A head pushed after the checks must fail the merge instead of landing unreviewed.
+fresh
+git clone -q "$tmp/origin.git" "$tmp/other" 2>/dev/null; git -C "$tmp/other" switch -q evolve/reviewed
+printf 'late\n' > "$tmp/other/late.txt"; git -C "$tmp/other" add late.txt; git -C "$tmp/other" commit -qm "evolve: pushed after the checks"; git -C "$tmp/other" push -q origin evolve/reviewed; rm -rf "$tmp/other"
+refuses "a head that moved after validation" "Head branch was modified" run
+[ "$(git -C "$tmp/origin.git" rev-list --count main)" = 1 ] || { echo "a mismatched head must not land" >&2; exit 1; }
+
+# A local branch checked out in another worktree is never deleted from under it.
+fresh; git -C "$tmp/work" worktree add -q "$tmp/wt" evolve/reviewed
+if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "a branch checked out in a worktree must not be deleted" >&2; exit 1; fi
+case "$out" in *"checked out in another worktree"*) ;; *) echo "wrong diagnostic for a worktree branch: $out" >&2; exit 1;; esac
+git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the worktree branch must survive" >&2; exit 1; }
+[ "$(git -C "$tmp/wt" symbolic-ref --short HEAD)" = evolve/reviewed ] || { echo "the worktree must keep its branch" >&2; exit 1; }
+git -C "$tmp/work" worktree remove --force "$tmp/wt"; rm -f "$tmp/merge-count"
 
 # A local branch that moved or appeared after the ancestry check is never deleted.
 race_git() { # $1 = action performed right after the real `git pull` (between check and delete)
@@ -187,7 +205,7 @@ case "$err" in *"Landed subject is 'wrong subject', expected 'evolve: route kept
 
 # --- a landing that failed after the merge resumes: cleanup only, no second merge ---
 fresh
-(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --match-head-commit "$(cat "$tmp/pr-head-oid")" --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
 [ "$(cat "$tmp/pr-state")" = MERGED ] && git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume fixture must be merged with the local branch left behind" >&2; exit 1; }
 out="$(run 2>"$tmp/resume-err")"
 case "$out" in "landed example/demo#5 as "*) ;; *) echo "resume must report the landing: $out" >&2; exit 1;; esac
@@ -197,7 +215,7 @@ grep -q "already MERGED; resuming" "$tmp/resume-err" || { echo "resume must disc
 ! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume must delete the local evolve branch" >&2; exit 1; }
 # A resumed landing succeeds after other landings moved main past the squash commit.
 fresh
-(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --match-head-commit "$(cat "$tmp/pr-head-oid")" --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
 landed_oid="$(cat "$tmp/merge-oid")"
 git clone -q "$tmp/origin.git" "$tmp/other" 2>/dev/null; printf 'later\n' > "$tmp/other/later.txt"; git -C "$tmp/other" add later.txt; git -C "$tmp/other" commit -qm "evolve: land something later (#6)"; git -C "$tmp/other" push -q origin main; rm -rf "$tmp/other"
 run >/dev/null 2>&1
@@ -206,7 +224,7 @@ git -C "$tmp/work" merge-base --is-ancestor "$landed_oid" HEAD || { echo "resume
 ! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume after later landings must still delete the local branch" >&2; exit 1; }
 # A resumed landing never deletes a remote branch that is no longer the PR head.
 fresh
-(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --match-head-commit "$(cat "$tmp/pr-head-oid")" --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
 git -C "$tmp/work" switch -q evolve/reviewed; printf 'new\n' > "$tmp/work/new.txt"; git -C "$tmp/work" add new.txt; git -C "$tmp/work" commit -qm "evolve: someone recreated the branch"
 git -C "$tmp/work" push -q origin evolve/reviewed; git -C "$tmp/work" switch -q main; git -C "$tmp/work" branch -q -D evolve/reviewed
 recreated="$(git -C "$tmp/origin.git" rev-parse evolve/reviewed)"
@@ -217,7 +235,7 @@ case "$out" in *"origin/evolve/reviewed is at $recreated, not the PR head"*) ;; 
 rm -f "$tmp/merge-count"
 # A resumed landing still refuses to delete local work the PR never carried.
 fresh
-(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --match-head-commit "$(cat "$tmp/pr-head-oid")" --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
 rm -f "$tmp/merge-count"
 git -C "$tmp/work" switch -q evolve/reviewed; git -C "$tmp/work" commit -q --allow-empty -m "fix: keep local work"; git -C "$tmp/work" switch -q main
 refuses "resumed landing over unpushed evolve commits" "local commits absent from the PR head" run

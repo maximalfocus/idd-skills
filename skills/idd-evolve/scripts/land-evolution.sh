@@ -71,7 +71,8 @@ if [ "$state" = OPEN ]; then
     *) echo "PR #$pr merge state is $merge_state, not CLEAN; rerun once GitHub reports it clean" >&2; exit 1;;
   esac
   body="$(gh pr view "$pr" --repo "$repo" --json body --jq '.body // ""')"
-  gh pr merge "$pr" --repo "$repo" --squash --subject "$subject" --body "$body"
+  # Bind the merge to the head that passed the checks; a push in between must fail the merge, not land unreviewed.
+  gh pr merge "$pr" --repo "$repo" --squash --match-head-commit "$head_oid" --subject "$subject" --body "$body"
   state="$(field state)"
   [ "$state" = MERGED ] || { echo "PR #$pr is $state after merge" >&2; exit 1; }
 else
@@ -92,6 +93,8 @@ git merge-base --is-ancestor "$oid" HEAD || { echo "Local $default at $(git rev-
 # Delete exactly the local tip the ancestry check validated; a branch that moved or appeared since is someone's work.
 if git show-ref --verify --quiet "refs/heads/$head"; then
   [ -n "$local_oid" ] || { echo "local $head appeared while landing; left in place for you to inspect" >&2; exit 1; }
+  ! git worktree list --porcelain | grep -Fxq "branch refs/heads/$head" || {
+    echo "local $head is checked out in another worktree; left in place for you to inspect" >&2; exit 1; }
   git update-ref -d "refs/heads/$head" "$local_oid" 2>/dev/null || { echo "local $head moved while landing; left in place for you to inspect" >&2; exit 1; }
 fi
 remote_tip() { # prints origin's tip of $head, nothing when absent; a failed lookup is not absence
