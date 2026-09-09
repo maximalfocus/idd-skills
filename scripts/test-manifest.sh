@@ -33,6 +33,9 @@ expected="$(printf 'constitution\tCONSTITUTION.md\ndecision-log\tdocs/ADR-001-st
 # A subdirectory scopes the listing to its subtree, paths still toplevel-relative.
 candidates="$(bash "$script" candidates "$tmp/demo/docs")"
 [ "$candidates" = "$(printf 'decision-log\tdocs/ADR-001-storage.md')" ] || { printf 'unexpected subtree candidate list:\n%s\n' "$candidates" >&2; exit 1; }
+# Several paths in one repository list the union of their subtrees, deduplicated.
+candidates="$(bash "$script" candidates "$tmp/demo/docs" "$tmp/demo/schemas" "$tmp/demo/docs")"
+[ "$candidates" = "$(printf 'decision-log\tdocs/ADR-001-storage.md\nschema\tschemas/')" ] || { printf 'unexpected union candidate list:\n%s\n' "$candidates" >&2; exit 1; }
 
 # --- an explicit empty manifest ----------------------------------------------
 mk_repo "$tmp/demo-prd" example/demo-prd
@@ -41,6 +44,21 @@ printf '# progress\n' > "$tmp/demo-prd/PROGRESS.md"; printf '# conventions\n' > 
 commit_all "$tmp/demo-prd" init
 bash "$script" drift "$tmp/demo-prd" | grep -q '^PASS: manifest drift' || { echo "drift rejected a clean contract" >&2; exit 1; }
 bash "$script" verify "$tmp/demo-prd" "$tmp/demo" | grep -q '^PASS: manifest verify (None declared)' || { echo "verify rejected an explicit empty manifest" >&2; exit 1; }
+# Paths in different repositories are a usage error, not a merged listing.
+status=0; bash "$script" candidates "$tmp/demo" "$tmp/demo-prd" 2>/dev/null || status=$?
+[ "$status" -eq 64 ] || { echo "candidates accepted paths from two repositories (exit $status)" >&2; exit 1; }
+
+# --- a multi-context contract tracks one pair per context ---------------------
+mkdir -p "$tmp/demo-prd/contexts/road-tax"
+printf '# road tax\n' > "$tmp/demo-prd/contexts/road-tax/PRD.md"; printf '# road tax progress\n' > "$tmp/demo-prd/contexts/road-tax/PROGRESS.md"
+commit_all "$tmp/demo-prd" contexts
+bash "$script" drift "$tmp/demo-prd" | grep -q '^PASS: manifest drift' || { echo "drift reported context contract files" >&2; exit 1; }
+printf 'stray\n' > "$tmp/demo-prd/contexts/road-tax/notes.md"; commit_all "$tmp/demo-prd" "context stray"
+refuses "an unlisted file inside a context" "DRIFT: tracked but not named by the manifest: contexts/road-tax/notes.md" bash "$script" drift "$tmp/demo-prd"
+git -C "$tmp/demo-prd" rm -q contexts/road-tax/notes.md
+mkdir -p "$tmp/demo-prd/contexts/Road_Tax"; printf '# bad\n' > "$tmp/demo-prd/contexts/Road_Tax/PRD.md"; commit_all "$tmp/demo-prd" "misnamed context"
+refuses "a context directory outside the naming convention" "DRIFT: tracked but not named by the manifest: contexts/Road_Tax/PRD.md" bash "$script" drift "$tmp/demo-prd"
+git -C "$tmp/demo-prd" rm -rq contexts; commit_all "$tmp/demo-prd" "drop contexts"
 
 # --- a contract tracking a file its manifest does not name -------------------
 printf 'stray\n' > "$tmp/demo-prd/notes.md"; commit_all "$tmp/demo-prd" stray

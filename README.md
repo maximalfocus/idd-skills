@@ -10,11 +10,13 @@ Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocatio
 
 Across both lifecycles, IDD treats the PRD as one coherent design contract and preserves its conceptual model over a cheap one-off change. New concepts, special cases, or fragmenting convenience features require an explicit recorded design decision; final acceptance verifies that the integrated product fits the model at its real boundary.
 
+A product too large for one coherent contract partitions its `{project}-prd` into `contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel. Each context owns a scope of implementation paths, names the contexts it depends on without restating them, and is admitted only when work is planned there: `/idd-plan --reconstruct --scope <paths> --context <name>` reconstructs one, issues carry the context name as their label, changed files must resolve to the issue's context, and every gate runs over the index and each context.
+
 ## Skill
 
 | Skill | Purpose |
 |---|---|
-| `/idd-plan [project-name\|--reconstruct [--scope path]\|--reconcile]` | Bootstrap a private product contract from requirements or implemented source, recommend one next issue, or repair its tracker |
+| `/idd-plan [project-name\|--reconstruct [--scope path...] [--context name]\|--reconcile]` | Bootstrap a private product contract from requirements or implemented source, recommend one next issue, or repair its tracker |
 | `/idd-issue <request> [--repo OWNER/REPO]` | Create one evidence-backed, duplicate-checked GitHub issue |
 | `/idd <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
@@ -78,9 +80,9 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them
 - `scripts/install.sh` — development-only cross-runner symlink installer
 - `scripts/test-install.sh` — isolated preflight, rollback, clean-install, and idempotency regression gate
-- `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh`, `scripts/tracker-gate.sh`, `scripts/manifest.sh`, `scripts/prd-fold-gate.sh`, `scripts/prd-size-gate.sh` — checkout compatibility wrappers for bundled scripts
+- `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh`, `scripts/tracker-gate.sh`, `scripts/manifest.sh`, `scripts/prd-fold-gate.sh`, `scripts/prd-size-gate.sh`, `scripts/contract.sh` — checkout compatibility wrappers for bundled scripts
 - `scripts/test-land.sh` — isolated mock lifecycle, idempotency, and rewritten-source test
-- `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-prd-fold-gate.sh`, `scripts/test-prd-size-gate.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, the PRD fold gate, the PRD size gate, and the acceptance static gate
+- `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-prd-fold-gate.sh`, `scripts/test-prd-size-gate.sh`, `scripts/test-contract.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, the PRD fold gate, the PRD size gate, the context contract tooling, and the acceptance static gate
 - `scripts/scan-exposure.sh`, `scripts/test-scan-exposure.sh` — checkout wrappers for the bundled publication scan and tests
 - `scripts/test-portable-install.sh` — isolated standard-copy and installed-runtime regression gate
 - `scripts/validate.sh` — structural and lifecycle validation

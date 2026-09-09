@@ -135,7 +135,7 @@ grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
 
-for name in tracker-gate manifest prd-fold-gate prd-size-gate; do
+for name in tracker-gate manifest prd-fold-gate prd-size-gate contract; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
   [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }
@@ -161,6 +161,12 @@ grep -q 'PRD size gate' "$root/CONSTITUTION.md" || { echo "constitution must nam
 grep -q 'folding' "$root/skills/idd-plan/SKILL.md" && grep -q 'folding the tracker' "$root/skills/idd-land/SKILL.md" || { echo "a stopped tracker gate must name the folding reconcile as its repair" >&2; exit 1; }
 grep -q 'never executes goldens' "$root/CONSTITUTION.md" || { echo "constitution must keep acceptance from executing goldens" >&2; exit 1; }
 grep -q 'only artifacts its manifest names' "$root/CONSTITUTION.md" || { echo "constitution must bound what a contract repository tracks" >&2; exit 1; }
+grep -q 'scripts/contract.sh gate' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must run the contract gate" >&2; exit 1; }
+grep -q -- '--context' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must select a context" >&2; exit 1; }
+grep -q 'contract.sh owner' "$root/skills/idd/SKILL.md" || { echo "idd must check touched files against the issue's context scope" >&2; exit 1; }
+grep -q 'contract.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate the whole contract before reconciliation" >&2; exit 1; }
+grep -q 'contexts/' "$root/CONSTITUTION.md" || { echo "constitution must admit context contracts" >&2; exit 1; }
+grep -q 'Depends on' "$root/CONSTITUTION.md" || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }
 
 bash -n "$root/scripts/test-portable-install.sh"
 [ -x "$root/scripts/test-portable-install.sh" ] || { echo "test-portable-install.sh must be executable" >&2; exit 1; }

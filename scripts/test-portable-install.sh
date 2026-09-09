@@ -42,6 +42,7 @@ for path in \
   idd-plan/scripts/manifest.sh \
   idd-plan/scripts/prd-fold-gate.sh \
   idd-plan/scripts/prd-size-gate.sh \
+  idd-plan/scripts/contract.sh \
   idd-land/scripts/land.sh \
   idd-publish/scripts/scan-exposure.sh \
   idd-publish/scripts/test-scan-exposure.sh; do
@@ -81,6 +82,8 @@ PRD_FOLD_GATE_SCRIPT="$agents_root/idd-plan/scripts/prd-fold-gate.sh" \
   bash "$root/scripts/test-prd-fold-gate.sh"
 PRD_SIZE_GATE_SCRIPT="$agents_root/idd-plan/scripts/prd-size-gate.sh" \
   bash "$root/scripts/test-prd-size-gate.sh"
+CONTRACT_SCRIPT="$agents_root/idd-plan/scripts/contract.sh" \
+  bash "$root/scripts/test-contract.sh"
 bash "$agents_root/idd-publish/scripts/test-scan-exposure.sh"
 
 grep -q 'npx skills add' "$root/README.md" || { echo "Missing ecosystem install command" >&2; exit 1; }

@@ -27,7 +27,7 @@ Follow the repository template. If none exists, use only the sections that add i
 - testable acceptance criteria;
 - non-goals or verification when they prevent ambiguity.
 
-Use existing labels only when clearly justified. Exclude credentials, account names, home paths, and unrelated follow-ups. Write multiline bodies through `gh issue create --body-file`, not shell interpolation.
+Use existing labels only when clearly justified; when the issue contract names an owning context of a partitioned PRD, apply that context's name as the label, creating the label if absent. Exclude credentials, account names, home paths, and unrelated follow-ups. Write multiline bodies through `gh issue create --body-file`, not shell interpolation.
 
 Default to an outcome that fits the product's established concepts, names, domain boundary, and public contracts. If the request introduces a novel concept, special case, boundary move, or convenience feature that would fragment that model, name it as a design decision and model extension in the issue; never encode an ad-hoc bump or quiet deviation.
 

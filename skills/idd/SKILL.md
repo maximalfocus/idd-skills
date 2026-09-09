@@ -17,7 +17,7 @@ Take one issue number (`issue 6`, `#6`, or `6`) or GitHub issue URL from the inv
 ## Step 0 — establish a safe issue boundary
 
 1. Resolve repo root, default branch, remotes, current branch, and status. Read root `AGENTS.md`/`CLAUDE.md` plus the relevant instructions they reference. Never overwrite or stage unrelated work.
-2. Fetch the issue with body **and comments** (`gh issue view … --json number,title,body,comments,labels,state,url`); require `OPEN` and require its repository to match the checkout's remote (otherwise ask for the correct local checkout). Comments are intent only when authoritative and non-conflicting. Record the canonical issue URL.
+2. Fetch the issue with body **and comments** (`gh issue view … --json number,title,body,comments,labels,state,url`); require `OPEN` and require its repository to match the checkout's remote (otherwise ask for the correct local checkout). Comments are intent only when authoritative and non-conflicting. Record the canonical issue URL. When the checkout has an exact `{project}-prd` sibling whose `idd-plan/scripts/contract.sh list` names contexts, the issue's context label names the scope this change may touch.
 3. Reject or ask to split an epic that cannot be reviewed and verified as one coherent change. For a bug, locate the reproduction; for a feature/change, locate the affected user or system boundary.
 4. If the working tree is dirty, do not discard or absorb it. Ask whether it is a prerequisite; otherwise create a sibling worktree from the current committed base. If clean, create `issue/<number>-<short-slug>` before the first write. Never implement on the default/shared branch.
 5. Confirm GitHub auth and that push access or the repository's fork workflow is available. A tooling failure is a disclosed blocker, not a reason to bypass policy.
@@ -69,7 +69,7 @@ Before delivery:
 - verify no unrelated files, generated junk, secrets, debug code, or accidental lockfile changes;
 - rerun the load-bearing issue checks after the final edit;
 - when retiring a stub, flag, or profile restriction, exhaustively search source and maintained docs for superseded status markers; qualify same-named components across stacks.
-- verify the change fits the existing model: no new concept, special case, boundary move, or fragmenting convenience feature that the issue did not record as a design decision; no surprise path added as a side effect; and nothing that covers more domain than the model intends.
+- verify the change fits the existing model: no new concept, special case, boundary move, or fragmenting convenience feature that the issue did not record as a design decision; no surprise path added as a side effect; and nothing that covers more domain than the model intends. In a partitioned contract run `idd-plan/scripts/contract.sh owner <contract-path> <changed files>`: every changed file resolves to the issue's context, or the issue records the cross-context design decision; a `none` or `ambiguous` file is a scope question to raise, never a cheap fix.
 
 If any acceptance item is ambiguous or unproved, stop claiming completion and say so; a reviewable implementation may still open a non-closing PR.
 

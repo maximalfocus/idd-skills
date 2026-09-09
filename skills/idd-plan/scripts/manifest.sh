@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: manifest.sh candidates IMPLEMENTATION_PATH   (a subdirectory scopes the listing to its subtree)
+usage: manifest.sh candidates IMPLEMENTATION_PATH...   (each subdirectory scopes the listing to its subtree; all in one repository)
        manifest.sh drift CONTRACT_PATH
        manifest.sh verify CONTRACT_PATH IMPLEMENTATION_PATH
 USAGE
@@ -59,12 +59,19 @@ manifest_rows() {
 has_section() { grep -Eq '^#+ Preserved artifacts[[:space:]]*$' "$1/PRD.md"; }
 
 cmd_candidates() {
-  [ "$#" -eq 1 ] || usage
-  local impl scope; impl="$(require_repo "$1")"
-  # A path below the toplevel scopes the listing to that subtree; the emitted
-  # paths stay relative to the toplevel either way.
-  scope="$(cd "$1" && git rev-parse --show-prefix)"
-  git -C "$impl" ls-files --full-name -- "${scope:-.}" | awk '
+  [ "$#" -ge 1 ] || usage
+  local impl other scope path scopes=()
+  impl="$(require_repo "$1")"
+  # Each path below the toplevel scopes the listing to that subtree, and the
+  # listing is the union of those subtrees; the emitted paths stay relative to
+  # the toplevel either way. Paths in different repositories are a usage error.
+  for path in "$@"; do
+    other="$(require_repo "$path")"
+    [ "$other" = "$impl" ] || { echo "Paths must lie in one repository: $path is not under $impl" >&2; usage; }
+    scope="$(cd "$path" && git rev-parse --show-prefix)"
+    scopes+=("${scope:-.}")
+  done
+  git -C "$impl" ls-files --full-name -- "${scopes[@]}" | awk '
     function emit(class, path,   key) { key = class "\t" path; if (!(key in seen)) { seen[key] = 1; print key } }
     {
       path = $0; n = split(path, parts, "/"); lbase = tolower(parts[n]); lower = tolower(path)
@@ -101,6 +108,9 @@ cmd_drift() {
     [ -n "$file" ] || continue
     case " $harness_files " in *" $file "*) continue;; esac
     [ "$file" = PRD.md ] || [ "$file" = PROGRESS.md ] && continue
+    # A multi-context contract also tracks one PRD.md and PROGRESS.md per
+    # context directory; anything else under contexts/ is drift.
+    [[ "$file" =~ ^contexts/[a-z0-9]+(-[a-z0-9]+)*/(PRD|PROGRESS)\.md$ ]] && continue
     printf '%s\n' "$allowed" | grep -qxF -- "$file" && continue
     echo "DRIFT: tracked but not named by the manifest: $file" >&2
     drift=1
