@@ -135,7 +135,7 @@ grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
 
-for name in tracker-gate manifest prd-fold-gate prd-size-gate contract; do
+for name in tracker-gate manifest prd-fold-gate prd-size-gate contract protect-main propose; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
   [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }
@@ -167,6 +167,12 @@ grep -q 'contract.sh owner' "$root/skills/idd/SKILL.md" || { echo "idd must chec
 grep -q 'contract.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate the whole contract before reconciliation" >&2; exit 1; }
 grep -q 'contexts/' "$root/CONSTITUTION.md" || { echo "constitution must admit context contracts" >&2; exit 1; }
 grep -q 'Depends on' "$root/CONSTITUTION.md" || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }
+
+grep -q 'only through a pull request' "$root/CONSTITUTION.md" || { echo "constitution must route kept evolutions through a reviewed pull request" >&2; exit 1; }
+grep -q 'scripts/protect-main.sh verify' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must verify the default branch is protected before editing" >&2; exit 1; }
+grep -q 'scripts/propose.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must publish through propose.sh" >&2; exit 1; }
+! grep -Eq 'push (`)?main' "$root/skills/idd-evolve/SKILL.md" "$root/CONSTITUTION.md" "$root/CLAUDE.md" || { echo "no methodology text may push main directly" >&2; exit 1; }
+grep -q 'evolve/<' "$root/CLAUDE.md" || { echo "CLAUDE.md must name the evolve branch convention" >&2; exit 1; }
 
 bash -n "$root/scripts/test-portable-install.sh"
 [ -x "$root/scripts/test-portable-install.sh" ] || { echo "test-portable-install.sh must be executable" >&2; exit 1; }

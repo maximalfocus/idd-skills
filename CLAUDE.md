@@ -14,7 +14,7 @@ IDD is the lightweight issue workflow. `/idd-plan` may bootstrap only a private 
 - Script deterministic installation/validation work; keep implementation judgment in prose.
 - Stage only task-owned paths explicitly; never use `git add -A`.
 - Run `bash scripts/validate.sh` before committing.
-- Kept evolve changes commit and push directly to `main`; only explicit `/idd-land` or `/idd-auto` authority may merge a project PR, and neither may force-push.
+- Kept evolve changes reach `main` only through a squash-merged PR opened by `scripts/propose.sh` on `evolve/<slug>`; `scripts/protect-main.sh` keeps GitHub enforcing that. Only explicit `/idd-land` or `/idd-auto` authority may merge a project PR; nothing may force-push.
 
 ## Naming conventions
 
@@ -30,7 +30,10 @@ Adopted 2026-09-03. Cite the rule IDs in issues and review comments.
   wording is wrong, edit the issue first, then match it.
 - **Branch (N-3).** `issue/<issue-number>-<lowercase-kebab-slug>`, matching
   `^issue/[1-9][0-9]*-[a-z0-9]+(-[a-z0-9]+)*$`. The slug is a handle, not the
-  title.
+  title. An evolution of this repository has no issue: it uses
+  `evolve/<lowercase-kebab-slug>`, and because the squash merge takes both from
+  the PR, its PR title is the N-4 commit subject and its PR body the commit
+  body.
 - **Commit subject (N-4).** `<type>(<scope>)?: <lowercase imperative>`, at most
   72 authored characters — a provider-added trailing ` (#N)` sits outside that
   budget. Scope is one kebab-case identifier: no spaces, no colon, one scope
