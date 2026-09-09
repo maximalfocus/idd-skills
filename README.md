@@ -45,6 +45,8 @@ npx skills add maximalfocus/idd-skills --skill idd-issue
 
 Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-publish` requires `idd-plan`, `idd-issue`, `idd`, and `idd-land`. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
 
+Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
+
 Development fallback for contributors working from a persistent checkout:
 
 ```sh

@@ -29,7 +29,8 @@ elif [ "$1 $2" = "pr view" ]; then
     .title) cat "$root/pr-title";;
     .mergeStateStatus) cat "$root/pr-merge-state";;
     '.body // ""') cat "$root/pr-body";;
-    .mergeCommit.oid) cat "$root/merge-oid";;
+    '.mergeCommit.oid // ""') [ -f "$root/merge-oid" ] && cat "$root/merge-oid" || true;;
+    .headRefOid) cat "$root/pr-head-oid";;
     *) echo "unexpected pr view key: $key" >&2; exit 2;;
   esac
 elif [ "$1 $2" = "pr merge" ]; then
@@ -42,7 +43,8 @@ elif [ "$1 $2" = "pr merge" ]; then
   head="$(cat "$root/pr-head")"
   git fetch -q origin
   tree="$(git rev-parse "origin/$head^{tree}")"
-  oid="$(git commit-tree "$tree" -p "$(git rev-parse origin/main)" -m "$subject (#5)" -m "$body")"
+  # GitHub takes an explicit subject verbatim: no " (#N)" is appended here.
+  oid="$(git commit-tree "$tree" -p "$(git rev-parse origin/main)" -m "$subject" -m "$body")"
   git push -q origin "$oid:main"
   [ -n "${LANDEV_TEST_KEEP_REMOTE:-}" ] || git push -q origin --delete "$head"
   echo "$oid" > "$root/merge-oid"; echo MERGED > "$root/pr-state"; printf 'x' >> "$root/merge-count"
@@ -68,6 +70,7 @@ fresh() { # origin with main plus a one-commit evolve branch, a clone on main ho
     git commit -qm "evolve: route kept evolutions through pull requests"; git push -q -u origin evolve/reviewed
     git switch -q main )
   echo OPEN > "$tmp/pr-state"; echo main > "$tmp/pr-base"; echo evolve/reviewed > "$tmp/pr-head"; echo false > "$tmp/pr-draft"
+  git -C "$tmp/work" rev-parse evolve/reviewed > "$tmp/pr-head-oid"
   printf 'evolve: route kept evolutions through pull requests' > "$tmp/pr-title"; echo CLEAN > "$tmp/pr-merge-state"
   printf 'Evidence: reviewed.\n\nKept: one branch.' > "$tmp/pr-body"
 }
@@ -98,8 +101,14 @@ LANDEV_TEST_KEEP_REMOTE=1 run >/dev/null
 [ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || { echo "must switch to main before deleting the branch" >&2; exit 1; }
 ! git -C "$tmp/origin.git" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "the script must delete a remote branch the provider kept" >&2; exit 1; }
 
+# Reading only the subject must still drain a large API response under pipefail.
+fresh
+awk 'BEGIN { for (i=0; i<20000; i++) print "body" }' > "$tmp/pr-body"
+run >/dev/null
+
 # --- refusals leave everything untouched --------------------------------------------
-fresh; echo MERGED > "$tmp/pr-state"; refuses "an already merged PR" "is MERGED, not OPEN" run
+fresh; echo CLOSED > "$tmp/pr-state"; refuses "a closed PR" "is CLOSED, not OPEN" run
+fresh; echo MERGED > "$tmp/pr-state"; refuses "a merged PR without a merge commit" "reports no merge commit" run
 fresh; echo develop > "$tmp/pr-base"; refuses "a PR onto another base" "targets develop, not main" run
 fresh; echo issue/3-fix > "$tmp/pr-head"; refuses "a non-evolve head" "not an evolve/<slug> branch (N-3)" run
 fresh; echo true > "$tmp/pr-draft"; refuses "a draft" "is a draft" run
@@ -112,10 +121,47 @@ fresh; printf 'dirty\n' > "$tmp/work/a.txt"; refuses "a dirty working tree" "dir
 refuses "a non-numeric PR" "usage:" bash -c "cd '$tmp/work' && bash '$script' abc"
 [ "$(git -C "$tmp/origin.git" rev-list --count main)" = 1 ] || { echo "refusals must leave origin main alone" >&2; exit 1; }
 
+# A clean local evolve branch may still contain work absent from the PR.
+fresh
+git -C "$tmp/work" switch -q evolve/reviewed
+git -C "$tmp/work" commit -q --allow-empty -m "fix: keep local work"
+refuses "unpushed evolve commits" "local commits absent from the PR head" run
+
 # --- a landed subject that differs from the title is disclosed after the merge --------
 fresh
 if err="$(cd "$tmp/work" && LANDEV_TEST_WRONG_SUBJECT='wrong subject' bash "$script" 5 2>&1 >/dev/null)"; then echo "a wrong landed subject must fail" >&2; exit 1; fi
-case "$err" in *"Landed subject is 'wrong subject (#5)'"*) ;; *) echo "wrong reason for a wrong landed subject: $err" >&2; exit 1;; esac
+case "$err" in *"Landed subject is 'wrong subject', expected 'evolve: route kept evolutions through pull requests (#5)'"*) ;; *) echo "wrong reason for a wrong landed subject: $err" >&2; exit 1;; esac
+
+# --- a landing that failed after the merge resumes: cleanup only, no second merge ---
+fresh
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+[ "$(cat "$tmp/pr-state")" = MERGED ] && git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume fixture must be merged with the local branch left behind" >&2; exit 1; }
+out="$(run 2>"$tmp/resume-err")"
+case "$out" in "landed example/demo#5 as "*) ;; *) echo "resume must report the landing: $out" >&2; exit 1;; esac
+grep -q "already MERGED; resuming" "$tmp/resume-err" || { echo "resume must disclose that it skipped the merge" >&2; exit 1; }
+[ "$(cat "$tmp/merge-count")" = x ] || { echo "resume must not merge a second time" >&2; exit 1; }
+[ "$(git -C "$tmp/work" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse main)" ] || { echo "resume must fast-forward main" >&2; exit 1; }
+! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "resume must delete the local evolve branch" >&2; exit 1; }
+# A resumed landing still refuses to delete local work the PR never carried.
+fresh
+(cd "$tmp/work" && gh pr merge 5 --repo example/demo --squash --subject "evolve: route kept evolutions through pull requests (#5)" --body "$(cat "$tmp/pr-body")")
+rm -f "$tmp/merge-count"
+git -C "$tmp/work" switch -q evolve/reviewed; git -C "$tmp/work" commit -q --allow-empty -m "fix: keep local work"; git -C "$tmp/work" switch -q main
+refuses "resumed landing over unpushed evolve commits" "local commits absent from the PR head" run
+git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/reviewed || { echo "a refused resume must keep the local branch" >&2; exit 1; }
+
+# Remote lookup failure is not evidence that cleanup succeeded.
+fresh
+real_git="$(command -v git)"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = ls-remote ]; then echo "simulated transport error" >&2; exit 128; fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "landing reported success despite failed remote lookup" >&2; exit 1; fi
+case "$out" in *"Cannot verify origin branch"*) ;; *) echo "wrong remote lookup diagnostic: $out" >&2; exit 1;; esac
+rm -f "$tmp/bin/git"
 
 # --- running from a mutable source ---------------------------------------------
 # The checkout may serve the installed skill, so the mid-sequence branch switch

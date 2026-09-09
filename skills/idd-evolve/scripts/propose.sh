@@ -27,7 +27,7 @@ types='feat|fix|docs|test|refactor|perf|chore|build|ci|evolve'
 [[ "$subject" =~ ^($types)(\([a-z0-9]+(-[a-z0-9]+)*\))?:\ [a-z] ]] || {
   echo "Subject must be '<type>(<scope>)?: <lowercase imperative>' with a listed type (N-4): $subject" >&2; exit 1; }
 [ "${#subject}" -le 72 ] || { echo "Subject exceeds 72 characters (N-4): ${#subject}" >&2; exit 1; }
-[ "$(wc -l < "$message" | tr -d ' ')" -le 1 ] || [ -z "$(sed -n 2p "$message")" ] || {
+[ -z "$(sed -n 2p "$message")" ] || {
   echo "Message body must be separated from the subject by one blank line" >&2; exit 1; }
 
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repository" >&2; exit 1; }
@@ -47,26 +47,41 @@ head_sha="$(git rev-parse HEAD)"; origin_sha="$(git rev-parse "origin/$default")
   fi
   exit 1; }
 ! git show-ref --verify --quiet "refs/heads/$branch" || { echo "Branch already exists locally: $branch" >&2; exit 1; }
-! git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1 || { echo "Branch already exists on origin: $branch" >&2; exit 1; }
+if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+  echo "Branch already exists on origin: $branch" >&2; exit 1
+else
+  remote_status=$?
+  [ "$remote_status" -eq 2 ] || { echo "Cannot verify origin branch $branch (git ls-remote exited $remote_status)" >&2; exit 1; }
+fi
 git diff --cached --quiet || { echo "Index already has staged changes; unstage them so only the named paths are committed" >&2; exit 1; }
 for path in "${paths[@]}"; do
   [ -n "$(git status --porcelain --untracked-files=all -- "$path")" ] || { echo "No change under $path" >&2; exit 1; }
 done
 
-body="$(mktemp)"; trap 'rm -f "$body"' EXIT
-tail -n +2 "$message" | sed '/./,$!d' > "$body"
+body="$(mktemp)"; created_branch=false
+finish_proposal() {
+  local status=$?
+  if [ "$created_branch" = true ] && [ "$(git symbolic-ref --short -q HEAD || true)" = "$branch" ]; then
+    git switch -q "$default" || { echo "Could not return to $default; preserve the worktree and recover manually" >&2; status=1; }
+  fi
+  rm -f "$body"
+  return "$status"
+}
+trap finish_proposal EXIT
+tail -n +3 "$message" > "$body"
 
 on_error() { echo "propose stopped on $(git symbolic-ref --short -q HEAD || echo 'detached HEAD'); the commit, if made, is only on $branch" >&2; }
 trap on_error ERR
 git switch -q -c "$branch"
+created_branch=true
 git add -- "${paths[@]}"
-git commit -q -F "$message"
+git commit -q --cleanup=verbatim -F "$message"
 git push -q -u origin "$branch"
 pr_url="$(gh pr create --repo "$repo" --base "$default" --head "$branch" --title "$subject" --body-file "$body")"
+echo "$pr_url"
 state="$(gh pr view "$branch" --repo "$repo" --json state --jq .state)"
 [ "$state" = OPEN ] || { echo "PR for $branch is $state, not OPEN" >&2; exit 1; }
 git switch -q "$default"
 trap - ERR
-echo "$pr_url"
 }
 propose_main "$@"; exit $?

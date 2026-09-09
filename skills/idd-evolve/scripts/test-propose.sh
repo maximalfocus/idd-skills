@@ -26,7 +26,9 @@ elif [ "$1 $2" = "pr create" ]; then
     shift
   done
   echo https://github.com/example/demo/pull/5
-elif [ "$1 $2" = "pr view" ]; then echo OPEN
+elif [ "$1 $2" = "pr view" ]; then
+  [ -z "${PROPOSE_TEST_VIEW_FAIL:-}" ] || { echo "simulated readback failure" >&2; exit 1; }
+  echo OPEN
 else echo "unexpected gh: $*" >&2; exit 2
 fi
 FAKE
@@ -80,6 +82,19 @@ printf 'evolve: no blank line\nbody\n' > "$tmp/bad"; refuses "a body glued to th
 refuses "a bad slug" "lowercase kebab-case" bash -c "cd '$tmp/work' && bash '$script' Bad_Slug '$tmp/msg' a.txt"
 refuses "too few arguments" "usage:" bash -c "cd '$tmp/work' && bash '$script' slug '$tmp/msg'"
 
+# A final body line without a newline still needs its blank separator.
+fresh; printf 'evolve: reject malformed messages\nbody' > "$tmp/bad"
+refuses "an unterminated glued body" "one blank line" bash -c "cd '$tmp/work' && bash '$script' x '$tmp/bad' a.txt"
+
+# Commit cleanup/config must not rewrite the supplied message or PR body.
+fresh
+printf 'evolve: preserve the message\n\n\nEvidence with trailing spaces.  \n\n\n' > "$tmp/verbatim"
+(cd "$tmp/work" && bash "$script" verbatim "$tmp/verbatim" a.txt >/dev/null)
+git -C "$tmp/work" cat-file commit evolve/verbatim | sed '1,/^$/d' > "$tmp/actual-message"
+cmp "$tmp/verbatim" "$tmp/actual-message" || { echo "commit cleanup rewrote the message" >&2; exit 1; }
+tail -n +3 "$tmp/verbatim" > "$tmp/expected-body"
+cmp "$tmp/expected-body" "$tmp/pr-body" || { echo "PR body lost whitespace" >&2; exit 1; }
+
 # --- checkout state --------------------------------------------------------------
 fresh; refuses "an unchanged path" "No change under c.txt" bash -c "cd '$tmp/work' && git checkout -q c.txt && bash '$script' slug '$tmp/msg' a.txt c.txt"
 fresh; refuses "pre-staged changes" "Index already has staged changes" bash -c "cd '$tmp/work' && git add c.txt && bash '$script' slug '$tmp/msg' a.txt"
@@ -93,6 +108,29 @@ fresh; git -C "$tmp/work" push -q origin main:refs/heads/evolve/slug; refuses "a
 # Every refusal above left main untouched and nothing pushed.
 [ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || { echo "a refusal must leave the checkout on main" >&2; exit 1; }
 [ "$(git -C "$tmp/origin.git" for-each-ref --format='%(refname:short)' refs/heads | sort | tr '\n' ' ')" = "evolve/slug main " ] || { echo "a refusal must push nothing" >&2; exit 1; }
+
+# A PR exists even if its readback fails; return to main and retain its URL.
+fresh
+if (cd "$tmp/work" && PROPOSE_TEST_VIEW_FAIL=1 bash "$script" readback "$tmp/msg" a.txt) > "$tmp/result" 2> "$tmp/error"; then
+  echo "readback failure must fail" >&2; exit 1
+fi
+[ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || { echo "readback failure stranded the evolve checkout" >&2; exit 1; }
+grep -qx 'https://github.com/example/demo/pull/5' "$tmp/result" || { echo "created PR URL must survive readback failure" >&2; exit 1; }
+[ "$(cat "$tmp/work/c.txt")" = c2 ] || { echo "error recovery lost unrelated changes" >&2; exit 1; }
+
+# An unsuccessful remote inventory is not an absent branch.
+fresh
+real_git="$(command -v git)"
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = ls-remote ]; then echo "simulated transport error" >&2; exit 128; fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+refuses "a failed remote lookup" "Cannot verify origin branch" bash -c "cd '$tmp/work' && bash '$script' remote-error '$tmp/msg' a.txt"
+[ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || { echo "lookup refusal must remain on main" >&2; exit 1; }
+! git -C "$tmp/origin.git" show-ref --verify --quiet refs/heads/evolve/remote-error || { echo "lookup refusal pushed a branch" >&2; exit 1; }
+rm -f "$tmp/bin/git"
 
 # --- running from a mutable source ---------------------------------------------
 # The checkout may serve the installed skill, so the mid-sequence branch switch

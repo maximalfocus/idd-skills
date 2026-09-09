@@ -29,7 +29,7 @@ For each candidate:
 1. Apply every constitution article. Reject anything speculative, already covered, project-specific, incompatible with IDD's lightweight boundary, or weakening conceptual integrity by adding a convenience feature or cheap one-off without a recorded design decision; record nothing.
 2. Make the smallest edit that fixes the proven gap, replacing existing prose where possible. Put mechanically deterministic behavior in `scripts/`, not prose.
 3. Run `bash scripts/validate.sh`; verify references, diff, and size caps. Revert a candidate that fails or adds more complexity than capability.
-4. From a `main` checkout equal to `origin/main`, write the `evolve:` or `fix:` message (N-4 subject, evidence and kept change in the body) to a temporary file and run `bash scripts/propose.sh <slug> <message-file> <changed paths...>`. It commits only those paths on `evolve/<slug>`, pushes, opens the PR, and returns the checkout to `main`. Never merge it, never write `main` directly, never force-push; the installed, symlinked skills keep serving `main` until the maintainer reviews and squash-merges.
+4. From a `main` checkout equal to `origin/main`, write the `evolve:` or `fix:` message (N-4 subject, evidence and kept change in the body) to a temporary file and run `bash scripts/propose.sh <slug> <message-file> <changed paths...>`. It commits only those paths on `evolve/<slug>`, pushes, opens the PR, and returns the checkout to `main`. Never merge it, never write `main` directly, never force-push; the installed, symlinked skills keep serving `main` until the maintainer reviews and instructs the agent to squash-merge.
 
 ## Land — on the maintainer's explicit instruction only
 

@@ -21,25 +21,29 @@ fi
 ruleset_name="require-pull-request"
 # Expected shapes, as the canonical strings verify compares against.
 expected_settings="true false false true PR_TITLE PR_BODY"
-expected_ruleset="active | 0 | ~DEFAULT_BRANCH | deletion,non_fast_forward,pull_request,required_linear_history | 0 true true squash"
+expected_ruleset="branch | active | 0 | ~DEFAULT_BRANCH |  | deletion,non_fast_forward,pull_request,required_linear_history | 0 true true squash false false"
 
 settings_json='{"allow_squash_merge":true,"allow_merge_commit":false,"allow_rebase_merge":false,"delete_branch_on_merge":true,"squash_merge_commit_title":"PR_TITLE","squash_merge_commit_message":"PR_BODY"}'
 ruleset_json='{"name":"'"$ruleset_name"'","target":"branch","enforcement":"active","bypass_actors":[],"conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"required_linear_history"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":true,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":true,"allowed_merge_methods":["squash"]}}]}'
 
 settings_query='[.allow_squash_merge,.allow_merge_commit,.allow_rebase_merge,.delete_branch_on_merge,.squash_merge_commit_title,.squash_merge_commit_message] | map(tostring) | join(" ")'
-ruleset_query='[.enforcement, (.bypass_actors|length|tostring), (.conditions.ref_name.include|join(",")), ([.rules[].type]|sort|join(",")), ((.rules[]|select(.type=="pull_request")|.parameters) as $p | [$p.required_approving_review_count, $p.dismiss_stale_reviews_on_push, $p.required_review_thread_resolution, (($p.allowed_merge_methods // [])|join("+"))] | map(tostring) | join(" "))] | join(" | ")'
+ruleset_query='[.target, .enforcement, (.bypass_actors|length|tostring), (.conditions.ref_name.include|join(",")), ((.conditions.ref_name.exclude // [])|join(",")), ([.rules[].type]|sort|join(",")), ((.rules[]|select(.type=="pull_request")|.parameters) as $p | [$p.required_approving_review_count, $p.dismiss_stale_reviews_on_push, $p.required_review_thread_resolution, (($p.allowed_merge_methods // [])|join("+")), $p.require_code_owner_review, $p.require_last_push_approval] | map(tostring) | join(" "))] | join(" | ")'
 
-ruleset_id() { gh api "repos/$repo/rulesets" --jq ".[] | select(.name==\"$ruleset_name\") | .id"; }
-
-write() { # $1 = method, $2 = path, stdin = JSON body; a refusal names the plan limit on private repositories
-  local err
-  if ! err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)"; then
-    echo "$err" >&2
-    if [ "$(gh api "repos/$repo" --jq .visibility)" = private ]; then
-      echo "GitHub Free does not enforce rulesets on a private repository; make $repo public or upgrade the plan before protecting it" >&2
-    fi
-    exit 1
+refused() { # $1 = gh's error text; a refused ruleset call names the plan limit on private repositories
+  echo "$1" >&2
+  if [ "$(gh api "repos/$repo" --jq .visibility)" = private ]; then
+    echo "GitHub Free does not enforce rulesets on a private repository; make $repo public or upgrade the plan before protecting it" >&2
   fi
+  exit 1
+}
+ruleset_id() { # GitHub refuses even the read on a private GitHub Free repository
+  local out
+  out="$(gh api "repos/$repo/rulesets" --jq ".[] | select(.name==\"$ruleset_name\") | .id" 2>&1)" || refused "$out"
+  printf '%s' "$out"
+}
+write() { # $1 = method, $2 = path, stdin = JSON body
+  local err
+  err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)" || refused "$err"
 }
 
 if [ "$mode" = apply ]; then
@@ -62,7 +66,7 @@ if [ -z "$id" ]; then
 else
   ruleset="$(gh api "repos/$repo/rulesets/$id" --jq "$ruleset_query")"
   [ "$ruleset" = "$expected_ruleset" ] || {
-    echo "ruleset drift: $repo ruleset $ruleset_name is [$ruleset], want [$expected_ruleset]" >&2; drift=1; }
+    echo "ruleset drift: $repo ruleset $ruleset_name is [$ruleset], want [$expected_ruleset] (target | enforcement | bypass count | includes | excludes | rules | approvals stale-review-dismissal thread-resolution merge-methods code-owner-review last-push-approval)" >&2; drift=1; }
 fi
 [ "$drift" -eq 0 ] || { echo "$repo default branch is not protected; run: bash scripts/protect-main.sh apply $repo" >&2; exit 1; }
 echo "$repo default branch protected: pull request required, squash only, linear, no force-push, no bypass"

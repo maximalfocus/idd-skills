@@ -3,6 +3,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 script="$root/skills/idd-evolve/scripts/protect-main.sh"
 tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
+command -v jq >/dev/null || { echo "protect-main tests require jq" >&2; exit 1; }
 mkdir -p "$tmp/bin"
 export PROTECT_TEST_ROOT="$tmp"
 export PATH="$tmp/bin:$PATH"
@@ -27,23 +28,28 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 printf 'x' >> "$root/calls"
-if [ "$method" != GET ] && [ -f "$root/refuse-writes" ]; then
+if { [ "$method" != GET ] && [ -f "$root/refuse-writes" ]; } || { [[ "$path" == */rulesets* ]] && [ -f "$root/refuse-rulesets" ]; }; then
   echo "gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)" >&2; exit 1
 fi
 case "$method $path" in
-  "PATCH repos/"*) cat > "$root/patch-body"; printf 'true false false true PR_TITLE PR_BODY' > "$root/settings";;
-  "POST repos/"*"/rulesets") cat > "$root/post-body"; echo 42 > "$root/ruleset-id"; cp "$root/protected-ruleset" "$root/ruleset";;
-  "PUT repos/"*"/rulesets/"*) cat > "$root/put-body"; cp "$root/protected-ruleset" "$root/ruleset";;
-  "GET repos/"*"/rulesets/"*) cat "$root/ruleset";;
-  "GET repos/"*"/rulesets") [ -f "$root/ruleset-id" ] && cat "$root/ruleset-id" || true;;
-  "GET repos/"*) if [ "$jq" = .visibility ]; then cat "$root/visibility"; else cat "$root/settings"; fi;;
+  "PATCH repos/"*) cat > "$root/patch-body"; cp "$root/patch-body" "$root/settings";;
+  "POST repos/"*"/rulesets") cat > "$root/post-body"; echo 42 > "$root/ruleset-id"; cp "$root/post-body" "$root/ruleset";;
+  "PUT repos/"*"/rulesets/"*) cat > "$root/put-body"; cp "$root/put-body" "$root/ruleset";;
+  "GET repos/"*"/rulesets/"*) jq -r "$jq" "$root/ruleset";;
+  "GET repos/"*"/rulesets") if [ -f "$root/ruleset-id" ]; then jq -n --argjson id "$(cat "$root/ruleset-id")" '[{name:"require-pull-request",id:$id}]'; else echo '[]'; fi | jq -r "$jq";;
+  "GET repos/"*) if [ "$jq" = .visibility ]; then cat "$root/visibility"; else jq -r "$jq" "$root/settings"; fi;;
   *) echo "unexpected gh api: $method $path" >&2; exit 2;;
 esac
 FAKE
 chmod +x "$tmp/bin/gh"
-printf 'active | 0 | ~DEFAULT_BRANCH | deletion,non_fast_forward,pull_request,required_linear_history | 0 true true squash' > "$tmp/protected-ruleset"
+cat > "$tmp/protected-ruleset" <<'JSON'
+{"name":"require-pull-request","target":"branch","enforcement":"active","bypass_actors":[],"conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"required_linear_history"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":true,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":true,"allowed_merge_methods":["squash"]}}]}
+JSON
+settings_fixture() {
+  jq -n --arg fields "$1" '$fields | split(" ") | {allow_squash_merge:(.[0]|fromjson),allow_merge_commit:(.[1]|fromjson),allow_rebase_merge:(.[2]|fromjson),delete_branch_on_merge:(.[3]|fromjson),squash_merge_commit_title:.[4],squash_merge_commit_message:.[5]}' > "$tmp/settings"
+}
 
-fresh() { rm -f "$tmp"/{calls,patch-body,post-body,put-body,ruleset-id,ruleset,refuse-writes}; printf '%s' "$1" > "$tmp/settings"; echo public > "$tmp/visibility"; }
+fresh() { rm -f "$tmp"/{calls,patch-body,post-body,put-body,ruleset-id,ruleset,refuse-writes,refuse-rulesets}; settings_fixture "$1"; echo public > "$tmp/visibility"; }
 refuses() { # $1 = description, $2 = required stderr fragment, remaining = command
   local desc="$1" want="$2" err; shift 2
   if err="$("$@" 2>&1 >/dev/null)"; then echo "protect-main accepted $desc" >&2; exit 1; fi
@@ -77,14 +83,24 @@ bash "$script" apply example/open >/dev/null
 bash "$script" verify example/open >/dev/null
 
 # --- verify names each drift from the protected shape -------------------------
-printf 'active | 1 | ~DEFAULT_BRANCH | deletion,non_fast_forward,pull_request,required_linear_history | 0 true true squash' > "$tmp/ruleset"
-refuses "a bypass actor" "ruleset drift" bash "$script" verify example/open
-printf 'disabled | 0 | ~DEFAULT_BRANCH | deletion,non_fast_forward,pull_request,required_linear_history | 0 true true squash' > "$tmp/ruleset"
-refuses "a disabled ruleset" "ruleset drift" bash "$script" verify example/open
-printf 'active | 0 | ~DEFAULT_BRANCH | pull_request | 0 true true squash+merge' > "$tmp/ruleset"
-refuses "missing rules and extra merge methods" "ruleset drift" bash "$script" verify example/open
+for mutation in \
+  '.bypass_actors = [{actor_id:1,actor_type:"Integration",bypass_mode:"always"}]' \
+  '.enforcement = "disabled"' \
+  '.target = "tag"' \
+  '.conditions.ref_name.exclude = ["~DEFAULT_BRANCH"]' \
+  '.conditions.ref_name.include = ["refs/heads/other"]' \
+  '(.rules[] | select(.type=="pull_request").parameters.require_code_owner_review) = true' \
+  '(.rules[] | select(.type=="pull_request").parameters.require_last_push_approval) = true' \
+  '(.rules[] | select(.type=="pull_request").parameters.required_approving_review_count) = 1' \
+  '(.rules[] | select(.type=="pull_request").parameters.dismiss_stale_reviews_on_push) = false' \
+  '(.rules[] | select(.type=="pull_request").parameters.required_review_thread_resolution) = false' \
+  '(.rules[] | select(.type=="pull_request").parameters.allowed_merge_methods) = ["squash","merge"]' \
+  '.rules |= map(select(.type != "deletion"))'; do
+  jq "$mutation" "$tmp/protected-ruleset" > "$tmp/ruleset"
+  refuses "$mutation" "ruleset drift" bash "$script" verify example/open
+done
 cp "$tmp/protected-ruleset" "$tmp/ruleset"
-printf 'true true false true PR_TITLE PR_BODY' > "$tmp/settings"
+settings_fixture 'true true false true PR_TITLE PR_BODY'
 refuses "merge commits re-enabled" "settings drift" bash "$script" verify example/open
 
 # --- a private repository on GitHub Free names the plan limit ------------------
@@ -95,6 +111,13 @@ refuses "a refused write on a public repository" "HTTP 403" bash "$script" apply
 err="$(bash "$script" apply example/locked 2>&1 >/dev/null || true)"
 case "$err" in *"GitHub Free"*) echo "a public repository must not be told about the private plan limit" >&2; exit 1;; esac
 rm -f "$tmp/refuse-writes"
+# GitHub Free refuses even the rulesets READ on a private repository (observed live 2026-09-09),
+# so both verify and apply must name the plan limit from that first refused call.
+fresh 'true false false true PR_TITLE PR_BODY'; touch "$tmp/refuse-rulesets"; echo private > "$tmp/visibility"
+refuses "a refused rulesets read on verify" "GitHub Free does not enforce rulesets on a private repository; make example/locked" bash "$script" verify example/locked
+refuses "a refused rulesets read on apply" "GitHub Free does not enforce rulesets on a private repository; make example/locked" bash "$script" apply example/locked
+[ ! -f "$tmp/post-body" ] && [ ! -f "$tmp/put-body" ] || { echo "a refused read must not be followed by a ruleset write" >&2; exit 1; }
+rm -f "$tmp/refuse-rulesets"
 
 # --- the repository defaults to the current checkout --------------------------
 fresh 'true false false true PR_TITLE PR_BODY'; echo 7 > "$tmp/ruleset-id"; cp "$tmp/protected-ruleset" "$tmp/ruleset"
