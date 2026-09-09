@@ -16,31 +16,34 @@ root="${PROTECT_TEST_ROOT:?}"
 if [ "$1 $2" = "repo view" ]; then echo maximalfocus/current; exit 0; fi
 [ "$1" = api ] || { echo "unexpected gh: $*" >&2; exit 2; }
 shift
-method=GET; path=""
+method=GET; path=""; jq=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --method) method="$2"; shift;;
     --input) shift;;
-    --jq) shift;;
+    --jq) jq="$2"; shift;;
     *) [ -z "$path" ] && path="$1";;
   esac
   shift
 done
 printf 'x' >> "$root/calls"
+if [ "$method" != GET ] && [ -f "$root/refuse-writes" ]; then
+  echo "gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)" >&2; exit 1
+fi
 case "$method $path" in
   "PATCH repos/"*) cat > "$root/patch-body"; printf 'true false false true PR_TITLE PR_BODY' > "$root/settings";;
   "POST repos/"*"/rulesets") cat > "$root/post-body"; echo 42 > "$root/ruleset-id"; cp "$root/protected-ruleset" "$root/ruleset";;
   "PUT repos/"*"/rulesets/"*) cat > "$root/put-body"; cp "$root/protected-ruleset" "$root/ruleset";;
   "GET repos/"*"/rulesets/"*) cat "$root/ruleset";;
   "GET repos/"*"/rulesets") [ -f "$root/ruleset-id" ] && cat "$root/ruleset-id" || true;;
-  "GET repos/"*) cat "$root/settings";;
+  "GET repos/"*) if [ "$jq" = .visibility ]; then cat "$root/visibility"; else cat "$root/settings"; fi;;
   *) echo "unexpected gh api: $method $path" >&2; exit 2;;
 esac
 FAKE
 chmod +x "$tmp/bin/gh"
 printf 'active | 0 | ~DEFAULT_BRANCH | deletion,non_fast_forward,pull_request,required_linear_history | 0 true true squash' > "$tmp/protected-ruleset"
 
-fresh() { rm -f "$tmp"/{calls,patch-body,post-body,put-body,ruleset-id,ruleset}; printf '%s' "$1" > "$tmp/settings"; }
+fresh() { rm -f "$tmp"/{calls,patch-body,post-body,put-body,ruleset-id,ruleset,refuse-writes}; printf '%s' "$1" > "$tmp/settings"; echo public > "$tmp/visibility"; }
 refuses() { # $1 = description, $2 = required stderr fragment, remaining = command
   local desc="$1" want="$2" err; shift 2
   if err="$("$@" 2>&1 >/dev/null)"; then echo "protect-main accepted $desc" >&2; exit 1; fi
@@ -83,6 +86,15 @@ refuses "missing rules and extra merge methods" "ruleset drift" bash "$script" v
 cp "$tmp/protected-ruleset" "$tmp/ruleset"
 printf 'true true false true PR_TITLE PR_BODY' > "$tmp/settings"
 refuses "merge commits re-enabled" "settings drift" bash "$script" verify example/open
+
+# --- a private repository on GitHub Free names the plan limit ------------------
+fresh 'true true true false COMMIT_OR_PR_TITLE COMMIT_MESSAGES'; touch "$tmp/refuse-writes"; echo private > "$tmp/visibility"
+refuses "a refused write on a private repository" "GitHub Free does not enforce rulesets on a private repository; make example/locked public" bash "$script" apply example/locked
+echo public > "$tmp/visibility"
+refuses "a refused write on a public repository" "HTTP 403" bash "$script" apply example/locked
+err="$(bash "$script" apply example/locked 2>&1 >/dev/null || true)"
+case "$err" in *"GitHub Free"*) echo "a public repository must not be told about the private plan limit" >&2; exit 1;; esac
+rm -f "$tmp/refuse-writes"
 
 # --- the repository defaults to the current checkout --------------------------
 fresh 'true false false true PR_TITLE PR_BODY'; echo 7 > "$tmp/ruleset-id"; cp "$tmp/protected-ruleset" "$tmp/ruleset"

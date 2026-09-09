@@ -31,13 +31,24 @@ ruleset_query='[.enforcement, (.bypass_actors|length|tostring), (.conditions.ref
 
 ruleset_id() { gh api "repos/$repo/rulesets" --jq ".[] | select(.name==\"$ruleset_name\") | .id"; }
 
+write() { # $1 = method, $2 = path, stdin = JSON body; a refusal names the plan limit on private repositories
+  local err
+  if ! err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)"; then
+    echo "$err" >&2
+    if [ "$(gh api "repos/$repo" --jq .visibility)" = private ]; then
+      echo "GitHub Free does not enforce rulesets on a private repository; make $repo public or upgrade the plan before protecting it" >&2
+    fi
+    exit 1
+  fi
+}
+
 if [ "$mode" = apply ]; then
-  printf '%s' "$settings_json" | gh api --method PATCH "repos/$repo" --input - >/dev/null
+  printf '%s' "$settings_json" | write PATCH "repos/$repo"
   id="$(ruleset_id)"
   if [ -n "$id" ]; then
-    printf '%s' "$ruleset_json" | gh api --method PUT "repos/$repo/rulesets/$id" --input - >/dev/null
+    printf '%s' "$ruleset_json" | write PUT "repos/$repo/rulesets/$id"
   else
-    printf '%s' "$ruleset_json" | gh api --method POST "repos/$repo/rulesets" --input - >/dev/null
+    printf '%s' "$ruleset_json" | write POST "repos/$repo/rulesets"
   fi
 fi
 

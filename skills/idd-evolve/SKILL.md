@@ -1,6 +1,6 @@
 ---
 name: idd-evolve
-description: "User-invoked IDD methodology evolution for an idd-skills checkout: filter proven lessons through its constitution; pass edits and publishes, fail does nothing. No logs."
+description: "User-invoked IDD methodology evolution for an idd-skills checkout: filter proven lessons through its constitution; pass edits and proposes a reviewed PR, fail does nothing; land merges one reviewed PR on instruction. No logs."
 compatibility: "Requires git; works with Claude Code, Codex, Pi, and OpenCode."
 ---
 
@@ -31,6 +31,10 @@ For each candidate:
 3. Run `bash scripts/validate.sh`; verify references, diff, and size caps. Revert a candidate that fails or adds more complexity than capability.
 4. From a `main` checkout equal to `origin/main`, write the `evolve:` or `fix:` message (N-4 subject, evidence and kept change in the body) to a temporary file and run `bash scripts/propose.sh <slug> <message-file> <changed paths...>`. It commits only those paths on `evolve/<slug>`, pushes, opens the PR, and returns the checkout to `main`. Never merge it, never write `main` directly, never force-push; the installed, symlinked skills keep serving `main` until the maintainer reviews and squash-merges.
 
+## Land — on the maintainer's explicit instruction only
+
+`/idd-evolve land <PR>` after review (the maintainer's own or `/peerreview`'s): run `bash scripts/land-evolution.sh <PR>`. It validates the open `evolve/<slug>` PR and its N-4 title, squash-merges with that title as subject and the PR body as body, verifies the landed commit, fast-forwards `main` here, and deletes the branch locally and on origin. A `BLOCKED` state means an unresolved review thread: resolve it and rerun, never bypass. Landing is never implied by proposing.
+
 ## Completion
 
-Report the evidence, kept change and why it passed, validation result, and the PR URL awaiting the maintainer's review; after the squash merge, `git pull --ff-only` on `main` refreshes the installed skills. Rejected candidates produce no artifact. If this run exposes a defect in the evolve gate itself, fix it through the same constitution; otherwise do nothing.
+Report the evidence, kept change and why it passed, validation result, and the PR URL awaiting the maintainer's review; a landing reports the landed subject and SHA. Rejected candidates produce no artifact. If this run exposes a defect in the evolve gate itself, fix it through the same constitution; otherwise do nothing.

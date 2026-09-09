@@ -14,7 +14,7 @@ IDD is the lightweight issue workflow. `/idd-plan` may bootstrap only a private 
 - Script deterministic installation/validation work; keep implementation judgment in prose.
 - Stage only task-owned paths explicitly; never use `git add -A`.
 - Run `bash scripts/validate.sh` before committing.
-- Kept evolve changes reach `main` only through a squash-merged PR opened by `scripts/propose.sh` on `evolve/<slug>`; `scripts/protect-main.sh` keeps GitHub enforcing that. Only explicit `/idd-land` or `/idd-auto` authority may merge a project PR; nothing may force-push.
+- Kept evolve changes reach `main` only through a PR opened by `scripts/propose.sh` on `evolve/<slug>` and squash-merged by `scripts/land-evolution.sh` on the maintainer's explicit instruction after review; `scripts/protect-main.sh` keeps GitHub enforcing that. Only explicit `/idd-land` or `/idd-auto` authority may merge a project PR; nothing may force-push.
 
 ## Naming conventions
 

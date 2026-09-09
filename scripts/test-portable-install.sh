@@ -46,6 +46,7 @@ for path in \
   idd-land/scripts/land.sh \
   idd-evolve/scripts/protect-main.sh \
   idd-evolve/scripts/propose.sh \
+  idd-evolve/scripts/land-evolution.sh \
   idd-publish/scripts/scan-exposure.sh \
   idd-publish/scripts/test-scan-exposure.sh; do
   [ -x "$agents_root/$path" ] || { echo "Missing executable installed resource: $path" >&2; exit 1; }
