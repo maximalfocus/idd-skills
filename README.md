@@ -47,6 +47,14 @@ Composite dependencies must be installed together. `idd-auto` requires `idd-plan
 
 Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
 
+## Reviewed evolutions in another repository
+
+The three scripts run against whatever checkout they are invoked in, so a sibling `*-skills` repository adopts the same reviewed path without copying them:
+
+1. `bash <idd-skills>/scripts/protect-main.sh apply OWNER/REPO` — on a public repository this installs the ruleset and the squash-only settings; on a private one GitHub Free enforces no ruleset, so it sets the settings and reports the ruleset as deferred (branch and PR discipline only).
+2. In that repository's constitution and evolve skill, publish through `bash <idd-skills>/scripts/propose.sh <slug> <message-file> <paths...>` and land on explicit instruction through `bash <idd-skills>/scripts/land-evolution.sh <PR>`; never write its default branch directly. Both scripts use `gh` for the repository and default branch and require the same N-3 `evolve/<slug>` and N-4 subject conventions.
+3. Gate the evolve skill on `bash <idd-skills>/scripts/protect-main.sh verify`. It passes on a private repository whose settings are right, and starts failing the moment the repository becomes public until `apply` is rerun, which completes the protection.
+
 Development fallback for contributors working from a persistent checkout:
 
 ```sh

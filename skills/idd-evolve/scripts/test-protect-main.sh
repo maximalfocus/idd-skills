@@ -112,11 +112,25 @@ err="$(bash "$script" apply example/locked 2>&1 >/dev/null || true)"
 case "$err" in *"GitHub Free"*) echo "a public repository must not be told about the private plan limit" >&2; exit 1;; esac
 rm -f "$tmp/refuse-writes"
 # GitHub Free refuses even the rulesets READ on a private repository (observed live 2026-09-09),
-# so both verify and apply must name the plan limit from that first refused call.
-fresh 'true false false true PR_TITLE PR_BODY'; touch "$tmp/refuse-rulesets"; echo private > "$tmp/visibility"
-refuses "a refused rulesets read on verify" "GitHub Free does not enforce rulesets on a private repository; make example/locked" bash "$script" verify example/locked
-refuses "a refused rulesets read on apply" "GitHub Free does not enforce rulesets on a private repository; make example/locked" bash "$script" apply example/locked
-[ ! -f "$tmp/post-body" ] && [ ! -f "$tmp/put-body" ] || { echo "a refused read must not be followed by a ruleset write" >&2; exit 1; }
+# so a private repository never touches rulesets: apply sets the settings and defers, verify
+# passes on the settings alone and says so, and both fail on drifted settings.
+fresh 'true true true false COMMIT_OR_PR_TITLE COMMIT_MESSAGES'; touch "$tmp/refuse-rulesets"; echo private > "$tmp/visibility"
+refuses "a private repository with drifted settings" "settings drift" bash "$script" verify example/locked
+out="$(bash "$script" apply example/locked 2>"$tmp/apply-err")"
+grep -q "ruleset deferred: example/locked is private" "$tmp/apply-err" || { echo "apply on a private repository must say the ruleset is deferred" >&2; exit 1; }
+case "$out" in *"ruleset DEFERRED while private"*) ;; *) echo "apply on a private repository must report the deferred state: $out" >&2; exit 1;; esac
+[ -f "$tmp/patch-body" ] || { echo "apply on a private repository must still set the merge settings" >&2; exit 1; }
+[ ! -f "$tmp/post-body" ] && [ ! -f "$tmp/put-body" ] || { echo "apply on a private repository must not write a ruleset" >&2; exit 1; }
+out="$(bash "$script" verify example/locked)"
+case "$out" in *"ruleset DEFERRED while private"*) ;; *) echo "verify on a private repository with good settings must pass as deferred: $out" >&2; exit 1;; esac
+# Once the repository is public, the deferred ruleset is drift until apply is rerun.
+echo public > "$tmp/visibility"; rm -f "$tmp/refuse-rulesets"
+refuses "a newly public repository" "no ruleset named require-pull-request" bash "$script" verify example/locked
+bash "$script" apply example/locked >/dev/null; [ -f "$tmp/post-body" ] || { echo "apply after going public must create the ruleset" >&2; exit 1; }
+bash "$script" verify example/locked >/dev/null
+# A refused rulesets call on a public repository surfaces gh's own error.
+fresh 'true false false true PR_TITLE PR_BODY'; touch "$tmp/refuse-rulesets"
+refuses "a refused rulesets read on a public repository" "HTTP 403" bash "$script" verify example/locked
 rm -f "$tmp/refuse-rulesets"
 
 # --- the repository defaults to the current checkout --------------------------
