@@ -80,6 +80,13 @@ grep -q 'Delivery-Type' "$root/skills/idd-implement/SKILL.md" || { echo "idd-imp
 grep -q 'Routing adds no authority' "$root/skills/idd/SKILL.md" || { echo "idd router must add no authority" >&2; exit 1; }
 grep -q 'reached only when the request names that action' "$root/skills/idd/SKILL.md" || { echo "idd router must reach explicit-invocation phases only by name" >&2; exit 1; }
 grep -q 'ask one question' "$root/skills/idd/SKILL.md" || { echo "idd router must ask on ambiguity, never guess" >&2; exit 1; }
+grep -Fq 'read-only `idd-plan` default mode' "$root/skills/idd/SKILL.md" || { echo "idd router must bound planning inference to default mode" >&2; exit 1; }
+grep -Fq 'Bootstrap, reconstruct, and reconcile require the request to name that mode' "$root/skills/idd/SKILL.md" || { echo "idd router must require named planning mutations" >&2; exit 1; }
+grep -Fq 'a missing or ambiguous pair is a question, never authority to bootstrap or reconstruct' "$root/skills/idd/SKILL.md" || { echo "idd router must stop default-mode fallback to bootstrap" >&2; exit 1; }
+grep -Fq 'including where direct invocation is required' "$root/CONSTITUTION.md" || { echo "constitution must define routed explicit invocation" >&2; exit 1; }
+for name in idd-auto idd-land idd-publish; do
+  grep -Fq 'directly or through `/idd`, per Constitution Article 5' "$root/skills/$name/SKILL.md" || { echo "$name must honor routed explicit invocation" >&2; exit 1; }
+done
 grep -q 'adds no authority of its own' "$root/CONSTITUTION.md" || { echo "constitution must deny the router any authority" >&2; exit 1; }
 grep -q -- '--subject' "$root/skills/idd-land/scripts/land.sh" || { echo "idd-land must compose the squash subject, not accept the provider default" >&2; exit 1; }
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }

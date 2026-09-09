@@ -6,7 +6,7 @@ compatibility: "Requires git, GitHub CLI (gh), and the exact {project} ↔ {proj
 
 # /idd-publish — publish one exact IDD project
 
-An explicit `/idd-publish` invocation authorizes the final visibility mutation for the exact pair: update both repositories through one publication-preparation issue, branch, PR, squash merge, closure, and tracker reconciliation, then make only `{project}` public. `{project}-prd` remains private. This is repository publication, not deployment or hosting.
+An explicit `/idd-publish` invocation (directly or through `/idd`, per Constitution Article 5) authorizes the final visibility mutation for the exact pair: update both repositories through one publication-preparation issue, branch, PR, squash merge, closure, and tracker reconciliation, then make only `{project}` public. `{project}-prd` remains private. This is repository publication, not deployment or hosting.
 
 ## Orient and prepare
 

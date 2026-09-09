@@ -8,7 +8,7 @@ compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex,
 
 Drive an existing exact `{project}` ↔ `{project}-prd` pair through repeated `/idd-plan` → `/idd-issue` → `/idd-implement` → `/idd-land` cycles. Keep one active issue at a time and preserve every constituent duplicate, acceptance, verification, review, merge, cleanup, and reconciliation gate. Publication is outside this command and is never invoked or scheduled by `/idd-auto`.
 
-An explicit `/idd-auto` invocation authorizes private creation of the uniquely missing implementation sibling for an existing clean PRD repository, plus creation and delivery of sequential PRD-derived issues, including their branches, commits, pushes, linked PRs, squash merges, closures, branch cleanup, and verified `PROGRESS.md` reconciliation. It does not authorize deployment, publication, force-push, bypassing a gate, accepting residuals, inventing requirements, parallel issue delivery, or changes outside the exact pair.
+An explicit `/idd-auto` invocation (directly or through `/idd`, per Constitution Article 5) authorizes private creation of the uniquely missing implementation sibling for an existing clean PRD repository, plus creation and delivery of sequential PRD-derived issues, including their branches, commits, pushes, linked PRs, squash merges, closures, branch cleanup, and verified `PROGRESS.md` reconciliation. It does not authorize deployment, publication, force-push, bypassing a gate, accepting residuals, inventing requirements, parallel issue delivery, or changes outside the exact pair.
 
 ## Orient and bind the completion target
 

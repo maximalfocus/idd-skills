@@ -18,7 +18,7 @@ A product too large for one coherent contract partitions its `{project}-prd` int
 |---|---|
 | `/idd-plan [project-name\|--reconstruct [--scope path...] [--context name]\|--reconcile]` | Bootstrap a private product contract from requirements or implemented source, recommend one next issue, or repair its tracker |
 | `/idd-issue <request> [--repo OWNER/REPO]` | Create one evidence-backed, duplicate-checked GitHub issue |
-| `/idd <request>` | Route one request to the phase that owns it; a bare issue number or URL goes to `idd-implement`, and phases that require explicit invocation are reached only when the request names their action |
+| `/idd <request>` | Route one request to the phase that owns it; a bare issue number or URL goes to `idd-implement`, and phases that require explicit invocation are reached only when the request names their action; planning inference reaches only read-only default mode, while bootstrap, reconstruct, and reconcile must be named |
 | `/idd-implement <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
 | `/idd-auto <project-name-or-path>` | Sequentially finish an exact PRD-linked project through the existing gated lifecycle |
