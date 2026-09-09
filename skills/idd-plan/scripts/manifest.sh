@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: manifest.sh candidates IMPLEMENTATION_PATH
+usage: manifest.sh candidates IMPLEMENTATION_PATH   (a subdirectory scopes the listing to its subtree)
        manifest.sh drift CONTRACT_PATH
        manifest.sh verify CONTRACT_PATH IMPLEMENTATION_PATH
 USAGE
@@ -60,8 +60,11 @@ has_section() { grep -Eq '^#+ Preserved artifacts[[:space:]]*$' "$1/PRD.md"; }
 
 cmd_candidates() {
   [ "$#" -eq 1 ] || usage
-  local impl; impl="$(require_repo "$1")"
-  git -C "$impl" ls-files | awk '
+  local impl scope; impl="$(require_repo "$1")"
+  # A path below the toplevel scopes the listing to that subtree; the emitted
+  # paths stay relative to the toplevel either way.
+  scope="$(cd "$1" && git rev-parse --show-prefix)"
+  git -C "$impl" ls-files --full-name -- "${scope:-.}" | awk '
     function emit(class, path,   key) { key = class "\t" path; if (!(key in seen)) { seen[key] = 1; print key } }
     {
       path = $0; n = split(path, parts, "/"); lbase = tolower(parts[n]); lower = tolower(path)

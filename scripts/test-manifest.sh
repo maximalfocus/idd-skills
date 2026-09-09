@@ -30,6 +30,9 @@ commit_all "$tmp/demo" init
 candidates="$(bash "$script" candidates "$tmp/demo")"
 expected="$(printf 'constitution\tCONSTITUTION.md\ndecision-log\tdocs/ADR-001-storage.md\ngolden-or-fixture\tgolden/\nlockfile\tpackage-lock.json\nschema\tschemas/')"
 [ "$candidates" = "$expected" ] || { printf 'unexpected candidate list:\n%s\n' "$candidates" >&2; exit 1; }
+# A subdirectory scopes the listing to its subtree, paths still toplevel-relative.
+candidates="$(bash "$script" candidates "$tmp/demo/docs")"
+[ "$candidates" = "$(printf 'decision-log\tdocs/ADR-001-storage.md')" ] || { printf 'unexpected subtree candidate list:\n%s\n' "$candidates" >&2; exit 1; }
 
 # --- an explicit empty manifest ----------------------------------------------
 mk_repo "$tmp/demo-prd" example/demo-prd
