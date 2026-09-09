@@ -13,7 +13,8 @@ repo="$1"; issue="$2"; pr="$3"
 
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repository" >&2; exit 1; }
 cd "$root"
-[ -z "$(git status --porcelain)" ] || { echo "Refusing to land with a dirty working tree" >&2; exit 1; }
+tree="$(git status --porcelain)" || { echo "Cannot read the working tree state; refusing to land" >&2; exit 1; }
+[ -z "$tree" ] || { echo "Refusing to land with a dirty working tree" >&2; exit 1; }
 git remote get-url origin >/dev/null
 actual_repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 [ "$actual_repo" = "$repo" ] || { echo "Checkout is $actual_repo, not $repo" >&2; exit 1; }
@@ -161,7 +162,8 @@ if git show-ref --verify --quiet "refs/heads/$head"; then
 fi
 git fetch --prune origin
 
-[ -z "$(git status --porcelain)" ] || { echo "Working tree is dirty after landing" >&2; exit 1; }
+tree="$(git status --porcelain)" || { echo "Cannot read the working tree state after landing" >&2; exit 1; }
+[ -z "$tree" ] || { echo "Working tree is dirty after landing" >&2; exit 1; }
 [ "$(git branch --show-current)" = "$default_branch" ] || { echo "Not on $default_branch" >&2; exit 1; }
 [ "$(gh pr view "$pr" --repo "$repo" --json state --jq .state)" = "MERGED" ] || { echo "PR postcondition failed" >&2; exit 1; }
 [ "$(gh issue view "$issue" --repo "$repo" --json state --jq .state)" = "CLOSED" ] || { echo "Issue postcondition failed" >&2; exit 1; }

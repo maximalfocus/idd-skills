@@ -107,6 +107,12 @@ git branch -f main issue/3-test
 refuses "a divergent local default branch" "cannot fast-forward"
 git branch -f main origin/main
 
+# --- an unreadable working tree is not a clean one --------------------------
+# A `git status` that fails prints nothing, and an empty capture once read as
+# clean. Landing must refuse before it touches GitHub.
+GIT_INDEX_FILE=/dev/null refuses "a working tree whose state cannot be read" "Cannot read the working tree state; refusing to land"
+[ "$(merges)" = 0 ] || { echo "idd-land merged on a working tree it could not read" >&2; exit 1; }
+
 # --- delivery type: fail closed before any mutation -------------------------
 printf 'No field here at all.\n' > "$tmp/pr-body"
 refuses "a PR with no Delivery-Type field" "declares no 'Delivery-Type"
@@ -199,6 +205,31 @@ if out="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" LAND_TEST_REWRITE="$tmp/la
 else
   echo "idd-land failed once its own source was rewritten mid-landing: $out" >&2; exit 1
 fi
+rm "$tmp/bin/git"
+
+# --- a postcondition it cannot read is a failure, not a landing --------------
+# The final tree check runs after the merge; a `git status` that fails there
+# must be reported, never printed as LANDED.
+fresh
+cat > "$tmp/bin/git" <<FAKE
+#!/usr/bin/env bash
+if [ "\$1" = status ] && [ -s "\${LAND_TEST_ROOT:?}/merge-count" ]; then
+  echo "fatal: simulated unreadable index" >&2; exit 128
+fi
+exec "$real_git" "\$@"
+FAKE
+chmod +x "$tmp/bin/git"
+if out="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 2>&1)"; then
+  echo "idd-land reported success on a tree it could not read after landing: $out" >&2; exit 1
+fi
+case "$out" in
+  *"Cannot read the working tree state after landing"*) ;;
+  *) echo "wrong reason for an unreadable post-landing tree: $out" >&2; exit 1;;
+esac
+case "$out" in
+  *LANDED*) echo "idd-land printed LANDED on a tree it could not read: $out" >&2; exit 1;;
+esac
+[ "$(merges)" = 1 ] || { echo "expected exactly one merge before the unreadable tree, saw $(merges)" >&2; exit 1; }
 rm "$tmp/bin/git"
 
 echo "idd-land lifecycle valid"
