@@ -62,7 +62,7 @@ grep -q 'sibling `idd-plan`' "$agents_root/idd-land/SKILL.md" || {
   echo "idd-land must resolve its installed idd-plan dependency" >&2; exit 1; }
 grep -q 'sibling `idd-plan`' "$agents_root/idd-acceptance/SKILL.md" || {
   echo "idd-acceptance must resolve its installed idd-plan dependency" >&2; exit 1; }
-grep -q 'sibling `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance`' "$agents_root/idd-auto/SKILL.md" || {
+grep -q 'sibling `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`' "$agents_root/idd-auto/SKILL.md" || {
   echo "idd-auto must declare its complete installed dependency set" >&2; exit 1; }
 grep -q 'explicit target or current checkout' "$agents_root/idd-evolve/SKILL.md" || {
   echo "idd-evolve must mutate an explicit methodology checkout" >&2; exit 1; }

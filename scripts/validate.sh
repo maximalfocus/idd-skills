@@ -22,7 +22,8 @@ validate_skill() {
 
 validate_skill idd-plan 90
 validate_skill idd-issue 70
-validate_skill idd 160
+validate_skill idd 60
+validate_skill idd-implement 160
 validate_skill idd-land 120
 validate_skill idd-auto 120
 validate_skill idd-evolve 80
@@ -34,7 +35,7 @@ grep -q 'explicit target or current checkout' "$root/skills/idd-evolve/SKILL.md"
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd-plan idd-issue idd idd-land idd-auto idd-evolve idd-publish idd-acceptance; do
+for name in idd idd-plan idd-issue idd-implement idd-land idd-auto idd-evolve idd-publish idd-acceptance; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -60,7 +61,7 @@ grep -q 'open and closed issues' "$root/skills/idd-issue/SKILL.md" || { echo "id
 grep -q 'gh issue view' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must verify the created issue" >&2; exit 1; }
 grep -q 'post-plan' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover planning evidence" >&2; exit 1; }
 grep -q 'post-create' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover issue-creation evidence" >&2; exit 1; }
-grep -Fq '`$idd-land #N`' "$root/skills/idd/SKILL.md" || { echo "idd must emit Codex next actions with dollar syntax" >&2; exit 1; }
+grep -Fq '`$idd-land #N`' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must emit Codex next actions with dollar syntax" >&2; exit 1; }
 grep -q 'at most one next issue' "$root/CONSTITUTION.md" || { echo "constitution must bound idd-plan output" >&2; exit 1; }
 grep -q 'product-only clarification' "$root/CONSTITUTION.md" || { echo "constitution must bound greenfield questions" >&2; exit 1; }
 grep -q 'draft-only opt-out' "$root/CONSTITUTION.md" || { echo "constitution must define greenfield publication default" >&2; exit 1; }
@@ -75,7 +76,11 @@ grep -q 'implementation control panel' "$root/skills/idd-plan/SKILL.md" || { ech
 grep -q 'implementation control panel rather than a commit or delivery log' "$root/CONSTITUTION.md" || { echo "constitution must keep progress out of history tracking" >&2; exit 1; }
 grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
 grep -q 'Delivery-Type' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must document the declared delivery type" >&2; exit 1; }
-grep -q 'Delivery-Type' "$root/skills/idd/SKILL.md" || { echo "idd must declare the delivery type landing requires" >&2; exit 1; }
+grep -q 'Delivery-Type' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must declare the delivery type landing requires" >&2; exit 1; }
+grep -q 'Routing adds no authority' "$root/skills/idd/SKILL.md" || { echo "idd router must add no authority" >&2; exit 1; }
+grep -q 'reached only when the request names that action' "$root/skills/idd/SKILL.md" || { echo "idd router must reach explicit-invocation phases only by name" >&2; exit 1; }
+grep -q 'ask one question' "$root/skills/idd/SKILL.md" || { echo "idd router must ask on ambiguity, never guess" >&2; exit 1; }
+grep -q 'adds no authority of its own' "$root/CONSTITUTION.md" || { echo "constitution must deny the router any authority" >&2; exit 1; }
 grep -q -- '--subject' "$root/skills/idd-land/scripts/land.sh" || { echo "idd-land must compose the squash subject, not accept the provider default" >&2; exit 1; }
 grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
 grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
@@ -93,7 +98,7 @@ grep -q 'companion PRD owner/name' "$root/skills/idd-publish/SKILL.md" || { echo
 grep -q 'scripts/scan-exposure.sh' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must run the scripted exposure scan" >&2; exit 1; }
 grep -q 'bare stem, never anchored to a file extension' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must match denylist terms by bare stem" >&2; exit 1; }
 grep -q 'A commit-message match is always that blocker' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must treat a commit-message match as unpurgeable" >&2; exit 1; }
-grep -q 'permanent provider surfaces' "$root/skills/idd/SKILL.md" || { echo "idd must keep private companion material out of permanent provider text" >&2; exit 1; }
+grep -q 'permanent provider surfaces' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must keep private companion material out of permanent provider text" >&2; exit 1; }
 grep -q 'matched by bare stem' "$root/CONSTITUTION.md" || { echo "constitution must bound denylist term form" >&2; exit 1; }
 grep -q 'advance its lifecycle status only when' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must preserve tracker lifecycle semantics" >&2; exit 1; }
 
@@ -163,7 +168,7 @@ grep -q 'never executes goldens' "$root/CONSTITUTION.md" || { echo "constitution
 grep -q 'only artifacts its manifest names' "$root/CONSTITUTION.md" || { echo "constitution must bound what a contract repository tracks" >&2; exit 1; }
 grep -q 'scripts/contract.sh gate' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must run the contract gate" >&2; exit 1; }
 grep -q -- '--context' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must select a context" >&2; exit 1; }
-grep -q 'contract.sh owner' "$root/skills/idd/SKILL.md" || { echo "idd must check touched files against the issue's context scope" >&2; exit 1; }
+grep -q 'contract.sh owner' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must check touched files against the issue's context scope" >&2; exit 1; }
 grep -q 'contract.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate the whole contract before reconciliation" >&2; exit 1; }
 grep -q 'contexts/' "$root/CONSTITUTION.md" || { echo "constitution must admit context contracts" >&2; exit 1; }
 grep -q 'Depends on' "$root/CONSTITUTION.md" || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }

@@ -6,7 +6,7 @@ compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex,
 
 # /idd-land — explicitly land one completed issue
 
-`/idd` stops at an open PR; `/idd-land` is the separate destructive lifecycle step. A direct explicit invocation, or an active explicitly invoked `/idd-auto` run for its one current accepted PR, authorizes squash merge, issue closure, default-branch refresh, deletion of that PR's same-repository remote/local feature branch, and automatic progress reconciliation in an exact convention-linked sibling `{project}-prd` repository when present. It does not authorize force-push, bypassing failed checks/reviews/conflicts, deployment, or landing any other issue.
+`/idd-implement` stops at an open PR; `/idd-land` is the separate destructive lifecycle step. A direct explicit invocation, or an active explicitly invoked `/idd-auto` run for its one current accepted PR, authorizes squash merge, issue closure, default-branch refresh, deletion of that PR's same-repository remote/local feature branch, and automatic progress reconciliation in an exact convention-linked sibling `{project}-prd` repository when present. It does not authorize force-push, bypassing failed checks/reviews/conflicts, deployment, or landing any other issue.
 
 ## Input and authority
 

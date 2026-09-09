@@ -6,7 +6,7 @@ compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex,
 
 # /idd-issue — create one implementation-ready issue
 
-Turn a concrete problem or change request into one live GitHub issue. Keep it small enough for one `/idd` run. Do not create branches, edit project files, prescribe speculative implementation, or start delivery.
+Turn a concrete problem or change request into one live GitHub issue. Keep it small enough for one `/idd-implement` run. Do not create branches, edit project files, prescribe speculative implementation, or start delivery.
 
 An explicit request to **file**, **create**, or **open** the issue authorizes one GitHub issue creation. An active explicitly invoked `/idd-auto` run supplies that authority for its one verified next-issue contract. A request to draft, review, or suggest does not.
 
