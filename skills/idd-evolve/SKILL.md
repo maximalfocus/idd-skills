@@ -6,7 +6,7 @@ compatibility: "Requires git; works with Claude Code, Codex, Pi, and OpenCode."
 
 # /idd-evolve — evolve Issue-Driven Development
 
-Improve the IDD methodology from real use without growing `/idd` into CDD. A candidate either passes the constitution and lands, or leaves no trace; git history is the record.
+Improve the IDD methodology from real use without growing `/idd-implement` into CDD. A candidate either passes the constitution and lands, or leaves no trace; git history is the record.
 
 ## First: read the constitution
 
@@ -16,7 +16,7 @@ Resolve the explicit target or current checkout as the `idd-skills` methodology 
 
 For **post-plan**, inspect the PRD requirements and progress tracker, live issue/PR state, the recommended next issue, and any automatic post-landing reconciliation. Evaluate ordering, scope selection, lifecycle accuracy, and privacy—not project correctness.
 
-For **post-create**, inspect the source request, duplicate search, created issue and edits/comments, available session evidence, and downstream `/idd` or PR friction when it bears on issue quality. Evaluate the issue-authoring method, not project correctness.
+For **post-create**, inspect the source request, duplicate search, created issue and edits/comments, available session evidence, and downstream `/idd-implement` or PR friction when it bears on issue quality. Evaluate the issue-authoring method, not project correctness.
 
 For **post-issue**, inspect the live issue/comments, project branch/PR diff and commits, verification output, and available session evidence. Do not review project correctness or invoke `/peerreview`; that is a separate user-invoked workflow. Match proof to the claim in any mode: one reproducible mechanical escape can establish a validation gap; behavioral advice normally needs multiple independent runs.
 

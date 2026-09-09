@@ -18,7 +18,7 @@ Pick the path that matches, and don't mix them.
 Add the capability through the normal product lifecycle:
 
 1. Update the private companion product contract (`{project}-prd`) — add one requirement (`R-###`) and one delivery slice, and update its progress tracker.
-2. Drive it through `idd-issue` → `idd` → `idd-land`.
+2. Drive it through `idd-issue` → `idd-implement` → `idd-land`.
 
 The change must satisfy both the product contract slice **and** every constitutional rule (size caps, lightweight boundary, safety gates).
 
@@ -26,7 +26,7 @@ The change must satisfy both the product contract slice **and** every constituti
 
 > "idd-skills should verify that a delivered product keeps conceptual integrity — that the product contract is one coherent design contract and that acceptance checks the whole, not just each room."
 
-This is a **capability** because it has an observable acceptance: the contract is coherent, and final acceptance verifies the whole model. It is delivered as a requirement (R-013) by updating the product contract, then the normal lifecycle.
+This is a **capability** because it has an observable acceptance: the contract is coherent, and final acceptance verifies the whole model. It is delivered as a requirement by updating the product contract, then the normal lifecycle.
 
 ## Lesson → evolution path
 
@@ -39,7 +39,7 @@ Evolve the method directly through `/idd-evolve`:
 
 ### Example of a lesson
 
-> "When I ran `/idd` on a project, it silently accepted an unproven acceptance item as a residual. It should stop and name it instead."
+> "When I ran `/idd-implement` on a project, it silently accepted an unproven acceptance item as a residual. It should stop and name it instead."
 
 This is a **lesson** because it comes from real use and is about how the existing method behaves. You would drive it through `/idd-evolve` with the evidence of that run.
 
@@ -55,6 +55,6 @@ This is a **lesson** because it comes from real use and is about how the existin
 
 | Your idea | Path |
 |---|---|
-| idd-skills should **do something new** (has an acceptance result) | **Capability** → update the `{project}-prd` contract, then `idd-issue` → `idd` → `idd-land` |
+| idd-skills should **do something new** (has an acceptance result) | **Capability** → update the `{project}-prd` contract, then `idd-issue` → `idd-implement` → `idd-land` |
 | You **used** it and found a friction / gap / repeated mistake | **Lesson** → `/idd-evolve` |
 | You want to change a **constitutional rule** (size cap, evidence bar, boundary, publication discipline) | **Lesson** — goes through the `/idd-evolve` evidence gate |

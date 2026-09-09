@@ -2,9 +2,9 @@
 
 Lightweight Issue-Driven Development for greenfield and existing software repositories.
 
-`/idd-plan` can bootstrap a private `{project}-prd` containing a concise PRD and progress tracker — from requirements for a new product, or reconstructed from an already-implemented repository — choose one next issue from an existing convention-linked pair, or reconcile verified progress; `/idd-issue` creates that implementation-ready GitHub issue; `/idd` takes it through focused implementation, repository-native verification, commit, push, and a linked PR. `/idd-auto` can explicitly orchestrate those same current gates one issue at a time until the PRD implementation scope is complete. `/idd-acceptance` exercises the final real product boundary, and `/idd-publish` can explicitly prepare and publish only the implementation repository while its companion contract remains private. IDD deliberately does **not** create plan files, golden-file suites, trace artifacts, or per-wave reviews. Use CDD instead when several implementations must prove the same behavior, or a rewrite or migration must preserve behavior exactly: those need a behavior contract that no implementation owns.
+`/idd-plan` can bootstrap a private `{project}-prd` containing a concise PRD and progress tracker — from requirements for a new product, or reconstructed from an already-implemented repository — choose one next issue from an existing convention-linked pair, or reconcile verified progress; `/idd-issue` creates that implementation-ready GitHub issue; `/idd-implement` takes it through focused implementation, repository-native verification, commit, push, and a linked PR. `/idd-auto` can explicitly orchestrate those same current gates one issue at a time until the PRD implementation scope is complete. `/idd-acceptance` exercises the final real product boundary, and `/idd-publish` can explicitly prepare and publish only the implementation repository while its companion contract remains private. IDD deliberately does **not** create plan files, golden-file suites, trace artifacts, or per-wave reviews. Use CDD instead when several implementations must prove the same behavior, or a rewrite or migration must preserve behavior exactly: those need a behavior contract that no implementation owns.
 
-Normal lifecycle: `/idd-plan` → `/idd-issue` → `/idd` → optional `/peerreview` → `/idd-land` → `/idd-acceptance` → optional `/idd-publish`. Landing automatically commits verified lifecycle progress to the associated PRD repository; `/idd-plan --reconcile` exists only for repair or explicit resynchronization. Publication is a separate explicit visibility operation, never an implicit consequence of implementation or acceptance.
+Normal lifecycle: `/idd-plan` → `/idd-issue` → `/idd-implement` → optional `/peerreview` → `/idd-land` → `/idd-acceptance` → optional `/idd-publish`. Landing automatically commits verified lifecycle progress to the associated PRD repository; `/idd-plan --reconcile` exists only for repair or explicit resynchronization. Publication is a separate explicit visibility operation, never an implicit consequence of implementation or acceptance.
 
 Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocation repeatedly selects, creates, implements, verifies, lands, and reconciles one issue at a time. It stops rather than bypassing ambiguity, residual acceptance, red CI/reviews, external prerequisites, or material product decisions.
 
@@ -18,7 +18,8 @@ A product too large for one coherent contract partitions its `{project}-prd` int
 |---|---|
 | `/idd-plan [project-name\|--reconstruct [--scope path...] [--context name]\|--reconcile]` | Bootstrap a private product contract from requirements or implemented source, recommend one next issue, or repair its tracker |
 | `/idd-issue <request> [--repo OWNER/REPO]` | Create one evidence-backed, duplicate-checked GitHub issue |
-| `/idd <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
+| `/idd <request>` | Route one request to the phase that owns it; a bare issue number or URL goes to `idd-implement`, and phases that require explicit invocation are reached only when the request names their action; planning inference reaches only read-only default mode, while bootstrap, reconstruct, and reconcile must be named |
+| `/idd-implement <issue-number-or-url>` | Implement one well-scoped issue and open a PR; never auto-merge or deploy |
 | `/idd-land <issue-number-or-url> [--pr N] [--accept-residuals]` | Validate and squash-merge one PR, close its issue, then delete its branches |
 | `/idd-auto <project-name-or-path>` | Sequentially finish an exact PRD-linked project through the existing gated lifecycle |
 | `/idd-evolve [post-plan\|post-create\|post-issue\|simplify\|land <PR>]` | Filter proven run lessons into IDD as a reviewed PR, or land one reviewed evolution PR; rejected candidates leave no log |
@@ -43,7 +44,7 @@ Selective install is supported for standalone skills:
 npx skills add maximalfocus/idd-skills --skill idd-issue
 ```
 
-Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-publish` requires `idd-plan`, `idd-issue`, `idd`, and `idd-land`. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
+Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-implement` requires `idd-plan` when the companion contract is partitioned; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd` routes to whichever sibling the request selects and needs that sibling installed. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
 
 Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
 
@@ -65,10 +66,10 @@ This fallback creates absolute symlinks in `~/.agents/skills/`, `~/.claude/skill
 
 | Runner | Invoke |
 |---|---|
-| Claude Code | `/idd-plan` · `/idd-issue fix the timeout` · `/idd 6` · `/idd-land 6` · `/idd-auto widget` · `/idd-acceptance widget` · `/idd-publish widget` |
-| Codex | `$idd-plan` · `$idd-issue fix the timeout` · `$idd 6` · `$idd-land 6` · `$idd-auto widget` · `$idd-acceptance widget` · `$idd-publish widget` |
-| Pi | `/skill:idd-plan` · `/skill:idd-issue fix the timeout` · `/skill:idd 6` · `/skill:idd-land 6` · `/skill:idd-auto widget` · `/skill:idd-acceptance widget` · `/skill:idd-publish widget` |
-| OpenCode | `Use idd-plan to choose the next issue` · `Use idd-issue to file it` · `Use idd for issue 6` · `Use idd-land for issue 6` · `Use idd-auto for widget` · `Use idd-acceptance for widget` · `Use idd-publish for widget` |
+| Claude Code | `/idd 6` · `/idd-plan` · `/idd-issue fix the timeout` · `/idd-implement 6` · `/idd-land 6` · `/idd-auto widget` · `/idd-acceptance widget` · `/idd-publish widget` |
+| Codex | `$idd 6` · `$idd-plan` · `$idd-issue fix the timeout` · `$idd-implement 6` · `$idd-land 6` · `$idd-auto widget` · `$idd-acceptance widget` · `$idd-publish widget` |
+| Pi | `/skill:idd 6` · `/skill:idd-plan` · `/skill:idd-issue fix the timeout` · `/skill:idd-implement 6` · `/skill:idd-land 6` · `/skill:idd-auto widget` · `/skill:idd-acceptance widget` · `/skill:idd-publish widget` |
+| OpenCode | `Use idd for issue 6` · `Use idd-plan to choose the next issue` · `Use idd-issue to file it` · `Use idd-implement for issue 6` · `Use idd-land for issue 6` · `Use idd-auto for widget` · `Use idd-acceptance for widget` · `Use idd-publish for widget` |
 
 The same runner-specific forms apply to `idd-evolve`. Restart an already-running harness after installation so it rescans skills.
 
@@ -80,7 +81,8 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 
 - `skills/idd-plan/SKILL.md` — greenfield and reconstructed product-contract bootstrap, next-issue planning, and reconciliation
 - `skills/idd-issue/SKILL.md` — evidence-backed issue creation workflow
-- `skills/idd/SKILL.md` — issue implementation workflow
+- `skills/idd/SKILL.md` — entry point that routes one request to the phase that owns it
+- `skills/idd-implement/SKILL.md` — issue implementation workflow
 - `skills/idd-land/SKILL.md` — explicit landing workflow
 - `skills/idd-auto/SKILL.md` — autonomous one-issue-at-a-time PRD completion loop
 - `skills/idd-evolve/SKILL.md` — pass-or-nothing evolution workflow

@@ -6,12 +6,12 @@ compatibility: "Requires git, GitHub CLI (gh), and the exact {project} ↔ {proj
 
 # /idd-publish — publish one exact IDD project
 
-An explicit `/idd-publish` invocation authorizes the final visibility mutation for the exact pair: update both repositories through one publication-preparation issue, branch, PR, squash merge, closure, and tracker reconciliation, then make only `{project}` public. `{project}-prd` remains private. This is repository publication, not deployment or hosting.
+An explicit `/idd-publish` invocation (directly or through `/idd`, per Constitution Article 5) authorizes the final visibility mutation for the exact pair: update both repositories through one publication-preparation issue, branch, PR, squash merge, closure, and tracker reconciliation, then make only `{project}` public. `{project}-prd` remains private. This is repository publication, not deployment or hosting.
 
 ## Orient and prepare
 
 1. Resolve this installed skill directory and the sibling `idd-plan` skill in the same installation root; run `idd-plan/scripts/resolve-prd-pair.sh`. Require matching origins, authenticated GitHub access, clean default branches, and both repositories currently private. Read `PRD.md`, `PROGRESS.md`, live issues/PRs, and repository instructions. A missing sibling is an incomplete installation and stops.
-2. Resolve sibling `idd-issue`, `idd`, and `idd-land` skills from the same installation root. Resume one uniquely active publication issue/PR; otherwise execute the sibling `idd-plan` for the next publication requirement, then `idd-issue`, `idd`, and `idd-land`. Preserve every constituent duplicate, acceptance, verification, review, merge, cleanup, and reconciliation gate. Never parallelize or invent requirements.
+2. Resolve sibling `idd-issue`, `idd-implement`, and `idd-land` skills from the same installation root. Resume one uniquely active publication issue/PR; otherwise execute the sibling `idd-plan` for the next publication requirement, then `idd-issue`, `idd-implement`, and `idd-land`. Preserve every constituent duplicate, acceptance, verification, review, merge, cleanup, and reconciliation gate. Never parallelize or invent requirements.
 3. Before publication, require a license, defaulting to MIT when the project does not specify one, plus public-safe documentation, a green repository-native gate and end-to-end check, and no unresolved product or legal decision. The preparation issue must be landed while the implementation repository is still private. Run the publication gate's denylist and secret scan over the preparation change before pushing it, including any guard or test that names a forbidden term in order to forbid it; once merged, a match survives in the provider's retained pull-request refs, which no history rewrite can reach.
 
 ## Publication gate
