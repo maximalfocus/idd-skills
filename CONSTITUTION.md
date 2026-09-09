@@ -1,31 +1,88 @@
 # IDD Constitution
 
-The law governing `/idd`, `/idd-plan`, `/idd-issue`, `/idd-implement`, `/idd-land`, `/idd-auto`, `/idd-acceptance`, `/idd-publish`, `/idd-evolve`, and changes to this repository. Evolution is a filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no log.
+The law governing `/idd`, `/idd-plan`, `/idd-issue`, `/idd-implement`, `/idd-land`, `/idd-auto`,
+`/idd-acceptance`, `/idd-publish`, `/idd-evolve`, and changes to this repository. Evolution is a
+filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no
+log.
 
 ## Article 1 — Preserve the lightweight boundary
 
-`/idd-plan` has one bounded bootstrap exception, reached either after product-requirement discovery (greenfield) or from an already-implemented repository's source and delivery history (reconstruct): bootstrap mode creates and pushes a private `{project}-prd` repository containing only `PRD.md` and `PROGRESS.md` by default; an explicit draft-only request suppresses publication. `PRD.md` carries a preserved-artifact manifest, written explicitly even when empty; besides those two files, harness instruction files, and — when the product is too large for one coherent contract — `contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel, a contract repository tracks only artifacts its manifest names, and reconcile mode reports anything else as drift without changing it. Each context is one coherent model with its own `Scope` of implementation paths, a `Depends on` list naming the contexts whose behavior it references but never restates, and its non-goals; the index owns the context table, cross-context invariants, and the manifest, and a context is admitted only when work is planned in it. Reconstruct describes only behavior the implementation already has, may be bounded to an explicitly named set of paths that becomes one context's scope with the remainder a stated non-goal, collapses implemented scope to one verified baseline, and never recreates Git history as delivery slices or invents lifecycle evidence. It never creates a plan file, implementation repository, issue, branch, or PR. For an existing convention-linked pair, default mode recommends at most one next issue without mutation; reconcile mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence, behind the bundled tracker gate, and never `PRD.md`: stale requirement prose is reported and repaired only by a user's `prd` commit. `/idd-issue` creates one implementation-ready GitHub issue from evidence after explicit authorization; it does not implement, branch, or open a PR. `/idd-implement` delivers one well-scoped live issue through native verification and a linked PR. `/idd` is the entry point: it routes one request to the one phase that owns it and adds no authority of its own, so a phase that requires explicit invocation is reached through it only when the request names that action, and ambiguity is a question, never a guess. `/idd-land` is the separate landing phase: explicit invocation as defined in Article 5, one active explicit `/idd-auto` run, or an explicit `/idd-publish` run for its one preparation PR may authorize it to squash-merge one validated PR, close its issue, clean its branches, and automatically reconcile an exact associated PRD tracker, but never bypass red gates. `/idd-auto` is the only full-loop implementation exception: one explicit invocation may privately bootstrap the exact missing implementation sibling of an existing clean PRD repository, then repeat the current plan, create, implement, and land phases for that exact pair, one issue at a time, until PRD implementation completion or a fail-closed blocker. `/idd-publish` is the separate publication phase: one explicit invocation may complete one publication-preparation issue and then make only the implementation repository public after exposure and anonymous-readback gates; its companion PRD remains private. No command creates golden-file suites, trace artifacts, mandatory review waves, deployment, speculative backlogs, or parallel delivery. `/idd-evolve` is separate methodology maintenance; no command adds methodology traces to project repositories.
+`/idd-plan` has one bounded bootstrap exception, reached either after product-requirement discovery
+(greenfield) or from an already-implemented repository's source and delivery history (reconstruct):
+bootstrap mode creates and pushes a private `{project}-prd` repository containing only `PRD.md` and
+`PROGRESS.md` by default; an explicit draft-only request suppresses publication. `PRD.md` carries a
+preserved-artifact manifest, written explicitly even when empty; besides those two files, harness
+instruction files, and — when the product is too large for one coherent contract —
+`contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel, a contract
+repository tracks only artifacts its manifest names, and reconcile mode reports anything else as
+drift without changing it. Each context is one coherent model with its own `Scope` of implementation
+paths, a `Depends on` list naming the contexts whose behavior it references but never restates, and
+its non-goals; the index owns the context table, cross-context invariants, and the manifest, and a
+context is admitted only when work is planned in it. Reconstruct describes only behavior the
+implementation already has, may be bounded to an explicitly named set of paths that becomes one
+context's scope with the remainder a stated non-goal, collapses implemented scope to one verified
+baseline, and never recreates Git history as delivery slices or invents lifecycle evidence. It never
+creates a plan file, implementation repository, issue, branch, or PR. For an existing
+convention-linked pair, default mode recommends at most one next issue without mutation; reconcile
+mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence, behind the
+bundled tracker gate, and never `PRD.md`: stale requirement prose is reported and repaired only by a
+user's `prd` commit. `/idd-issue` creates one implementation-ready GitHub issue from evidence after
+explicit authorization; it does not implement, branch, or open a PR. `/idd-implement` delivers one
+well-scoped live issue through native verification and a linked PR. `/idd` is the entry point: it
+routes one request to the one phase that owns it and adds no authority of its own, so a phase that
+requires explicit invocation is reached through it only when the request names that action, and
+ambiguity is a question, never a guess. `/idd-land` is the separate landing phase: explicit
+invocation as defined in Article 5, one active explicit `/idd-auto` run, or an explicit
+`/idd-publish` run for its one preparation PR may authorize it to squash-merge one validated PR,
+close its issue, clean its branches, and automatically reconcile an exact associated PRD tracker,
+but never bypass red gates. `/idd-auto` is the only full-loop implementation exception: one explicit
+invocation may privately bootstrap the exact missing implementation sibling of an existing clean PRD
+repository, then repeat the current plan, create, implement, and land phases for that exact pair,
+one issue at a time, until PRD implementation completion or a fail-closed blocker. `/idd-publish` is
+the separate publication phase: one explicit invocation may complete one publication-preparation
+issue and then make only the implementation repository public after exposure and anonymous-readback
+gates; its companion PRD remains private. No command creates golden-file suites, trace artifacts,
+mandatory review waves, deployment, speculative backlogs, or parallel delivery. `/idd-evolve` is
+separate methodology maintenance; no command adds methodology traces to project repositories.
 
-`/idd-acceptance` is the separate final integrated acceptance phase: it verifies the completed product at its real user-facing boundary and never deploys or changes the contract. It verifies each manifest row by existence and by reading the artifact against its identity statement; it never executes goldens or compares input-output pairs.
+`/idd-acceptance` is the separate final integrated acceptance phase: it verifies the completed
+product at its real user-facing boundary and never deploys or changes the contract. It verifies each
+manifest row by existence and by reading the artifact against its identity statement; it never
+executes goldens or compares input-output pairs.
 
 ## Article 2 — Pass or nothing
 
 A candidate has two outcomes:
 
-- **Pass** → minimally edit the methodology, validate, commit, and push. Git history records what and why.
+- **Pass** → minimally edit the methodology, validate, commit, and push. Git history records what
+  and why.
 - **Fail** → do nothing. No research log, proposal queue, patterns ledger, or deferred list.
 
 ## Article 3 — Evidence and value
 
-A change passes only when it is high-value, proven, not already covered, and smaller than the friction it removes. A mechanically reproducible defect or established practice may be proven once; a behavioral generalization normally needs multiple independent runs. For `/idd-plan`, primary evidence is PRD-to-issue selection quality, live/tracker discrepancies, post-landing reconciliation outcomes, and reconstruction fidelity to implemented source. For `/idd-issue`, primary evidence is the source request, duplicate-search result, created issue and edits/comments, and downstream implementation friction when available. For `/idd-auto`, primary evidence is repeated sequential lifecycle friction plus its live-state resume and gate-preservation outcomes. Planning and issue creation never auto-invoke evolution or create lessons logs; `/idd-evolve post-plan` and `post-create` apply the same pass-or-nothing gate. Prefer deletion or replacement over addition. A change must also leave already-delivered issues the same or better: name the delivery it would most likely have degraded, clear it, or narrow the rule to where it holds.
+A change passes only when it is high-value, proven, not already covered, and smaller than the
+friction it removes. A mechanically reproducible defect or established practice may be proven once;
+a behavioral generalization normally needs multiple independent runs. For `/idd-plan`, primary
+evidence is PRD-to-issue selection quality, live/tracker discrepancies, post-landing reconciliation
+outcomes, and reconstruction fidelity to implemented source. For `/idd-issue`, primary evidence is
+the source request, duplicate-search result, created issue and edits/comments, and downstream
+implementation friction when available. For `/idd-auto`, primary evidence is repeated sequential
+lifecycle friction plus its live-state resume and gate-preservation outcomes. Planning and issue
+creation never auto-invoke evolution or create lessons logs; `/idd-evolve post-plan` and
+`post-create` apply the same pass-or-nothing gate. Prefer deletion or replacement over addition. A
+change must also leave already-delivered issues the same or better: name the delivery it would most
+likely have degraded, clear it, or narrow the rule to where it holds.
 
 ## Article 4 — Put instructions at the right layer
 
-Structural, behavioral, and validation lessons belong in skills. Runtime/tool-specific accidents do not, unless they reveal a general issue-delivery boundary. If a step has one mechanically correct output—installation, structural validation, counts, transforms, or git plumbing—script it; prose remains for judgment.
+Structural, behavioral, and validation lessons belong in skills. Runtime/tool-specific accidents do
+not, unless they reveal a general issue-delivery boundary. If a step has one mechanically correct
+output—installation, structural validation, counts, transforms, or git plumbing—script it; prose
+remains for judgment.
 
 ## Article 5 — Size and structure gates
 
-- `skills/idd-plan/SKILL.md` ≤ 90 lines.
+- `skills/idd-plan/SKILL.md` ≤ 160 lines.
 - `skills/idd-issue/SKILL.md` ≤ 70 lines.
 - `skills/idd/SKILL.md` ≤ 60 lines.
 - `skills/idd-implement/SKILL.md` ≤ 160 lines.
@@ -34,26 +91,84 @@ Structural, behavioral, and validation lessons belong in skills. Runtime/tool-sp
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - `skills/idd-publish/SKILL.md` ≤ 120 lines.
 - `skills/idd-acceptance/SKILL.md` ≤ 120 lines.
-- Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and a quality gate.
-- `/idd-plan` requires private-by-default bootstrap publication with a draft-only opt-out, product-only clarification proportional to unresolved domain complexity, source-traceable descriptive requirements and one verified implementation baseline when reconstructing, exact association for existing pairs, read-only default planning, at most one next issue, live-state authority, an explicit manifest from both bootstrap modes with reconstruct candidates limited to observed evidence and confirmed by the user, a scoped reconstruct that names its paths as one context's scope and states the remainder as a non-goal, a contract that passes the bundled PRD size gate and, when partitioned, the bundled contract gate over the index and every context, and tracker-only reconciliation behind the bundled tracker gate, whose budgets — like the PRD size gate's — change only through `/idd-evolve`, that keeps `PROGRESS.md` an implementation control panel rather than a commit or delivery log.
-- `/idd` requires one request to one routed phase and one question on ambiguity; routing adds no authority. For all invocation rules, a user request explicitly naming a phase's action through `/idd` counts as that phase's explicit invocation, including where direct invocation is required; it preserves every phase gate and required flag. Inference reaches only `/idd-implement`, read-only `/idd-plan` default mode, or `/idd-acceptance`; routing to bootstrap, reconstruct, or reconcile requires the request to name that mode, and a missing default-mode pair never authorizes bootstrap.
-- `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back verification.
-- `/idd-land` requires explicit invocation, an acceptance/residual gate, a landing script parsed whole before it runs, the tracker gate — and the contract gate when the contract is partitioned — before reconciliation, and verified postconditions.
-- `/idd-auto` requires explicit invocation, an exact PRD source and pair (privately bootstrapping only its uniquely missing implementation sibling), one active issue, current constituent gates, live-state resume, a final completion audit, and no publication invocation.
-- `/idd-auto` acceptance failures must distinguish an accepted-requirement repair issue from a genuinely new or changed requirement; only the latter pauses for explicit scope authorization and PRD/slice revision, and project defects never invoke `/idd-evolve`.
-- `/idd-publish` requires explicit invocation, an exact private pair, one preparation issue, a scripted exposure audit covering every commit message and retained pull-request ref with denylist terms matched by bare stem, implementation-only visibility mutation, anonymous readback, and private PRD verification.
-- `/idd-acceptance` requires an exact completed pair, a real product boundary, complete applicable journeys, readiness and teardown evidence, manifest rows verified by existence and identity without executing goldens, failure classification, and no deployment or residual acceptance.
-- `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for planning, implementation, and issue-creation evidence.
+- Every line of `skills/*/SKILL.md`, `CONSTITUTION.md`, and `CLAUDE.md` ≤ 100 characters.
+- Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and
+  a quality gate.
+- `/idd-plan` requires private-by-default bootstrap publication with a draft-only opt-out,
+  product-only clarification proportional to unresolved domain complexity, source-traceable
+  descriptive requirements and one verified implementation baseline when reconstructing, exact
+  association for existing pairs, read-only default planning, at most one next issue, live-state
+  authority, an explicit manifest from both bootstrap modes with reconstruct candidates limited to
+  observed evidence and confirmed by the user, a scoped reconstruct that names its paths as one
+  context's scope and states the remainder as a non-goal, a contract that passes the bundled PRD
+  size gate and, when partitioned, the bundled contract gate over the index and every context, and
+  tracker-only reconciliation behind the bundled tracker gate, whose budgets — like the PRD size
+  gate's — change only through `/idd-evolve`, that keeps `PROGRESS.md` an implementation control
+  panel rather than a commit or delivery log.
+- `/idd` requires one request to one routed phase and one question on ambiguity; routing adds no
+  authority. For all invocation rules, a user request explicitly naming a phase's action through
+  `/idd` counts as that phase's explicit invocation, including where direct invocation is required;
+  it preserves every phase gate and required flag. Inference reaches only `/idd-implement`,
+  read-only `/idd-plan` default mode, or `/idd-acceptance`; routing to bootstrap, reconstruct, or
+  reconcile requires the request to name that mode, and a missing default-mode pair never authorizes
+  bootstrap.
+- `/idd-issue` requires explicit creation authority, open-and-closed duplicate search, and read-back
+  verification.
+- `/idd-land` requires explicit invocation, an acceptance/residual gate, a landing script parsed
+  whole before it runs, the tracker gate — and the contract gate when the contract is partitioned —
+  before reconciliation, and verified postconditions.
+- `/idd-auto` requires explicit invocation, an exact PRD source and pair (privately bootstrapping
+  only its uniquely missing implementation sibling), one active issue, current constituent gates,
+  live-state resume, a final completion audit, and no publication invocation.
+- `/idd-auto` acceptance failures must distinguish an accepted-requirement repair issue from a
+  genuinely new or changed requirement; only the latter pauses for explicit scope authorization and
+  PRD/slice revision, and project defects never invoke `/idd-evolve`.
+- `/idd-publish` requires explicit invocation, an exact private pair, one preparation issue, a
+  scripted exposure audit covering every commit message and retained pull-request ref with denylist
+  terms matched by bare stem, implementation-only visibility mutation, anonymous readback, and
+  private PRD verification.
+- `/idd-acceptance` requires an exact completed pair, a real product boundary, complete applicable
+  journeys, readiness and teardown evidence, manifest rows verified by existence and identity
+  without executing goldens, failure classification, and no deployment or residual acceptance.
+- `/idd-evolve` reads this constitution first and uses pass-or-nothing evolution for planning,
+  implementation, and issue-creation evidence.
 - Cross-references resolve and `bash scripts/validate.sh` passes.
 
 Over cap means compress in the same change or revert.
 
 ## Article 6 — Commit and publish
 
-Every kept evolution reaches `maximalfocus/idd-skills` on `main` only through a pull request the maintainer reviews and the agent squash-merges on explicit instruction. `scripts/propose.sh` commits the explicit task-owned paths on `evolve/<slug>` from the current `origin/main`, pushes that branch, opens the PR whose title is the N-4 commit subject and whose body its body, and returns the checkout to `main`. After review — the maintainer's own or `/peerreview`'s — only the maintainer's explicit instruction authorizes `scripts/land-evolution.sh` to squash-merge that PR with its title as subject and delete its branch locally and on origin; nothing else writes `main`. `scripts/protect-main.sh` makes GitHub enforce that shape — pull request required, squash only, linear history, no force-push, no deletion, no bypass — and `/idd-evolve` verifies it before editing anything. Stage only explicit task-owned paths; never `git add -A`. Never force-push. Greenfield `/idd-plan` authorizes the initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land` or `/idd-auto` authority permits automatic verified `PROGRESS.md` commit/push in the exact associated PRD repository. Failure after merge is disclosed and resumable. Project repositories otherwise remain governed by their own review policy.
+Every kept evolution reaches `maximalfocus/idd-skills` on `main` only through a pull request the
+maintainer reviews and the agent squash-merges on explicit instruction. `scripts/propose.sh` commits
+the explicit task-owned paths on `evolve/<slug>` from the current `origin/main`, pushes that branch,
+opens the PR whose title is the N-4 commit subject and whose body its body, and returns the checkout
+to `main`. After review — the maintainer's own or `/peerreview`'s — only the maintainer's explicit
+instruction authorizes `scripts/land-evolution.sh` to squash-merge that PR with its title as subject
+and delete its branch locally and on origin; nothing else writes `main`. `scripts/protect-main.sh`
+makes GitHub enforce that shape — pull request required, squash only, linear history, no force-push,
+no deletion, no bypass — and `/idd-evolve` verifies it before editing anything. Stage only explicit
+task-owned paths; never `git add -A`. Never force-push. Greenfield `/idd-plan` authorizes the
+initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land` or
+`/idd-auto` authority permits automatic verified `PROGRESS.md` commit/push in the exact associated
+PRD repository. Failure after merge is disclosed and resumable. Project repositories otherwise
+remain governed by their own review policy.
 
 ## Article 7 — Preserve conceptual integrity
 
-Treat the PRD as one coherent design contract: its concepts and names are consistent, its domain boundary and non-goals are explicit, and its slices partition that domain instead of adding convenience rooms. Every slice states how it preserves or extends the model, is independently deliverable, and never requires a later slice's deliverable. A validated slice's acceptance lives in the requirement it extends; the slice keeps no section of its own, so the contract grows with the model rather than with the delivery count.
+Treat the PRD as one coherent design contract: its concepts and names are consistent, its domain
+boundary and non-goals are explicit, and its slices partition that domain instead of adding
+convenience rooms. Every slice states how it preserves or extends the model, is independently
+deliverable, and never requires a later slice's deliverable. A validated slice's acceptance lives in
+the requirement it extends; the slice keeps no section of its own, so the contract grows with the
+model rather than with the delivery count.
 
-Issues and implementations are model-consistent by default. Prefer the smallest coherent change that keeps established patterns and public contracts whole over a cheaper one-off; a novel concept, special case, boundary move, or fragmenting convenience feature is a named design decision and recorded model extension, never a quiet deviation. Final acceptance judges the integrated product at its real boundary for contradictions, out-of-domain surplus, and surprise paths, not merely journey-by-journey success. In a partitioned contract a context owns only behavior inside its scope; a change that must cross contexts is a design decision recorded in the index before its issues exist, one context per issue, dependency first. Planning, creation, implementation, landing, automation, acceptance, and evolution must reject unrecorded fragmentation. This is a judgment gate, not authority to create plan files, checklists, trace records, or another artifact pipeline.
+Issues and implementations are model-consistent by default. Prefer the smallest coherent change that
+keeps established patterns and public contracts whole over a cheaper one-off; a novel concept,
+special case, boundary move, or fragmenting convenience feature is a named design decision and
+recorded model extension, never a quiet deviation. Final acceptance judges the integrated product at
+its real boundary for contradictions, out-of-domain surplus, and surprise paths, not merely
+journey-by-journey success. In a partitioned contract a context owns only behavior inside its scope;
+a change that must cross contexts is a design decision recorded in the index before its issues
+exist, one context per issue, dependency first. Planning, creation, implementation, landing,
+automation, acceptance, and evolution must reject unrecorded fragmentation. This is a judgment gate,
+not authority to create plan files, checklists, trace records, or another artifact pipeline.

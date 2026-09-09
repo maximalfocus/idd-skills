@@ -2,6 +2,9 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+has_phrase() { # $1 = file, $2 = fixed phrase; matches across the 100-column line wrap
+  tr -s '[:space:]' ' ' < "$1" | grep -Fq -- "$2"
+}
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
@@ -58,13 +61,13 @@ if grep -rEn '(\.\./\.\./CONSTITUTION\.md|idd-skills/scripts/|physical source re
   exit 1
 fi
 
-grep -q 'sibling `idd-plan`' "$agents_root/idd-land/SKILL.md" || {
+has_phrase "$agents_root/idd-land/SKILL.md" 'sibling `idd-plan`' || {
   echo "idd-land must resolve its installed idd-plan dependency" >&2; exit 1; }
-grep -q 'sibling `idd-plan`' "$agents_root/idd-acceptance/SKILL.md" || {
+has_phrase "$agents_root/idd-acceptance/SKILL.md" 'sibling `idd-plan`' || {
   echo "idd-acceptance must resolve its installed idd-plan dependency" >&2; exit 1; }
-grep -q 'sibling `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`' "$agents_root/idd-auto/SKILL.md" || {
+has_phrase "$agents_root/idd-auto/SKILL.md" 'sibling `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`' || {
   echo "idd-auto must declare its complete installed dependency set" >&2; exit 1; }
-grep -q 'explicit target or current checkout' "$agents_root/idd-evolve/SKILL.md" || {
+has_phrase "$agents_root/idd-evolve/SKILL.md" 'explicit target or current checkout' || {
   echo "idd-evolve must mutate an explicit methodology checkout" >&2; exit 1; }
 
 RESOLVE_PRD_PAIR_SCRIPT="$agents_root/idd-plan/scripts/resolve-prd-pair.sh" \

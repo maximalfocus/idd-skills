@@ -1,49 +1,155 @@
 ---
 name: idd-plan
-description: "Bootstrap a greenfield IDD product PRD, reconstruct one from an already-implemented repository, plan the next issue from an existing sibling {project}-prd repository, or reconcile its progress tracker with verified live GitHub state."
+description: >-
+  Bootstrap a greenfield IDD product PRD, reconstruct one from an already-implemented repository,
+  plan the next issue from an existing sibling {project}-prd repository, or reconcile its progress
+  tracker with verified live GitHub state.
 compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex, Pi, and OpenCode."
 ---
 
 # /idd-plan — start or continue an issue-driven product
 
-Bootstrap a concise product contract — from requirements for a new product, or from the implemented source of an existing one — or bridge an existing private `{project}-prd` repository to its implementation repository, without importing CDD's artifact pipeline. Both bootstrap modes publish only `PRD.md` and `PROGRESS.md` to a private repository by default. Existing-project default mode is read-only and recommends one issue; reconcile mode updates only the tracker.
-
-A greenfield or reconstruct invocation authorizes discovery, drafting, private PRD repository creation, initial commit, and push unless the user explicitly asks for draft-only output. Creating the implementation repository or an issue remains separate. `/idd-plan --reconcile` authorizes a tracker commit/push; successful `/idd-land` supplies the same authority automatically.
+Bootstrap a concise product contract — from requirements for a new product or from the implemented
+source of an existing one — or bridge an existing private `{project}-prd` repository to its
+implementation repository, without CDD's artifact pipeline. Both bootstrap modes publish only
+`PRD.md` and `PROGRESS.md` to a private repository, and authorize discovery, drafting, repository
+creation, initial commit, and push unless the user explicitly asks for draft-only output; creating
+the implementation repository or an issue stays separate. Default mode is read-only and recommends
+one issue. `--reconcile` updates only the tracker and authorizes its commit/push, as does a
+successful `/idd-land`. No mode creates a PLAN file or a speculative backlog.
 
 ## Orient and select the mode
 
-1. Resolve this installed skill directory and run its bundled `scripts/resolve-prd-pair.sh`; the only automatic association is the exact sibling `{implementation-name}-prd` with matching GitHub origins plus `PRD.md` and `PROGRESS.md`. Read both repositories' instructions. Run its bundled `scripts/contract.sh list <contract-path>`: any names mean a partitioned contract whose root `PRD.md` is the index and root `PROGRESS.md` the portfolio panel; `--context <name>` selects one, a mode that reads the contract reads the index plus that context, and a mode that writes it passes `scripts/contract.sh gate <contract-path>`. GitHub is lifecycle authority and the PRD is requirement authority.
-2. Select the mode by what already exists: no product and no PRD source is greenfield; an implemented repository with real delivery history and no sibling PRD is reconstruct, which `--reconstruct` also names explicitly and `--reconstruct --scope <path>...` bounds to the paths or globs of one context in a repository too large to read entire, while `--reconstruct --scope … --context <name>` against an existing pair admits a context its index does not list yet; an exact pair is default, or reconcile with `--reconcile`. Both bootstrap modes resolve a unique project slug, GitHub owner, private visibility, and workspace parent, and never overwrite a path or repository. `--reconcile` always requires an existing exact pair and clean trees.
-3. Existing modes fetch the live issue/PR state, comments, checks, closing links, and squash commits needed for each conclusion. Parse requirements, slices, dependencies, release boundaries, tracker links, and explicit deferrals; preserve contradictions.
+1. Resolve this installed skill directory and run its bundled `scripts/resolve-prd-pair.sh`: the
+   only automatic association is the exact sibling `{implementation-name}-prd` with matching GitHub
+   origins plus `PRD.md` and `PROGRESS.md`. Read both repositories' instructions. Run the bundled
+   `scripts/contract.sh list <contract-path>`: any names mean a partitioned contract whose root
+   `PRD.md` is the index and root `PROGRESS.md` the portfolio panel; `--context <name>` selects one,
+   a reading mode reads the index plus that context, and a writing mode passes
+   `scripts/contract.sh gate <contract-path>` first. GitHub is lifecycle authority; the PRD is
+   requirement authority.
+2. Select the mode by what exists. No product and no PRD source: greenfield. An implemented
+   repository with real delivery history and no sibling PRD: reconstruct, also named by
+   `--reconstruct`; `--reconstruct --scope <path>...` bounds it to one context's paths or globs in a
+   repository too large to read entire, and with `--context <name>` against an existing pair admits
+   a context its index does not list yet, never by widening an existing one. An exact pair: default,
+   or `--reconcile`, which also requires clean trees. Both bootstrap modes resolve a unique project
+   slug, GitHub owner, private visibility, and workspace parent, and never overwrite a path or
+   repository.
+3. Existing modes fetch the live issue/PR state, comments, checks, closing links, and squash commits
+   each conclusion needs; parse requirements, slices, dependencies, release boundaries, tracker
+   links, and explicit deferrals, preserving contradictions.
 
 ## Greenfield mode — clarify and author the product contract
 
-1. Clarify intended users, problem, outcomes, workflows, security/data/API behavior, scope, non-goals, release boundary, and observable acceptance. Scale discovery to unresolved domain complexity: a small product gets few questions; a large, ambiguous, or high-risk domain gets more. Ask one decision at a time only when its answer materially changes the product, offer real alternatives with a recommendation, and stop when acceptance is unambiguous. Select technology and implementation details autonomously from best practices unless they change product behavior/risk or the user states a preference.
-2. Draft one concise `PRD.md` as a coherent design contract: use consistent concepts and naming, state the domain boundary and non-goals explicitly, and define stable requirement IDs with small, dependency-ordered, independently reviewable delivery slices. Slices partition the domain rather than add convenience rooms — one issue per slice, delivered issue-by-issue, never a monolithic slice for the whole project; each states how it preserves or extends the model, its explicit dependencies, and its own acceptance, which must never require a later slice's deliverable, and no slice claims a gate that only applies after all slices land. A slice owns a section only while it is ready or active: once validated, its acceptance moves into the requirement it extends or becomes a new requirement, and the slice collapses to one row of the Delivery slices table, a `prd` commit by the user. Write a `### Preserved artifacts` section: one row per artifact a regeneration must carry over unchanged, with repository, path, why it is not regenerable, and how final acceptance verifies it; ask for candidates from the product description, never invent a path, and write an empty manifest explicitly as `None declared`. Draft `PROGRESS.md` as an implementation control panel with the same IDs, explicit status semantics, and only the baseline plus rows that answer what is ready, active, blocked, or missing acceptance; never use it as an append-only or commit log, and invent no GitHub evidence. Do not create a PLAN file or speculative issue backlog; recommend only the first ready slice as an issue contract.
-3. Once the complete contract is settled, write only those two files, run this skill's bundled `scripts/prd-size-gate.sh PRD.md` and, once it passes, `scripts/init-prd.sh <path> <owner>/<project>-prd`, and read back the private remote and commit. If the user requested draft-only output, present both complete drafts and the recommended first issue without writing or publishing. Stop before implementation-repository or issue creation unless separately authorized.
+1. Clarify users, problem, outcomes, workflows, security/data/API behavior, scope, non-goals,
+   release boundary, and observable acceptance, scaling discovery to unresolved domain complexity.
+   Ask one decision at a time only when its answer materially changes the product, offer real
+   alternatives with a recommendation, and stop when acceptance is unambiguous. Choose technology
+   and implementation details autonomously unless they change product behavior/risk or the user
+   states a preference.
+2. Draft one concise `PRD.md` as a coherent design contract: consistent concepts and naming, an
+   explicit domain boundary and non-goals, stable requirement IDs, and small, dependency-ordered,
+   independently reviewable slices that partition the domain rather than add convenience rooms —
+   one issue per slice, never one monolithic slice. Each slice states how it preserves or extends
+   the model, its dependencies, and its own acceptance, which never requires a later slice's
+   deliverable or a gate that applies only after all slices land. A slice owns a section only while
+   ready or active: once validated, its acceptance moves into the requirement it extends or becomes
+   a new requirement, and the slice collapses to one row of the Delivery slices table, a `prd`
+   commit by the user. Write `### Preserved artifacts`: one row per artifact a regeneration must
+   carry over unchanged — repository, path, why it is not regenerable, how final acceptance verifies
+   it — from candidates the user names, never an invented path; an empty manifest is written
+   explicitly as `None declared`. Draft `PROGRESS.md` as an implementation control panel with the
+   same IDs, explicit status semantics, and only the baseline plus rows that answer what is ready,
+   active, blocked, or missing acceptance; never an append-only or commit log, and no invented
+   GitHub evidence. Recommend only the first ready slice as an issue contract.
+3. Once the contract is settled, write only those two files, pass the bundled
+   `scripts/prd-size-gate.sh PRD.md`, run `scripts/init-prd.sh <path> <owner>/<project>-prd`, and
+   read back the private remote and commit. For draft-only output, present both complete drafts and
+   the recommended first issue without writing or publishing.
 
 ## Reconstruct mode — derive the contract from implemented source
 
-1. Read the whole implemented surface before drafting — with `--scope`, the whole surface those paths cover — every tracked entry point, its tests, its build/verification gate, its documentation, and any retained charter, plus the live issue, pull-request, and commit history that touches it. Name the exact source commit the reconstruction describes, and the scope path when bounded: a scoped contract writes those globs under `## Scope`, the contexts it references under `## Depends on` by name and requirement ID without restating their behavior, and the rest of the repository as an explicit non-goal; the first context of a large product is normally the shared foundation the others depend on, and a later context is admitted with its own `--reconstruct --scope … --context <name>`, never by widening an existing one. Run this skill's bundled `scripts/manifest.sh candidates <implementation-path-or-scope-paths>`: it proposes only classes with observed evidence (a constitution, versioned schemas or rule packs, golden or fixture directories, frozen protocol documents, lockfiles, decision logs, dated acceptance or cohort records), and a candidate enters the `### Preserved artifacts` section only when the user confirms it with a stated reason. Clarify with the user only what the source cannot answer — the release boundary, publication posture, or a disputed non-goal — never what the code already states.
-2. Write requirements descriptively: each states behavior the source implements at that commit, and rationale is quoted only from repository evidence such as code comments, documentation, charters, issues, and pull requests. Attribute no intent the repository does not state, and stay silent where the implementation is silent.
-3. Collapse all implemented scope into one verified implementation baseline in the PRD and `PROGRESS.md`, bound to the named source commit and real repository-gate result. Git and GitHub retain historical chronology: never turn each past commit, issue, or PR into a delivery slice or tracker row. Add slices only for explicitly accepted remaining feature, changed-behavior, or repair outcomes, carrying only real current lifecycle evidence and never invent issue numbers. Mark nothing `validated` without live acceptance evidence, state outstanding verification gaps explicitly, pass the bundled `scripts/prd-size-gate.sh PRD.md`, publish through `scripts/init-prd.sh`, then continue in default mode. With `--context <name>`, write `contexts/<name>/PRD.md` and `PROGRESS.md`, add the context's row to the index `## Contexts` table and the portfolio panel — creating both root files when the pair is new — and pass `scripts/contract.sh gate <contract-path>` before the contract commit.
+1. Read the whole implemented surface — with `--scope`, the surface those paths cover — every
+   tracked entry point, its tests, build/verification gate, documentation, retained charter, and the
+   live issue, PR, and commit history that touches it. Name the exact source commit described and,
+   when bounded, the scope: write those globs under `## Scope`, the contexts referenced under
+   `## Depends on` by name and requirement ID without restating their behavior, and the rest of the
+   repository as an explicit non-goal; the first context of a large product is normally the shared
+   foundation. Run the bundled `scripts/manifest.sh candidates <implementation-or-scope-paths>`: it
+   proposes only classes with observed evidence (a constitution, versioned schemas or rule packs,
+   golden or fixture directories, frozen protocol documents, lockfiles, decision logs, dated
+   acceptance or cohort records), and a candidate enters `### Preserved artifacts` only when the
+   user confirms it with a stated reason. Ask the user only what the source cannot answer — release
+   boundary, publication posture, a disputed non-goal — never what the code already states.
+2. Write requirements descriptively: each states behavior the source implements at that commit, with
+   rationale quoted only from repository evidence (comments, documentation, charters, issues, PRs).
+   Attribute no intent the repository does not state; stay silent where the implementation is.
+3. Collapse all implemented scope into one verified implementation baseline in the PRD and
+   `PROGRESS.md`, bound to the named source commit and real repository-gate result. Git and GitHub
+   retain chronology: never turn each past commit, issue, or PR into a slice or tracker row. Add
+   slices only for explicitly accepted remaining feature, changed-behavior, or repair outcomes with
+   real current lifecycle evidence, and never invent issue numbers. Mark nothing `validated` without
+   live acceptance evidence; state verification gaps explicitly. Pass `scripts/prd-size-gate.sh
+   PRD.md`, publish through `scripts/init-prd.sh`, then continue in default mode. With
+   `--context <name>`, write `contexts/<name>/PRD.md` and `PROGRESS.md`, add the context's row to
+   the index `## Contexts` table and the portfolio panel — creating both root files when the pair
+   is new — and pass `scripts/contract.sh gate <contract-path>` before the contract commit.
 
 ## Default mode — recommend one next issue
 
-1. Reconcile mentally, without editing, what is landed, partially landed, active, blocked, and unstarted. In a partitioned contract start from the portfolio panel: honor `--context` when given, otherwise prefer the context with active work or the earliest unmet dependency, and read only the index plus that context. Do not equate merged code with release validation, and do not advance post-release work ahead of unmet initial-release dependencies.
-2. Build a dependency-ordered view of the remaining slices, then select only the first independently reviewable outcome. Prefer completing a partially landed slice over starting a later one unless a recorded dependency blocks it.
-3. Draft a compact, public-safe issue contract: source requirement and slice IDs, the owning context name as the issue label when the contract is partitioned, outcome, publishable evidence, acceptance criteria, non-goals, likely boundary, and verification. Reference rather than quote private rationale or source material; do not invent implementation details or create a speculative backlog.
+1. Reconcile mentally, without editing, what is landed, partially landed, active, blocked, and
+   unstarted. In a partitioned contract start from the portfolio panel: honor `--context`, otherwise
+   prefer the context with active work or the earliest unmet dependency, and read only the index
+   plus that context. Merged code is not release validation; post-release work never advances ahead
+   of unmet initial-release dependencies.
+2. Order the remaining slices by dependency and select only the first independently reviewable
+   outcome, preferring to complete a partially landed slice unless a recorded dependency blocks it.
+3. Draft a compact, public-safe issue contract: requirement and slice IDs, the owning context name
+   as label when partitioned, outcome, publishable evidence, acceptance criteria, non-goals, likely
+   boundary, and verification. Reference rather than quote private rationale; invent no
+   implementation details.
 
 ## Reconcile mode — persist verified progress
 
-1. Pull each clean default branch with `--ff-only`. Re-read every tracker-linked issue, PR, and commit needed for the changed rows. When called by `/idd-land`, also bind the supplied issue, PR, and squash commit to the matching requirement slice; stop rather than guess when that mapping is ambiguous.
-2. Edit only `PROGRESS.md` — in a partitioned contract the owning context's, found by the landed issue's context label, plus its portfolio row — the implementation control panel: it must answer what is ready, active, blocked, and still missing acceptance. Record current issue/PR/squash evidence in its owning row, apply the existing status semantics, and replace superseded state instead of appending. At a completed release boundary, collapse terminal rows into one baseline containing requirement coverage, source commit, and verification or acceptance result; Git and GitHub retain lifecycle history. Keep only that baseline and rows that still guide implementation. Never copy private PRD content into the public repository or claim acceptance not proven by live evidence. Never edit `PRD.md` or its manifest: when landed behavior contradicts requirement prose, report `PRD text stale` naming the requirement, and the repair is a `prd` commit by the user. Run this skill's bundled `scripts/manifest.sh drift <contract-path>`, `scripts/prd-fold-gate.sh PRD.md PROGRESS.md`, and `scripts/prd-size-gate.sh PRD.md`, reporting any unlisted tracked file as drift, any validated slice that still owns a PRD section as `PRD slices unfolded`, and any over-budget section or contract as `PRD over budget` naming it, changing nothing in `PRD.md`; the repair is folding, compressing, or narrowing the domain boundary in a `prd` commit, never a raised budget. In a partitioned contract also run `scripts/contract.sh gate <contract-path>` over the index and every context.
-3. Run this skill's bundled `scripts/tracker-gate.sh PROGRESS.md`, then repository instructions, requirement ID and Markdown link validation, and `git diff --check`. The gate's budgets live in the script and change only through `/idd-evolve`; a stopped gate is reported with its line and cell and repaired only by this mode folding and replacing state under the tracker's own update rule, never by raising a budget or dropping the rule. Audit the complete diff for lifecycle-only changes. If byte-identical, report already reconciled; otherwise commit `progress: reconcile <owner/repo>#<issue>` (or an equally specific repair subject), push the PRD default branch normally, and read back the remote commit.
+1. Pull each clean default branch with `--ff-only`; re-read every tracker-linked issue, PR, and
+   commit the changed rows need. When called by `/idd-land`, bind the supplied issue, PR, and squash
+   commit to the matching slice; stop rather than guess when that mapping is ambiguous.
+2. Edit only `PROGRESS.md` — in a partitioned contract the owning context's, found by the landed
+   issue's context label, plus its portfolio row — as the implementation control panel: record
+   current issue/PR/squash evidence in the owning row under the existing status semantics, replacing
+   superseded state. At a completed release boundary, collapse terminal rows into one baseline with
+   requirement coverage, source commit, and verification result; keep only that baseline and rows
+   that still guide implementation. Never copy private PRD content into the public repository or
+   claim acceptance live evidence does not prove. Never edit `PRD.md` or its manifest: when landed
+   behavior contradicts requirement prose, report `PRD text stale` naming the requirement, repaired
+   by a user's `prd` commit. Run the bundled `scripts/manifest.sh drift <contract-path>`,
+   `scripts/prd-fold-gate.sh PRD.md PROGRESS.md`, and `scripts/prd-size-gate.sh PRD.md`; report an
+   unlisted tracked file as drift, a validated slice still owning a PRD section as `PRD slices
+   unfolded`, and an over-budget section or contract as `PRD over budget` naming it, changing
+   nothing in `PRD.md` — the repair is folding, compressing, or narrowing the domain boundary in a
+   `prd` commit, never a raised budget. When partitioned also run
+   `scripts/contract.sh gate <contract-path>` over the index and every context.
+3. Run the bundled `scripts/tracker-gate.sh PROGRESS.md`, repository instructions, requirement ID
+   and Markdown link validation, and `git diff --check`. The gate's budgets live in the script and
+   change only through `/idd-evolve`; a stopped gate is reported with its line and cell and repaired
+   only by this mode folding and replacing state under the tracker's own update rule. Audit the
+   diff for lifecycle-only changes. If byte-identical, report already reconciled; otherwise commit
+   `progress: reconcile <owner/repo>#<issue>` (or an equally specific repair subject), push the PRD
+   default branch normally, and read back the remote commit.
 
 ## GATE — planning and reconciliation integrity
 
-Both bootstrap modes require PRD/tracker ID agreement, an explicit manifest even when empty, one coherent model with explicit domain and non-goals, model-preserving or explicitly model-extending slices, a contract that passes the bundled size gate — and the contract gate when partitioned — and private visibility readback unless draft-only. Greenfield additionally requires material product decisions settled and no technical-question drift; reconstruct additionally requires a named source commit, the scope path when bounded with the remainder a stated non-goal, every implemented requirement traceable to source, one baseline bound to the real verification result, no historical delivery rows, and no `validated` status without live acceptance evidence. Existing modes require an exact pair and complete live-state reads. Every mode permits one next issue at most, dependency-respecting order, and no invented lifecycle evidence. Reconcile passes the tracker gate, never edits `PRD.md`, and leaves both repositories clean and synchronized with only `PROGRESS.md` changed and only evidence needed for current implementation decisions; failure after merge is reported as `landed, PRD reconciliation incomplete` and never rolls back the merge.
-
-## Completion
-
-Greenfield returns the approved PRD/tracker repository and one next issue contract. Reconstruct returns the published PRD/tracker repository, the source commit, the requirement and slice inventory, and either one next issue contract or the outstanding acceptance and verification gaps when the implemented scope is already complete. Existing default returns discrepancies, ordered remaining slices, and one issue contract. Reconcile returns changed rows, evidence URLs and squash, commit/push state, and incomplete postconditions. Every mode gives exactly one next action (`/idd-issue …`, implementation-repository authorization, a named verification gap, or the named blocker).
+Bootstrap requires PRD/tracker ID agreement, an explicit manifest, one coherent model, a passing
+size gate — and contract gate when partitioned — and private visibility readback unless draft-only;
+greenfield also requires settled material product decisions and no technical-question drift, and
+reconstruct a named source commit with the remainder of a scoped repository a stated non-goal.
+Existing modes require an exact pair and complete live-state reads. Every mode permits at most one
+next issue, in dependency order, with no invented lifecycle evidence. Reconcile passes the tracker
+gate, never edits `PRD.md`, and leaves both repositories clean and synchronized with only
+`PROGRESS.md` changed; failure after merge is reported as `landed, PRD reconciliation incomplete`
+and never rolls back the merge. Return the mode's result — repository and first issue contract;
+source commit, inventory, and next issue or verification gaps; discrepancies, ordered slices, and
+issue contract; or changed rows, evidence, and commit/push state — and exactly one next action
+(`/idd-issue …`, implementation-repository authorization, a named verification gap, or the named
+blocker).

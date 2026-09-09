@@ -3,6 +3,10 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+has_phrase() { # $1 = file, $2 = fixed phrase; matches across the 100-column line wrap
+  tr -s '[:space:]' ' ' < "$1" | grep -Fq -- "$2"
+}
+
 validate_skill() {
   local name="$1"
   local cap="$2"
@@ -20,7 +24,7 @@ validate_skill() {
   echo "$name valid ($lines/$cap lines)"
 }
 
-validate_skill idd-plan 90
+validate_skill idd-plan 160
 validate_skill idd-issue 70
 validate_skill idd 60
 validate_skill idd-implement 160
@@ -30,7 +34,11 @@ validate_skill idd-evolve 80
 validate_skill idd-publish 120
 validate_skill idd-acceptance 120
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
-grep -q 'explicit target or current checkout' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must resolve the target methodology checkout" >&2; exit 1; }
+if LC_ALL=en_US.UTF-8 grep -nE '^.{101,}' "$root"/skills/*/SKILL.md "$root/CONSTITUTION.md" "$root/CLAUDE.md"; then
+  echo "every line of the skills, CONSTITUTION.md, and CLAUDE.md must be 100 characters or fewer" >&2
+  exit 1
+fi
+has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit target or current checkout' || { echo "idd-evolve must resolve the target methodology checkout" >&2; exit 1; }
 
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
@@ -56,58 +64,58 @@ bash -n "$root/scripts/test-install.sh"
 [ -x "$root/scripts/test-install.sh" ] || { echo "test-install.sh must be executable" >&2; exit 1; }
 bash "$root/scripts/test-install.sh"
 
-grep -q 'explicit request' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must require explicit creation authority" >&2; exit 1; }
-grep -q 'open and closed issues' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must search open and closed issues" >&2; exit 1; }
-grep -q 'gh issue view' "$root/skills/idd-issue/SKILL.md" || { echo "idd-issue must verify the created issue" >&2; exit 1; }
+has_phrase "$root/skills/idd-issue/SKILL.md" 'explicit request' || { echo "idd-issue must require explicit creation authority" >&2; exit 1; }
+has_phrase "$root/skills/idd-issue/SKILL.md" 'open and closed issues' || { echo "idd-issue must search open and closed issues" >&2; exit 1; }
+has_phrase "$root/skills/idd-issue/SKILL.md" 'gh issue view' || { echo "idd-issue must verify the created issue" >&2; exit 1; }
 grep -q 'post-plan' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover planning evidence" >&2; exit 1; }
 grep -q 'post-create' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must cover issue-creation evidence" >&2; exit 1; }
-grep -Fq '`$idd-land #N`' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must emit Codex next actions with dollar syntax" >&2; exit 1; }
-grep -q 'at most one next issue' "$root/CONSTITUTION.md" || { echo "constitution must bound idd-plan output" >&2; exit 1; }
-grep -q 'product-only clarification' "$root/CONSTITUTION.md" || { echo "constitution must bound greenfield questions" >&2; exit 1; }
-grep -q 'draft-only opt-out' "$root/CONSTITUTION.md" || { echo "constitution must define greenfield publication default" >&2; exit 1; }
-grep -q 'unless the user explicitly asks for draft-only output' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must publish greenfield PRDs by default" >&2; exit 1; }
+has_phrase "$root/skills/idd-implement/SKILL.md" '`$idd-land #N`' || { echo "idd-implement must emit Codex next actions with dollar syntax" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'at most one next issue' || { echo "constitution must bound idd-plan output" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'product-only clarification' || { echo "constitution must bound greenfield questions" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'draft-only opt-out' || { echo "constitution must define greenfield publication default" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'unless the user explicitly asks for draft-only output' || { echo "idd-plan must publish greenfield PRDs by default" >&2; exit 1; }
 grep -q '^## Reconstruct mode' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must reconstruct a PRD from implemented source" >&2; exit 1; }
-grep -q 'never invent issue numbers' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must not invent lifecycle evidence" >&2; exit 1; }
-grep -q 'one verified implementation baseline' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must collapse implemented scope to one baseline" >&2; exit 1; }
-grep -q 'never turn each past commit' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must not create historical delivery rows" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'never invent issue numbers' || { echo "idd-plan reconstruct must not invent lifecycle evidence" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'one verified implementation baseline' || { echo "idd-plan reconstruct must collapse implemented scope to one baseline" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'never turn each past commit' || { echo "idd-plan reconstruct must not create historical delivery rows" >&2; exit 1; }
 grep -q 'reconstruct' "$root/CONSTITUTION.md" || { echo "constitution must authorize the reconstruct bootstrap" >&2; exit 1; }
-grep -q 'Edit only `PROGRESS.md`' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
-grep -q 'implementation control panel' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must keep progress implementation-focused" >&2; exit 1; }
-grep -q 'implementation control panel rather than a commit or delivery log' "$root/CONSTITUTION.md" || { echo "constitution must keep progress out of history tracking" >&2; exit 1; }
-grep -q 'requires no separate user invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'Edit only `PROGRESS.md`' || { echo "idd-plan reconcile must be tracker-only" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'implementation control panel' || { echo "idd-plan must keep progress implementation-focused" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'implementation control panel rather than a commit or delivery log' || { echo "constitution must keep progress out of history tracking" >&2; exit 1; }
+has_phrase "$root/skills/idd-land/SKILL.md" 'requires no separate user invocation' || { echo "idd-land must automatically reconcile progress" >&2; exit 1; }
 grep -q 'Delivery-Type' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must document the declared delivery type" >&2; exit 1; }
 grep -q 'Delivery-Type' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must declare the delivery type landing requires" >&2; exit 1; }
-grep -q 'Routing adds no authority' "$root/skills/idd/SKILL.md" || { echo "idd router must add no authority" >&2; exit 1; }
-grep -q 'reached only when the request names that action' "$root/skills/idd/SKILL.md" || { echo "idd router must reach explicit-invocation phases only by name" >&2; exit 1; }
-grep -q 'ask one question' "$root/skills/idd/SKILL.md" || { echo "idd router must ask on ambiguity, never guess" >&2; exit 1; }
-grep -Fq 'read-only `idd-plan` default mode' "$root/skills/idd/SKILL.md" || { echo "idd router must bound planning inference to default mode" >&2; exit 1; }
-grep -Fq 'Bootstrap, reconstruct, and reconcile require the request to name that mode' "$root/skills/idd/SKILL.md" || { echo "idd router must require named planning mutations" >&2; exit 1; }
-grep -Fq 'a missing or ambiguous pair is a question, never authority to bootstrap or reconstruct' "$root/skills/idd/SKILL.md" || { echo "idd router must stop default-mode fallback to bootstrap" >&2; exit 1; }
-grep -Fq 'including where direct invocation is required' "$root/CONSTITUTION.md" || { echo "constitution must define routed explicit invocation" >&2; exit 1; }
+has_phrase "$root/skills/idd/SKILL.md" 'Routing adds no authority' || { echo "idd router must add no authority" >&2; exit 1; }
+has_phrase "$root/skills/idd/SKILL.md" 'reached only when the request names that action' || { echo "idd router must reach explicit-invocation phases only by name" >&2; exit 1; }
+has_phrase "$root/skills/idd/SKILL.md" 'ask one question' || { echo "idd router must ask on ambiguity, never guess" >&2; exit 1; }
+has_phrase "$root/skills/idd/SKILL.md" 'read-only `idd-plan` default mode' || { echo "idd router must bound planning inference to default mode" >&2; exit 1; }
+has_phrase "$root/skills/idd/SKILL.md" 'Bootstrap, reconstruct, and reconcile require the request to name that mode' || { echo "idd router must require named planning mutations" >&2; exit 1; }
+has_phrase "$root/skills/idd/SKILL.md" 'a missing or ambiguous pair is a question, never authority to bootstrap or reconstruct' || { echo "idd router must stop default-mode fallback to bootstrap" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'including where direct invocation is required' || { echo "constitution must define routed explicit invocation" >&2; exit 1; }
 for name in idd-auto idd-land idd-publish; do
-  grep -Fq 'directly or through `/idd`, per Constitution Article 5' "$root/skills/$name/SKILL.md" || { echo "$name must honor routed explicit invocation" >&2; exit 1; }
+  has_phrase "$root/skills/$name/SKILL.md" 'directly or through `/idd`, per Constitution Article 5' || { echo "$name must honor routed explicit invocation" >&2; exit 1; }
 done
-grep -q 'adds no authority of its own' "$root/CONSTITUTION.md" || { echo "constitution must deny the router any authority" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'adds no authority of its own' || { echo "constitution must deny the router any authority" >&2; exit 1; }
 grep -q -- '--subject' "$root/skills/idd-land/scripts/land.sh" || { echo "idd-land must compose the squash subject, not accept the provider default" >&2; exit 1; }
-grep -q 'explicit `/idd-auto` invocation' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require explicit authority" >&2; exit 1; }
-grep -q 'one active issue at a time' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
+has_phrase "$root/skills/idd-auto/SKILL.md" 'explicit `/idd-auto` invocation' || { echo "idd-auto must require explicit authority" >&2; exit 1; }
+has_phrase "$root/skills/idd-auto/SKILL.md" 'one active issue at a time' || { echo "idd-auto must serialize issue delivery" >&2; exit 1; }
 grep -q 'scripts/resolve-prd-pair.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require an exact PRD pair" >&2; exit 1; }
 grep -q 'scripts/init-implementation.sh' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must bootstrap a uniquely missing implementation sibling" >&2; exit 1; }
-grep -q 'Do not auto-apply `--accept-residuals`' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
-grep -q 'never invoked' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must not invoke publication" >&2; exit 1; }
+has_phrase "$root/skills/idd-auto/SKILL.md" 'Do not auto-apply `--accept-residuals`' || { echo "idd-auto must fail closed on residuals" >&2; exit 1; }
+has_phrase "$root/skills/idd-auto/SKILL.md" 'never invoked' || { echo "idd-auto must not invoke publication" >&2; exit 1; }
 grep -q 'idd-acceptance' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must require final integrated acceptance" >&2; exit 1; }
-grep -q 'Do not invoke `/idd-evolve` for a project defect' "$root/skills/idd-auto/SKILL.md" || { echo "idd-auto must separate project defects from methodology evolution" >&2; exit 1; }
-grep -q 'real product boundary' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must use a real product boundary" >&2; exit 1; }
-grep -q 'explicit `/idd-publish` invocation' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
-grep -q 'defaulting to MIT' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must default unspecified licenses to MIT" >&2; exit 1; }
+has_phrase "$root/skills/idd-auto/SKILL.md" 'Do not invoke `/idd-evolve` for a project defect' || { echo "idd-auto must separate project defects from methodology evolution" >&2; exit 1; }
+has_phrase "$root/skills/idd-acceptance/SKILL.md" 'real product boundary' || { echo "idd-acceptance must use a real product boundary" >&2; exit 1; }
+has_phrase "$root/skills/idd-publish/SKILL.md" 'explicit `/idd-publish` invocation' || { echo "idd-publish must require explicit visibility authority" >&2; exit 1; }
+has_phrase "$root/skills/idd-publish/SKILL.md" 'defaulting to MIT' || { echo "idd-publish must default unspecified licenses to MIT" >&2; exit 1; }
 grep -q 'anonymous' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must verify public/private readback" >&2; exit 1; }
-grep -q 'companion PRD owner/name' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must denylist the private companion identity" >&2; exit 1; }
+has_phrase "$root/skills/idd-publish/SKILL.md" 'companion PRD owner/name' || { echo "idd-publish must denylist the private companion identity" >&2; exit 1; }
 grep -q 'scripts/scan-exposure.sh' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must run the scripted exposure scan" >&2; exit 1; }
-grep -q 'bare stem, never anchored to a file extension' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must match denylist terms by bare stem" >&2; exit 1; }
-grep -q 'A commit-message match is always that blocker' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must treat a commit-message match as unpurgeable" >&2; exit 1; }
-grep -q 'permanent provider surfaces' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must keep private companion material out of permanent provider text" >&2; exit 1; }
-grep -q 'matched by bare stem' "$root/CONSTITUTION.md" || { echo "constitution must bound denylist term form" >&2; exit 1; }
-grep -q 'advance its lifecycle status only when' "$root/skills/idd-publish/SKILL.md" || { echo "idd-publish must preserve tracker lifecycle semantics" >&2; exit 1; }
+has_phrase "$root/skills/idd-publish/SKILL.md" 'bare stem, never anchored to a file extension' || { echo "idd-publish must match denylist terms by bare stem" >&2; exit 1; }
+has_phrase "$root/skills/idd-publish/SKILL.md" 'A commit-message match is always that blocker' || { echo "idd-publish must treat a commit-message match as unpurgeable" >&2; exit 1; }
+has_phrase "$root/skills/idd-implement/SKILL.md" 'permanent provider surfaces' || { echo "idd-implement must keep private companion material out of permanent provider text" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'matched by bare stem' || { echo "constitution must bound denylist term form" >&2; exit 1; }
+has_phrase "$root/skills/idd-publish/SKILL.md" 'advance its lifecycle status only when' || { echo "idd-publish must preserve tracker lifecycle semantics" >&2; exit 1; }
 
 bash -n "$root/scripts/resolve-prd-pair.sh"
 bash -n "$root/scripts/test-resolve-prd-pair.sh"
@@ -142,7 +150,7 @@ bash "$root/scripts/test-scan-exposure.sh"
 bash -n "$root/scripts/land.sh"
 [ -x "$root/scripts/land.sh" ] || { echo "land.sh must be executable" >&2; exit 1; }
 grep -q 'scripts/land.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must invoke land.sh" >&2; exit 1; }
-grep -q 'explicit invocation' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must require explicit invocation" >&2; exit 1; }
+has_phrase "$root/skills/idd-land/SKILL.md" 'explicit invocation' || { echo "idd-land must require explicit invocation" >&2; exit 1; }
 grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate residual acceptance" >&2; exit 1; }
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
@@ -154,37 +162,37 @@ for name in tracker-gate manifest prd-fold-gate prd-size-gate contract protect-m
   [ -x "$root/scripts/test-$name.sh" ] || { echo "test-$name.sh must be executable" >&2; exit 1; }
   bash "$root/scripts/test-$name.sh"
 done
-grep -q 'scripts/tracker-gate.sh PROGRESS.md' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must run the tracker gate" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'scripts/tracker-gate.sh PROGRESS.md' || { echo "idd-plan reconcile must run the tracker gate" >&2; exit 1; }
 grep -q 'tracker-gate.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must run the tracker gate before reconciliation" >&2; exit 1; }
-grep -q 'PRD text stale' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report stale requirement prose" >&2; exit 1; }
-grep -q 'landed, PRD text stale' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must name the stale-prose outcome" >&2; exit 1; }
-grep -q 'None declared' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must write an explicit empty manifest" >&2; exit 1; }
-grep -q 'manifest.sh candidates' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must propose manifest candidates mechanically" >&2; exit 1; }
-grep -q 'manifest.sh drift' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report manifest drift" >&2; exit 1; }
-grep -q 'manifest.sh verify' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must verify manifest rows" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'PRD text stale' || { echo "idd-plan reconcile must report stale requirement prose" >&2; exit 1; }
+has_phrase "$root/skills/idd-land/SKILL.md" 'landed, PRD text stale' || { echo "idd-land must name the stale-prose outcome" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'None declared' || { echo "idd-plan must write an explicit empty manifest" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'manifest.sh candidates' || { echo "idd-plan reconstruct must propose manifest candidates mechanically" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'manifest.sh drift' || { echo "idd-plan reconcile must report manifest drift" >&2; exit 1; }
+has_phrase "$root/skills/idd-acceptance/SKILL.md" 'manifest.sh verify' || { echo "idd-acceptance must verify manifest rows" >&2; exit 1; }
 grep -q 'prd-fold-gate.sh' "$root/skills/idd-acceptance/SKILL.md" || { echo "idd-acceptance must report unfolded validated slices" >&2; exit 1; }
-grep -q 'scripts/prd-fold-gate.sh PRD.md PROGRESS.md' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report unfolded validated slices" >&2; exit 1; }
-grep -q 'collapses to one row' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must fold validated slices into requirements" >&2; exit 1; }
-grep -q 'keeps no section of its own' "$root/CONSTITUTION.md" || { echo "constitution must keep validated slices out of the PRD body" >&2; exit 1; }
-grep -q 'scripts/prd-size-gate.sh PRD.md' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must gate PRD size" >&2; exit 1; }
-grep -q 'PRD over budget' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconcile must report an over-budget contract" >&2; exit 1; }
-grep -q -- '--reconstruct --scope' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan reconstruct must accept a scope" >&2; exit 1; }
-grep -q 'PRD size gate' "$root/CONSTITUTION.md" || { echo "constitution must name the PRD size gate" >&2; exit 1; }
-grep -q 'folding' "$root/skills/idd-plan/SKILL.md" && grep -q 'folding the tracker' "$root/skills/idd-land/SKILL.md" || { echo "a stopped tracker gate must name the folding reconcile as its repair" >&2; exit 1; }
-grep -q 'never executes goldens' "$root/CONSTITUTION.md" || { echo "constitution must keep acceptance from executing goldens" >&2; exit 1; }
-grep -q 'only artifacts its manifest names' "$root/CONSTITUTION.md" || { echo "constitution must bound what a contract repository tracks" >&2; exit 1; }
-grep -q 'scripts/contract.sh gate' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must run the contract gate" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'scripts/prd-fold-gate.sh PRD.md PROGRESS.md' || { echo "idd-plan reconcile must report unfolded validated slices" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'collapses to one row' || { echo "idd-plan must fold validated slices into requirements" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'keeps no section of its own' || { echo "constitution must keep validated slices out of the PRD body" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'scripts/prd-size-gate.sh PRD.md' || { echo "idd-plan must gate PRD size" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'PRD over budget' || { echo "idd-plan reconcile must report an over-budget contract" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" '--reconstruct --scope' || { echo "idd-plan reconstruct must accept a scope" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'PRD size gate' || { echo "constitution must name the PRD size gate" >&2; exit 1; }
+grep -q 'folding' "$root/skills/idd-plan/SKILL.md" && has_phrase "$root/skills/idd-land/SKILL.md" 'folding the tracker' || { echo "a stopped tracker gate must name the folding reconcile as its repair" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'never executes goldens' || { echo "constitution must keep acceptance from executing goldens" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'only artifacts its manifest names' || { echo "constitution must bound what a contract repository tracks" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'scripts/contract.sh gate' || { echo "idd-plan must run the contract gate" >&2; exit 1; }
 grep -q -- '--context' "$root/skills/idd-plan/SKILL.md" || { echo "idd-plan must select a context" >&2; exit 1; }
-grep -q 'contract.sh owner' "$root/skills/idd-implement/SKILL.md" || { echo "idd-implement must check touched files against the issue's context scope" >&2; exit 1; }
+has_phrase "$root/skills/idd-implement/SKILL.md" 'contract.sh owner' || { echo "idd-implement must check touched files against the issue's context scope" >&2; exit 1; }
 grep -q 'contract.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must gate the whole contract before reconciliation" >&2; exit 1; }
 grep -q 'contexts/' "$root/CONSTITUTION.md" || { echo "constitution must admit context contracts" >&2; exit 1; }
-grep -q 'Depends on' "$root/CONSTITUTION.md" || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'Depends on' || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }
 
-grep -q 'only through a pull request' "$root/CONSTITUTION.md" || { echo "constitution must route kept evolutions through a reviewed pull request" >&2; exit 1; }
-grep -q 'scripts/protect-main.sh verify' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must verify the default branch is protected before editing" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'only through a pull request' || { echo "constitution must route kept evolutions through a reviewed pull request" >&2; exit 1; }
+has_phrase "$root/skills/idd-evolve/SKILL.md" 'scripts/protect-main.sh verify' || { echo "idd-evolve must verify the default branch is protected before editing" >&2; exit 1; }
 grep -q 'scripts/propose.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must publish through propose.sh" >&2; exit 1; }
 grep -q 'scripts/land-evolution.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must land a reviewed PR only through land-evolution.sh" >&2; exit 1; }
-grep -q 'explicit instruction' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve landing must require the maintainer's explicit instruction" >&2; exit 1; }
+has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit instruction' || { echo "idd-evolve landing must require the maintainer's explicit instruction" >&2; exit 1; }
 grep -q -- '--subject' "$root/skills/idd-evolve/scripts/land-evolution.sh" || { echo "land-evolution.sh must compose the squash subject" >&2; exit 1; }
 grep -q '^propose_main "\$@"; exit \$?$' "$root/skills/idd-evolve/scripts/propose.sh" || { echo "propose.sh must run as one parsed function" >&2; exit 1; }
 grep -q '^land_evolution_main "\$@"; exit \$?$' "$root/skills/idd-evolve/scripts/land-evolution.sh" || { echo "land-evolution.sh must run as one parsed function" >&2; exit 1; }
