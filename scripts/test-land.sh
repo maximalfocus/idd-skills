@@ -157,6 +157,14 @@ case "$err" in
   *) echo "wrong reason for a mismatched landed subject: $err" >&2; exit 1;;
 esac
 
+# An initialism opening the title keeps its case; lowering only its first letter
+# would land a subject nobody wrote, and a landed subject cannot be rewritten.
+fresh
+printf 'READMEs omit the help flag' > "$tmp/issue-title"
+run
+[ "$(cat "$tmp/merge-subject")" = "feat: READMEs omit the help flag (#13)" ] || {
+  echo "an initialism opening the title was not kept: $(cat "$tmp/merge-subject")" >&2; exit 1; }
+
 # --- the ordinary case, then an idempotent resume ---------------------------
 fresh
 run

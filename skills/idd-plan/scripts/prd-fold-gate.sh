@@ -11,14 +11,25 @@ prd="$1"; tracker="$2"
 [ -f "$prd" ] || { echo "FAIL: PRD does not exist: $prd" >&2; exit 2; }
 [ -f "$tracker" ] || { echo "FAIL: tracker does not exist: $tracker" >&2; exit 2; }
 
-# Validated slice ids: the id in the first cell of a table row that says
-# validated (never a dependency or evidence id elsewhere on that row), and any
-# id or id range inside the tracker's baseline section, which is folded by
-# definition. Ranges read S-001–S-004, S-001..S-004, or S-001 through S-004.
+# Validated slice ids: the id in the first cell of a table row with a cell
+# reading validated, bare or in code or emphasis, and any id or id range inside
+# the tracker's baseline section, which is folded by definition. Mentioning the
+# word is not the status, and a row's other ids are not its own: "depends on
+# validated work" names a status the row does not have, and a dependency or
+# evidence id on a validated row is never that row's slice.
+# Ranges read S-001–S-004, S-001..S-004, or S-001 through S-004.
 validated="$(awk '
+  function says_validated(row,   n, cells, i, cell) {
+    n = split(row, cells, "|")
+    for (i = 1; i <= n; i++) {
+      cell = tolower(cells[i]); gsub(/[[:space:]`*_]/, "", cell)
+      if (cell == "validated") return 1
+    }
+    return 0
+  }
   /^## / { in_baseline = ($0 ~ /[Bb]aseline/) }
   in_baseline { print; next }
-  /^\|/ && tolower($0) ~ /validated/ { split($0, cells, "|"); print cells[2] }
+  /^\|/ && says_validated($0) { split($0, cells, "|"); print cells[2] }
 ' "$tracker" | awk '
   {
     line = $0

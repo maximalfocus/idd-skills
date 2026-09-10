@@ -78,7 +78,13 @@ fi
 
 issue_title="$(gh issue view "$issue" --repo "$repo" --json title --jq .title)"
 [ -n "$issue_title" ] || { echo "Issue #$issue has no title" >&2; exit 1; }
-title_head="$(printf '%s' "$issue_title" | cut -c1 | tr 'A-Z' 'a-z')"
+# The subject form wants a lowercase opening letter, but not at the cost of an
+# initialism: READMEs or PRD would land as rEADMEs or pRD, a word nobody wrote.
+title_head="$(printf '%s' "$issue_title" | cut -c1)"
+case "$issue_title" in
+  [[:upper:]][[:upper:]]*) ;;
+  *) title_head="$(printf '%s' "$title_head" | tr 'A-Z' 'a-z')";;
+esac
 title_tail="$(printf '%s' "$issue_title" | cut -c2-)"
 authored_subject="$delivery_type: $title_head$title_tail"
 [ "${#authored_subject}" -le 72 ] || {
