@@ -67,9 +67,10 @@ Adopted 2026-09-03. Cite the rule IDs in issues and review comments.
 - **Landed subject.** A squash merge derives its subject from the untyped N-2 PR title, so the PR
   declares the type instead, in exactly one body line: `Delivery-Type: <type>`. `/idd-implement`
   writes it when opening the PR and `skills/idd-land/scripts/land.sh` composes `<type>: <issue
-  title, initial letter lowercased> (#<PR>)` and passes it as `--subject`; landing stops on an
-  absent, repeated, non-lowercase, or unlisted type and never truncates an over-72 subject. Do not
-  "fix" a subject by putting a type prefix on the PR title — that breaks N-2 instead.
+  title, initial letter lowercased unless it opens an initialism> (#<PR>)` and passes it as
+  `--subject`; landing stops on an absent, repeated, non-lowercase, or unlisted type and never
+  truncates an over-72 subject. Do not "fix" a subject by putting a type prefix on the PR title —
+  that breaks N-2 instead.
 - **Private material.** This repository is public. Never name the private companion product-contract
   repository (this project's `{project}-prd` sibling), one of its documents, or one of its sections
   in a branch, commit, issue, or PR — not even in order to say what must not be named. A requirement
