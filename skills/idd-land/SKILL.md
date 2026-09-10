@@ -69,12 +69,12 @@ deliberately leave untyped, so the pull request declares the landed type in exac
 Delivery-Type: <type>
 ```
 
-Landing composes `<type>: <issue title with its initial ASCII letter lowercased> (#<PR>)` and passes
-it to the squash merge. It stops rather than guessing when the field is absent, repeated, not a
-lowercase type token, or outside the vocabulary the repository declares in its own
-`AGENTS.md`/`CLAUDE.md` (`Types:` line; a repository declaring none constrains nothing). The
-authored portion, excluding the trailing ` (#N)`, is capped at 72 characters and never truncated —
-an over-budget subject is a title to shorten, not a rule to bend. Issue and PR titles stay untyped.
+Landing composes `<type>: <issue title> (#<PR>)`, lowercasing the title's initial ASCII letter
+unless an initialism opens it, and passes it to the squash merge. It stops rather than guessing when
+the field is absent, repeated, not a lowercase type token, or outside the vocabulary the repository
+declares in `AGENTS.md`/`CLAUDE.md` (`Types:` line; a repository declaring none constrains nothing).
+The authored part before the trailing ` (#N)` is capped at 72 characters and never truncated — an
+over-budget subject is a title to shorten, not a rule to bend. Issue and PR titles stay untyped.
 
 ## GATE — pre-merge snapshot
 
