@@ -5,8 +5,8 @@ gate="${PRD_FOLD_GATE_SCRIPT:-$root/scripts/prd-fold-gate.sh}"
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 
 # The validated row writes its status emphasized and capitalized, as real
-# trackers do; the ready row's evidence mentions validated, which must not make
-# it validated.
+# trackers do. The ready row's evidence mentions validated, and another validated
+# row names the ready slice after its own: neither may make it validated.
 cat > "$tmp/PROGRESS.md" <<'TRACKER'
 # progress
 
@@ -24,7 +24,7 @@ cat > "$tmp/PROGRESS.md" <<'TRACKER'
 |---|---|---|---|
 | S-001 | R-001 | **Validated** | #1 / PR #2 |
 | S-002 | R-002 | Ready | depends on a validated slice |
-| S-003 | R-003 | Validated | #3 / PR #4 |
+| S-003 | R-003 | Validated | #3 / PR #4, after S-002 |
 TRACKER
 
 prd() { # $@ = extra sections

@@ -11,11 +11,12 @@ prd="$1"; tracker="$2"
 [ -f "$prd" ] || { echo "FAIL: PRD does not exist: $prd" >&2; exit 2; }
 [ -f "$tracker" ] || { echo "FAIL: tracker does not exist: $tracker" >&2; exit 2; }
 
-# Validated slice ids: any id on a table row with a cell reading validated, bare
-# or in code or emphasis, and any id or id range inside the tracker's baseline
-# section, which is folded by definition. Mentioning the word is not the status:
-# "depends on validated work" or "stays landed rather than validated" names a
-# status the row does not have.
+# Validated slice ids: the id in the first cell of a table row with a cell
+# reading validated, bare or in code or emphasis, and any id or id range inside
+# the tracker's baseline section, which is folded by definition. Mentioning the
+# word is not the status, and a row's other ids are not its own: "depends on
+# validated work" names a status the row does not have, and a dependency or
+# evidence id on a validated row is never that row's slice.
 # Ranges read S-001–S-004, S-001..S-004, or S-001 through S-004.
 validated="$(awk '
   function says_validated(row,   n, cells, i, cell) {
@@ -27,7 +28,8 @@ validated="$(awk '
     return 0
   }
   /^## / { in_baseline = ($0 ~ /[Bb]aseline/) }
-  in_baseline || (/^\|/ && says_validated($0)) { print }
+  in_baseline { print; next }
+  /^\|/ && says_validated($0) { split($0, cells, "|"); print cells[2] }
 ' "$tracker" | awk '
   {
     line = $0
