@@ -11,12 +11,14 @@ prd="$1"; tracker="$2"
 [ -f "$prd" ] || { echo "FAIL: PRD does not exist: $prd" >&2; exit 2; }
 [ -f "$tracker" ] || { echo "FAIL: tracker does not exist: $tracker" >&2; exit 2; }
 
-# Validated slice ids: any id on a table row that says validated, and any id
-# or id range inside the tracker's baseline section, which is folded by
+# Validated slice ids: the id in the first cell of a table row that says
+# validated (never a dependency or evidence id elsewhere on that row), and any
+# id or id range inside the tracker's baseline section, which is folded by
 # definition. Ranges read S-001–S-004, S-001..S-004, or S-001 through S-004.
 validated="$(awk '
   /^## / { in_baseline = ($0 ~ /[Bb]aseline/) }
-  in_baseline || (/^\|/ && tolower($0) ~ /validated/) { print }
+  in_baseline { print; next }
+  /^\|/ && tolower($0) ~ /validated/ { split($0, cells, "|"); print cells[2] }
 ' "$tracker" | awk '
   {
     line = $0
