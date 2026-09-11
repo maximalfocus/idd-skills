@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# A slice owns a PRD section only while it is ready or active. Once it is
-# validated, its acceptance belongs to the requirement it extends and the
+# A slice owns a PRD section from planning until it is validated, however long
+# it is blocked. Then its acceptance belongs to the requirement it extends and the
 # slice collapses to one row; a validated slice that still owns a section is
 # reported here. Read-only: it names the section and stops.
 usage() { echo "usage: prd-fold-gate.sh PRD.md PROGRESS.md" >&2; exit 64; }

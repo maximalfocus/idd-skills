@@ -54,8 +54,8 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
    independently reviewable slices that partition the domain rather than add convenience rooms —
    one issue per slice, never one monolithic slice. Each slice states how it preserves or extends
    the model, its dependencies, and its own acceptance, which never requires a later slice's
-   deliverable or a gate that applies only after all slices land. A slice owns a section only while
-   ready or active: once validated, its acceptance moves into the requirement it extends or becomes
+   deliverable or a gate that applies only after all slices land. A slice owns a section from
+   planning until validated: then its acceptance moves into the requirement it extends or becomes
    a new requirement, and the slice collapses to one row of the Delivery slices table, a `prd`
    commit by the user. Write `### Preserved artifacts`: one row per artifact a regeneration must
    carry over unchanged — repository, path, why it is not regenerable, how final acceptance verifies
