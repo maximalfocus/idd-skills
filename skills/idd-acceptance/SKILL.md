@@ -20,9 +20,10 @@ failures.
 1. Resolve the exact `{project}` ↔ `{project}-prd` pair with the sibling `idd-plan` skill's bundled
    `scripts/resolve-prd-pair.sh`; a missing sibling is an incomplete installation and stops. Read
    `PRD.md`, `PROGRESS.md`, every context contract that `idd-plan/scripts/contract.sh list` names,
-   repository instructions, and the final acceptance language. Require clean default branches, no
-   active feature branch, and no open implementation issue or PR. If the pair or completion state is
-   ambiguous, stop with the exact evidence needed to resume.
+   repository instructions, and the final acceptance language. Require a clean implementation
+   default branch with no active feature branch, a clean PRD synced by
+   `idd-plan/scripts/progress-pr.sh sync`, and no open implementation issue or PR. If the pair or
+   completion state is ambiguous, stop with the exact evidence needed to resume.
 2. Translate each applicable PRD acceptance outcome into a user-observable journey, context by
    context, plus every cross-context invariant and journey the index declares. Also derive
    whole-product checks from its concepts, domain boundary, and non-goals; do not invent scenarios

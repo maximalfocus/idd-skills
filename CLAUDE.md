@@ -41,7 +41,8 @@ invocation, one issue at a time, and must stop on any red or ambiguous gate. Evo
   `evolve/<slug>` and squash-merged by `scripts/land-evolution.sh` on the maintainer's explicit
   instruction after review; `scripts/protect-main.sh` keeps GitHub enforcing that. Only explicit
   `/idd-land` or `/idd-auto` authority, or `/idd-publish` authority for its one preparation PR, may
-  merge a project PR; nothing may force-push.
+  merge a project PR; a PRD's `progress/` batch PR merges only at a milestone reconcile under that
+  authority or a direct `/idd-plan --reconcile`; nothing may force-push.
 
 ## Naming conventions
 

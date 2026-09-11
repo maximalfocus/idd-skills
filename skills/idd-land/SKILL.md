@@ -38,10 +38,10 @@ mismatch, or a dirty tree.
 5. Resolve the sibling `idd-plan` skill in the same installation root and run its bundled
    `scripts/resolve-prd-pair.sh`: exit 3 means no associated PRD and landing proceeds without
    reconciliation; a missing sibling is an incomplete installation and stops. With a pair, require
-   the PRD checkout clean, on its default branch, correctly associated, and able to fast-forward;
-   pre-resolve the issue's context from its label when `idd-plan/scripts/contract.sh list` names
-   contexts, then its exact tracker row — in that context's `PROGRESS.md` plus its portfolio row —
-   or an explicit no-applicable-row result. Ambiguity stops before GitHub mutation.
+   the PRD checkout clean, correctly associated, and synced by `idd-plan/scripts/progress-pr.sh
+   sync`; pre-resolve the issue's context from its label when `idd-plan/scripts/contract.sh list`
+   names contexts, then its exact tracker row — in that context's `PROGRESS.md` plus its portfolio
+   row — or an explicit no-applicable-row result. Ambiguity stops before GitHub mutation.
 
 ## Step 1 — acceptance and residual gate
 
@@ -100,21 +100,21 @@ not write. Any failed postcondition is reported precisely and is never called co
 
 ## Step 3 — automatically reconcile associated PRD progress
 
-When Step 0 found an associated PRD, first run the sibling `idd-plan/scripts/tracker-gate.sh` on
-the owning `PROGRESS.md` — and `idd-plan/scripts/contract.sh gate` on the whole partitioned
-contract: a stopped gate is `landed, PRD reconciliation incomplete` with the reported line and cell,
-repaired by `/idd-plan --reconcile` folding the tracker under its own update rule, never a raised
-budget. Then read the physical sibling `skills/idd-plan/SKILL.md` and execute its Reconcile mode
-with the verified issue, PR, and squash commit; this is mandatory and
-requires no separate user invocation. When the landed change makes requirement prose in `PRD.md`
-inaccurate, report `landed, PRD text stale` naming the requirement; the repair is a `prd` commit by
-the user, never a reconcile edit. Verify the PRD commit and push, then return to the implementation
-checkout. If reconciliation fails after merge, do not undo or conceal the landing: report `landed,
-PRD reconciliation incomplete` and keep the same `/idd-land` invocation resumable. Without an
-associated PRD, report `PRD reconciliation: not configured`.
+When Step 0 found an associated PRD, first run the sibling `idd-plan/scripts/tracker-gate.sh` on the
+owning `PROGRESS.md` — and `idd-plan/scripts/contract.sh gate` on the whole partitioned contract: a
+stopped gate is `landed, PRD reconciliation incomplete` with the reported line and cell, repaired by
+`/idd-plan --reconcile` folding the tracker under its own update rule, never a raised budget. Then
+read the sibling `skills/idd-plan/SKILL.md` and execute its Reconcile mode with the verified issue,
+PR, and squash commit; this is mandatory and requires no separate user invocation. When landed
+behavior makes `PRD.md` prose inaccurate, report `landed, PRD text stale` naming the requirement,
+repaired by the user's `prd` pull request, never a reconcile edit. Verify the batch push and any
+milestone merge — a merge refused for review state is `PRD batch awaiting review`, not a failed
+landing — then return to the implementation checkout. A reconciliation failure after merge never
+undoes or conceals the landing: it is `landed, PRD reconciliation incomplete`, resumable by this
+invocation; without an associated PRD, report `PRD reconciliation: not configured`.
 
 ## Completion output
 
 Return only the issue/PR URLs, squash commit, closure state, deleted branch names, current default
-branch, accepted residuals (if any), PRD reconciliation path/commit/push state, any
-stale-requirement report, and any incomplete postcondition.
+branch, accepted residuals (if any), PRD batch PR and commit/push/merge state, any stale-requirement
+report, and any incomplete postcondition.

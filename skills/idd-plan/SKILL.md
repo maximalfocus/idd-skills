@@ -15,8 +15,8 @@ implementation repository, without CDD's artifact pipeline. Both bootstrap modes
 `PRD.md` and `PROGRESS.md` to a private repository, and authorize discovery, drafting, repository
 creation, initial commit, and push unless the user explicitly asks for draft-only output; creating
 the implementation repository or an issue stays separate. Default mode is read-only and recommends
-one issue. `--reconcile` updates only the tracker and authorizes its commit/push, as does a
-successful `/idd-land`. No mode creates a PLAN file or a speculative backlog.
+one issue. `--reconcile` updates only the tracker through the PRD's one open progress-batch pull
+request, as does a successful `/idd-land`. No mode creates a PLAN file or a speculative backlog.
 
 ## Orient and select the mode
 
@@ -27,7 +27,7 @@ successful `/idd-land`. No mode creates a PLAN file or a speculative backlog.
    `PRD.md` is the index and root `PROGRESS.md` the portfolio panel; `--context <name>` selects one,
    a reading mode reads the index plus that context, and a writing mode passes
    `scripts/contract.sh gate <contract-path>` first. GitHub is lifecycle authority; the PRD is
-   requirement authority.
+   requirement authority; the head of an open `progress/` batch pull request is the current tracker.
 2. Select the mode by what exists. No product and no PRD source: greenfield. An implemented
    repository with real delivery history and no sibling PRD: reconstruct, also named by
    `--reconstruct`; `--reconstruct --scope <path>...` bounds it to one context's paths or globs in a
@@ -112,7 +112,8 @@ successful `/idd-land`. No mode creates a PLAN file or a speculative backlog.
 
 ## Reconcile mode — persist verified progress
 
-1. Pull each clean default branch with `--ff-only`; re-read every tracker-linked issue, PR, and
+1. Pull the clean implementation default branch with `--ff-only`, run the bundled
+   `scripts/progress-pr.sh sync <contract-path>`, and re-read every tracker-linked issue, PR, and
    commit the changed rows need. When called by `/idd-land`, bind the supplied issue, PR, and squash
    commit to the matching slice; stop rather than guess when that mapping is ambiguous.
 2. Edit only `PROGRESS.md` — in a partitioned contract the owning context's, found by the landed
@@ -134,9 +135,13 @@ successful `/idd-land`. No mode creates a PLAN file or a speculative backlog.
    and Markdown link validation, and `git diff --check`. The gate's budgets live in the script and
    change only through `/idd-evolve`; a stopped gate is reported with its line and cell and repaired
    only by this mode folding and replacing state under the tracker's own update rule. Audit the
-   diff for lifecycle-only changes. If byte-identical, report already reconciled; otherwise commit
-   `progress: reconcile <owner/repo>#<issue>` (or an equally specific repair subject), push the PRD
-   default branch normally, and read back the remote commit.
+   diff for lifecycle-only changes. If byte-identical, report already reconciled; otherwise run
+   `scripts/progress-pr.sh push <contract-path> '<subject>' <tracker-paths>` with `progress:
+   reconcile <owner/repo>#<issue>` or an equally specific repair subject and read back its commit.
+   The batch merges only at a milestone — a row set `validated`, a release boundary collapsed, the
+   step before `/idd-acceptance`, `/idd-publish`, or the `/idd-auto` completion audit, or a direct
+   user `--reconcile` — through `scripts/progress-pr.sh merge <contract-path> '<subject>'`; a merge
+   refused for review state is `PRD batch awaiting review`, never bypassed.
 
 ## GATE — planning and reconciliation integrity
 

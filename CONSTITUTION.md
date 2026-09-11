@@ -25,8 +25,9 @@ baseline, and never recreates Git history as delivery slices or invents lifecycl
 creates a plan file, implementation repository, issue, branch, or PR. For an existing
 convention-linked pair, default mode recommends at most one next issue without mutation; reconcile
 mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence, behind the
-bundled tracker gate, and never `PRD.md`: stale requirement prose is reported and repaired only by a
-user's `prd` commit. `/idd-issue` creates one implementation-ready GitHub issue from evidence after
+bundled tracker gate, through one open progress-batch pull request squash-merged only at a
+milestone, and never `PRD.md`: stale requirement prose is reported and repaired only by a user's
+`prd` commit. `/idd-issue` creates one implementation-ready GitHub issue from evidence after
 explicit authorization; it does not implement, branch, or open a PR. `/idd-implement` delivers one
 well-scoped live issue through native verification and a linked PR. `/idd` is the entry point: it
 routes one request to the one phase that owns it and adds no authority of its own, so a phase that
@@ -105,6 +106,10 @@ remains for judgment.
   tracker-only reconciliation behind the bundled tracker gate, whose budgets — like the PRD size
   gate's — change only through `/idd-evolve`, that keeps `PROGRESS.md` an implementation control
   panel rather than a commit or delivery log.
+- After bootstrap a PRD default branch changes only through a pull request: reconciliation commits
+  to one open `progress/` batch that the bundled `progress-pr.sh` squash-merges only at a milestone
+  and never past requested changes or unresolved threads, and that script's local pre-push hook
+  refuses a direct push to the default branch.
 - `/idd` requires one request to one routed phase and one question on ambiguity; routing adds no
   authority. For all invocation rules, a user request explicitly naming a phase's action through
   `/idd` counts as that phase's explicit invocation, including where direct invocation is required;
@@ -148,10 +153,11 @@ and delete its branch locally and on origin; nothing else writes `main`. `script
 makes GitHub enforce that shape — pull request required, squash only, linear history, no force-push,
 no deletion, no bypass — and `/idd-evolve` verifies it before editing anything. Stage only explicit
 task-owned paths; never `git add -A`. Never force-push. Greenfield `/idd-plan` authorizes the
-initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land` or
-`/idd-auto` authority permits automatic verified `PROGRESS.md` commit/push in the exact associated
-PRD repository. Failure after merge is disclosed and resumable. Project repositories otherwise
-remain governed by their own review policy.
+initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land`,
+`/idd-auto`, `/idd-publish`, or direct `--reconcile` authority permits automatic verified
+`PROGRESS.md` commits to the exact associated PRD's one open `progress/` batch and that batch's
+squash merge at a milestone. Failure after merge is disclosed and resumable. Project repositories
+otherwise remain governed by their own review policy.
 
 ## Article 7 — Preserve conceptual integrity
 
