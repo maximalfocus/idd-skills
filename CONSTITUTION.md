@@ -23,9 +23,11 @@ implementation already has, may be bounded to an explicitly named set of paths t
 context's scope with the remainder a stated non-goal, collapses implemented scope to one verified
 baseline, and never recreates Git history as delivery slices or invents lifecycle evidence. It never
 creates a plan file, implementation repository, issue, branch, or PR. For an existing
-convention-linked pair, default mode recommends at most one next issue without mutation; reconcile
-mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence, behind the
-bundled tracker gate, through one open progress-batch pull request squash-merged only at a
+convention-linked pair, default mode recommends at most one next issue. Its only state changes are
+the bundled progress sync's local checkout state: branch selection, a local default-import merge,
+and the local guard hook. It never changes repository content, remote refs, issues, or the tracker.
+Reconcile mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence,
+behind the bundled tracker gate, through one open progress-batch PR squash-merged only at a
 milestone, and never `PRD.md`: stale requirement prose is reported and repaired only by a user's
 `prd` commit. `/idd-issue` creates one implementation-ready GitHub issue from evidence after
 explicit authorization; it does not implement, branch, or open a PR. `/idd-implement` delivers one
@@ -106,6 +108,9 @@ remains for judgment.
   tracker-only reconciliation behind the bundled tracker gate, whose budgets — like the PRD size
   gate's — change only through `/idd-evolve`, that keeps `PROGRESS.md` an implementation control
   panel rather than a commit or delivery log.
+- Read-only default planning permits only the bundled progress sync's local checkout state changes:
+  branch selection, a local default-import merge, and the local guard hook. It never changes
+  repository content, remote refs, issues, or the tracker.
 - After bootstrap a PRD default branch changes only through a pull request: reconciliation commits
   to one open `progress/` batch that the bundled `progress-pr.sh` squash-merges only at a milestone
   and never past requested changes or unresolved threads, and that script's local pre-push hook
