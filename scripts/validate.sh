@@ -155,7 +155,7 @@ grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
 
-for name in tracker-gate manifest prd-fold-gate prd-size-gate contract protect-main propose land-evolution; do
+for name in tracker-gate manifest prd-fold-gate prd-size-gate contract progress-pr protect-main propose land-evolution; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
   [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }
@@ -164,6 +164,10 @@ for name in tracker-gate manifest prd-fold-gate prd-size-gate contract protect-m
 done
 has_phrase "$root/skills/idd-plan/SKILL.md" 'scripts/tracker-gate.sh PROGRESS.md' || { echo "idd-plan reconcile must run the tracker gate" >&2; exit 1; }
 grep -q 'tracker-gate.sh' "$root/skills/idd-land/SKILL.md" || { echo "idd-land must run the tracker gate before reconciliation" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'scripts/progress-pr.sh sync <contract-path>' || { echo "idd-plan reconcile must edit the synced progress batch" >&2; exit 1; }
+has_phrase "$root/skills/idd-plan/SKILL.md" 'The batch merges only at a milestone' || { echo "idd-plan must merge progress batches only at a milestone" >&2; exit 1; }
+has_phrase "$root/skills/idd-land/SKILL.md" 'progress-pr.sh sync' || { echo "idd-land must sync the PRD progress batch before reconciliation" >&2; exit 1; }
+has_phrase "$root/CONSTITUTION.md" 'changes only through a pull request' || { echo "constitution must route PRD default-branch changes through a pull request" >&2; exit 1; }
 has_phrase "$root/skills/idd-plan/SKILL.md" 'PRD text stale' || { echo "idd-plan reconcile must report stale requirement prose" >&2; exit 1; }
 has_phrase "$root/skills/idd-land/SKILL.md" 'landed, PRD text stale' || { echo "idd-land must name the stale-prose outcome" >&2; exit 1; }
 has_phrase "$root/skills/idd-plan/SKILL.md" 'None declared' || { echo "idd-plan must write an explicit empty manifest" >&2; exit 1; }

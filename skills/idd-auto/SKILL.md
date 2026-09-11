@@ -37,7 +37,8 @@ pair.
    missing pair state still stops. Require matching GitHub origins, authentication, repository
    instructions, and clean trees; an existing clean issue branch may be resumed only when live state
    binds it uniquely to the one active issue.
-3. Pull clean default branches with `--ff-only`. Read `PRD.md`, `PROGRESS.md`, every context
+3. Pull the clean implementation default branch with `--ff-only` and run the sibling
+   `idd-plan/scripts/progress-pr.sh sync` on the PRD. Read `PRD.md`, `PROGRESS.md`, every context
    contract when the pair is partitioned (an optional `--context <name>` narrows selection to one
    context while the pair still keeps one active issue), live issues/comments, PRs/reviews/checks,
    closing links, and squash commits. GitHub owns lifecycle truth; the PRD owns accepted
@@ -77,13 +78,14 @@ queue, speculative backlog, or hidden progress file.
    `idd-land` without residual acceptance. Verify squash merge, closure, default-branch refresh,
    local/remote branch deletion, and automatic PRD reconciliation, then begin the next iteration
    from fresh live state.
-6. When `idd-plan` reports no remaining implementation outcome, invoke `/idd-acceptance <project>`
-   from clean default branches. Treat its result as a required final gate. A product failure against
-   an accepted requirement becomes one linked repair issue under the existing slice; it does not
-   rewrite the PRD. A genuinely new feature or changed behavior is outside the frozen contract: stop
-   for explicit user authorization, then update the PRD and delivery slices before creating its
-   issue. Update `PROGRESS.md` only with verified lifecycle evidence through normal reconciliation.
-   Do not declare completion from issue-level checks alone.
+6. When `idd-plan` reports no remaining implementation outcome, merge the open progress batch
+   through its Reconcile mode, then invoke `/idd-acceptance <project>` from clean trees. Treat its
+   result as a required final gate. A product failure against an accepted requirement becomes one
+   linked repair issue under the existing slice; it does not rewrite the PRD. A genuinely new
+   feature or changed behavior is outside the frozen contract: stop for explicit user authorization,
+   then update the PRD and delivery slices before creating its issue. Update `PROGRESS.md` only with
+   verified lifecycle evidence through normal reconciliation. Do not declare completion from
+   issue-level checks alone.
 
 ## GATE — fail closed or finish
 
@@ -100,10 +102,10 @@ Never end with a checkpoint or progress report. If the final audit finds remaini
 scope and no permitted blocker, start the next iteration. Declare completion only after the audit
 proves the completion target and the integrated product matches its coherent model with no
 contradictions, out-of-domain surplus, surprise paths, or unrecorded fragmenting decisions; both
-repositories must be clean and synchronized on their default branches, no run feature branch may
-remain, and `PROGRESS.md` must contain verified issue/PR/squash evidence. Return the created and
-landed issue/PR URLs, final implementation and PRD commits, verification state, and either
-`complete` or the single resumable blocker. Completion — or a blocker that ends the run — also ends
-the authority this run supplied to `/idd-issue`, `/idd-implement`, and `/idd-land`. A later request
-in the same session is a new invocation and inherits nothing: it needs its own explicit
-authorization before any issue, branch, or merge.
+repositories must be clean and synchronized on their default branches, no run feature branch or open
+progress batch may remain, and `PROGRESS.md` must contain verified issue/PR/squash evidence. Return
+the created and landed issue/PR URLs, final implementation and PRD commits, verification state, and
+either `complete` or the single resumable blocker. Completion — or a blocker that ends the run —
+also ends the authority this run supplied to `/idd-issue`, `/idd-implement`, and `/idd-land`. A
+later request in the same session is a new invocation and inherits nothing: it needs its own
+explicit authorization before any issue, branch, or merge.
