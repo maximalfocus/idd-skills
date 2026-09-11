@@ -40,6 +40,7 @@ from the same installation root and execute it in full; this file restates no ph
 | Explicitly asks to evolve the methodology, including from a lesson from a run | `idd-evolve` |
 
 Inference reaches only `idd-implement`, read-only `idd-plan` default mode, or `idd-acceptance`.
+Default mode allows only bundled sync's local checkout changes per Constitution Articles 1 and 5.
 Bootstrap, reconstruct, and reconcile require the request to name that mode. The last six rows are
 reached only when the request names that action itself, never state, history, or an earlier turn.
 

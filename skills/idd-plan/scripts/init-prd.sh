@@ -27,7 +27,16 @@ if git -C "$target" remote get-url origin >/dev/null 2>&1; then
   actual="$(git -C "$target" remote get-url origin)"
   [ "$actual" = "$expected" ] || { echo "Unexpected origin: $actual" >&2; exit 1; }
   gh repo view "$repo" >/dev/null
-  git -C "$target" push -u origin main
+  remote_main="$(git -C "$target" ls-remote --heads origin refs/heads/main)"
+  remote_main="${remote_main%%[[:space:]]*}"
+  if [ -n "$remote_main" ]; then
+    [ "$remote_main" = "$(git -C "$target" rev-parse refs/heads/main)" ] || {
+      echo "Bootstrap already published; route subsequent changes through a pull request" >&2; exit 1; }
+  else
+    [ "$(git -C "$target" rev-list --count main)" = 1 ] || {
+      echo "Bootstrap requires one initial commit; inspect local history before retrying" >&2; exit 1; }
+    git -C "$target" push -u origin main
+  fi
 else
   gh repo view "$repo" >/dev/null 2>&1 && { echo "GitHub repository already exists: $repo" >&2; exit 1; }
   gh repo create "$repo" --private --description "Private requirements and delivery progress for ${repo##*/}." --source "$target" --remote origin --push

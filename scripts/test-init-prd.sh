@@ -29,4 +29,18 @@ output="$(bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd)"
 grep -q '^repository=https://github.com/example/demo-prd$' <<<"$output"
 [ "$(git -C "$tmp/demo-prd" ls-files | tr '\n' ' ')" = "PRD.md PROGRESS.md " ]
 [ "$(git --git-dir="$tmp/remote.git" rev-parse main)" = "$(git -C "$tmp/demo-prd" rev-parse HEAD)" ]
+# Simulate GitHub identity while every transport still targets the temporary bare repo.
+real_git="$(command -v git)"
+printf '#!/bin/bash\nif [[ "$*" == *"remote get-url origin"* ]]; then echo https://github.com/example/demo-prd.git; else exec %q "$@"; fi\n' "$real_git" > "$tmp/bin/git"
+chmod +x "$tmp/bin/git"
+bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd >/dev/null
+before="$(git --git-dir="$tmp/remote.git" rev-parse main)"
+printf 'later row\n' >> "$tmp/demo-prd/PROGRESS.md"
+git -C "$tmp/demo-prd" commit -qam 'progress: later row'
+if err="$(bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd 2>&1)"; then
+  echo "Bootstrap retry must not push a post-bootstrap commit" >&2; exit 1
+fi
+[[ "$err" == *"Bootstrap already published"* ]]
+[ "$(git --git-dir="$tmp/remote.git" rev-parse main)" = "$before" ]
+grep -qx 'later row' "$tmp/demo-prd/PROGRESS.md"
 echo "IDD PRD bootstrap valid"

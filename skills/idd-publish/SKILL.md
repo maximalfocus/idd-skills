@@ -18,9 +18,13 @@ deployment or hosting.
 
 1. Resolve this installed skill directory and the sibling `idd-plan` skill in the same installation
    root; run `idd-plan/scripts/resolve-prd-pair.sh`. Require matching origins, authenticated GitHub
-   access, clean trees with the PRD synced by `idd-plan/scripts/progress-pr.sh sync`, and both
-   repositories currently private. Read `PRD.md`, `PROGRESS.md`, live issues/PRs, and repository
-   instructions. A missing sibling is an incomplete installation and stops.
+   access, clean trees with the PRD synced by `idd-plan/scripts/progress-pr.sh sync`, and a private
+   PRD. The implementation must be private except when resuming after this run changed visibility;
+   that resume must verify the same completed preparation and exposure/readback evidence, then
+   finish reconciliation without a new preparation issue. Read `PRD.md`, `PROGRESS.md`, live
+   issues/PRs, and repository instructions.
+   A missing sibling is an incomplete installation and stops. Execute `idd-plan` Reconcile mode
+   at this pre-publication milestone; stop on any batch refusal before changing visibility.
 2. Resolve sibling `idd-issue`, `idd-implement`, and `idd-land` skills from the same installation
    root. Resume one uniquely active publication issue/PR; otherwise execute the sibling `idd-plan`
    for the next publication requirement, then `idd-issue`, `idd-implement`, and `idd-land`. Preserve
@@ -70,6 +74,7 @@ Stop with one precise, resumable blocker if pair identity, privacy state, licens
 secret scan, checks, review, or readback is ambiguous or red. On success, reconcile only the exact
 PRD `PROGRESS.md` row with issue/PR/squash and public/private readback evidence; advance its
 lifecycle status only when the tracker's own definitions and every requirement represented by that
-row are satisfied. Commit it with `idd-plan/scripts/progress-pr.sh push` and merge that batch, since
-publication is a milestone, then verify both trees and default branches are clean and synchronized.
-Return the issue/PR URLs, final commits, visibility evidence, and `complete`.
+row are satisfied. Execute `idd-plan` Reconcile mode with that evidence and its tracker/contract
+checks, batch push, and milestone merge. A review refusal is `PRD batch awaiting review`; disclose
+any completed visibility change and preserve resumability. Verify both trees and default branches
+are clean and synchronized. Return URLs, final commits, visibility evidence, and `complete`.

@@ -9,9 +9,8 @@ compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex,
 
 # /idd-plan — start or continue an issue-driven product
 
-Bootstrap a concise product contract — from requirements for a new product or from the implemented
-source of an existing one — or bridge an existing private `{project}-prd` repository to its
-implementation repository, without CDD's artifact pipeline. Both bootstrap modes publish only
+Bootstrap a product contract from new requirements or implemented source, or bridge an existing
+private `{project}-prd` to its implementation repository. Both bootstrap modes publish only
 `PRD.md` and `PROGRESS.md` to a private repository, and authorize discovery, drafting, repository
 creation, initial commit, and push unless the user explicitly asks for draft-only output; creating
 the implementation repository or an issue stays separate. Default mode is read-only and recommends
@@ -21,13 +20,15 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
 ## Orient and select the mode
 
 1. Resolve this installed skill directory and run its bundled `scripts/resolve-prd-pair.sh`: the
-   only automatic association is the exact sibling `{implementation-name}-prd` with matching GitHub
-   origins plus `PRD.md` and `PROGRESS.md`. Read both repositories' instructions. Run the bundled
-   `scripts/contract.sh list <contract-path>`: any names mean a partitioned contract whose root
+   only automatic association is `{implementation-name}-prd` with matching origins and PRD/tracker.
+   Before any existing-contract reads or gates, run
+   `scripts/progress-pr.sh sync <contract-path>`; stop on refusal. Read repository instructions.
+   Run `scripts/contract.sh list <contract-path>`: names mean a partitioned contract whose root
    `PRD.md` is the index and root `PROGRESS.md` the portfolio panel; `--context <name>` selects one,
    a reading mode reads the index plus that context, and a writing mode passes
    `scripts/contract.sh gate <contract-path>` first. GitHub is lifecycle authority; the PRD is
-   requirement authority; the head of an open `progress/` batch pull request is the current tracker.
+   requirement authority. Default mode permits only bundled sync's local branch selection,
+   default-import merge, and guard hook; never edits content, remote refs, issues, or the tracker.
 2. Select the mode by what exists. No product and no PRD source: greenfield. An implemented
    repository with real delivery history and no sibling PRD: reconstruct, also named by
    `--reconstruct`; `--reconstruct --scope <path>...` bounds it to one context's paths or globs in a
@@ -94,21 +95,19 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
    PRD.md`, publish through `scripts/init-prd.sh`, then continue in default mode. With
    `--context <name>`, write `contexts/<name>/PRD.md` and `PROGRESS.md`, add the context's row to
    the index `## Contexts` table and the portfolio panel — creating both root files when the pair
-   is new — and pass `scripts/contract.sh gate <contract-path>` before the contract commit.
+   is new — and pass `scripts/contract.sh gate <contract-path>`. Bootstrap pushes only once;
+   existing-context contract changes require a user's `prd` pull request, never a default push.
 
 ## Default mode — recommend one next issue
 
-1. Reconcile mentally, without editing, what is landed, partially landed, active, blocked, and
-   unstarted. In a partitioned contract start from the portfolio panel: honor `--context`, otherwise
-   prefer the context with active work or the earliest unmet dependency, and read only the index
-   plus that context. Merged code is not release validation; post-release work never advances ahead
-   of unmet initial-release dependencies.
-2. Order the remaining slices by dependency and select only the first independently reviewable
-   outcome, preferring to complete a partially landed slice unless a recorded dependency blocks it.
+1. Without editing, assess landed, partial, active, blocked, and unstarted work. In a partitioned
+   contract honor `--context`; otherwise choose active work or the earliest unmet dependency from
+   the portfolio. Read the index and that context. Merged code is not release validation;
+   post-release work never advances ahead of unmet initial-release dependencies.
+2. Select one independently reviewable outcome in dependency order; prefer unblocked partial work.
 3. Draft a compact, public-safe issue contract: requirement and slice IDs, the owning context name
    as label when partitioned, outcome, publishable evidence, acceptance criteria, non-goals, likely
-   boundary, and verification. Reference rather than quote private rationale; invent no
-   implementation details.
+   boundary, and verification. Reference, never quote, private rationale; invent no details.
 
 ## Reconcile mode — persist verified progress
 
@@ -140,8 +139,10 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
    reconcile <owner/repo>#<issue>` or an equally specific repair subject and read back its commit.
    The batch merges only at a milestone — a row set `validated`, a release boundary collapsed, the
    step before `/idd-acceptance`, `/idd-publish`, or the `/idd-auto` completion audit, or a direct
-   user `--reconcile` — through `scripts/progress-pr.sh merge <contract-path> '<subject>'`; a merge
-   refused for review state is `PRD batch awaiting review`, never bypassed.
+   user `--reconcile` — through `scripts/progress-pr.sh merge <contract-path> '<subject>'`, even
+   with no new diff. Exit 2 is `PRD batch awaiting review`; other failures are resumable plumbing
+   blockers, never review refusals. New batches use `progress/batch`; failed pushes retain evidence.
+   Retry outages with push; after a race, preserve the checkout, sync a clean clone, and reconcile.
 
 ## GATE — planning and reconciliation integrity
 
@@ -154,7 +155,6 @@ next issue, in dependency order, with no invented lifecycle evidence. Reconcile 
 gate, never edits `PRD.md`, and leaves both repositories clean and synchronized with only
 `PROGRESS.md` changed; failure after merge is reported as `landed, PRD reconciliation incomplete`
 and never rolls back the merge. Return the mode's result — repository and first issue contract;
-source commit, inventory, and next issue or verification gaps; discrepancies, ordered slices, and
-issue contract; or changed rows, evidence, and commit/push state — and exactly one next action
-(`/idd-issue …`, implementation-repository authorization, a named verification gap, or the named
-blocker).
+source commit, inventory, next issue or verification gaps; discrepancies, ordered slices, issue
+contract; or changed rows, evidence, commit/push state — and one next action (`/idd-issue …`,
+implementation-repository authorization, a named verification gap, or the named blocker).
