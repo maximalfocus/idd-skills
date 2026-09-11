@@ -132,19 +132,34 @@ refuses "a failed remote lookup" "Cannot verify origin branch" bash -c "cd '$tmp
 ! git -C "$tmp/origin.git" show-ref --verify --quiet refs/heads/evolve/remote-error || { echo "lookup refusal pushed a branch" >&2; exit 1; }
 rm -f "$tmp/bin/git"
 
+# --- the shared line width -----------------------------------------------------
+# A wide added line is refused before any branch, commit, or index change.
+fresh; printf '%0101d\n' 0 > "$tmp/work/a.txt"
+refuses "an added line over 100 characters" "over 100 characters: a.txt:1" \
+  bash -c "cd '$tmp/work' && bash '$script' wide '$tmp/msg' a.txt"
+[ "$(git -C "$tmp/work" symbolic-ref --short HEAD)" = main ] || {
+  echo "a width refusal must stay on main" >&2; exit 1; }
+git -C "$tmp/work" diff --cached --quiet || {
+  echo "a width refusal must leave the index untouched" >&2; exit 1; }
+! git -C "$tmp/work" show-ref --verify --quiet refs/heads/evolve/wide || {
+  echo "a width refusal created a branch" >&2; exit 1; }
+
 # --- running from a mutable source ---------------------------------------------
 # The checkout may serve the installed skill, so the mid-sequence branch switch
 # can rewrite this very script on disk; everything after it must already be parsed.
+# The copy keeps its installed layout so it resolves its sibling idd-plan scripts.
 fresh
 real_git="$(command -v git)"
-cp "$script" "$tmp/copy.sh"
+mkdir -p "$tmp/skills/idd-evolve/scripts"; ln -sfn "$root/skills/idd-plan" "$tmp/skills/idd-plan"
+copy="$tmp/skills/idd-evolve/scripts/copy.sh"; cp "$script" "$copy"
 cat > "$tmp/bin/git" <<FAKE
 #!/usr/bin/env bash
 if [ "\$1" = switch ] && [ -n "\${REWRITE_TARGET:-}" ]; then yes 'exit 99' | head -4000 > "\$REWRITE_TARGET"; fi
 exec "$real_git" "\$@"
 FAKE
 chmod +x "$tmp/bin/git"
-out="$(cd "$tmp/work" && REWRITE_TARGET="$tmp/copy.sh" bash "$tmp/copy.sh" rewritten "$tmp/msg" a.txt 2>&1)" || { echo "the script failed once its own source was rewritten mid-run: $out" >&2; exit 1; }
+out="$(cd "$tmp/work" && REWRITE_TARGET="$copy" bash "$copy" rewritten "$tmp/msg" a.txt 2>&1)" || {
+  echo "the script failed once its own source was rewritten mid-run: $out" >&2; exit 1; }
 case "$out" in *"pull/5") ;; *) echo "a rewritten source did not report completion: $out" >&2; exit 1;; esac
 rm -f "$tmp/bin/git"
 

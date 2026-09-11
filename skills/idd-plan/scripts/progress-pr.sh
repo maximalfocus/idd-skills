@@ -21,6 +21,7 @@ case "$mode" in
   merge) [ "$#" -eq 1 ] || usage;;
   *) usage;;
 esac
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ -d "$prd" ] || { echo "Missing PRD checkout: $prd" >&2; exit 1; }
 root="$(git -C "$prd" rev-parse --show-toplevel 2>/dev/null)" || { echo "Not a git repository: $prd" >&2; exit 1; }
 cd "$root"
@@ -30,8 +31,11 @@ repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 default="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
 [[ "$repo" == *-prd ]] || { echo "$repo is not a {project}-prd repository" >&2; exit 1; }
 
-check_subject() {
-  [[ "$1" =~ ^progress:\ [a-z0-9] ]] || { echo "Subject must be 'progress: <lowercase summary>': $1" >&2; exit 1; }
+check_subject() { # N-4 in idd-plan/references/conventions.md
+  [[ "$1" =~ ^docs\(progress\):\ [a-z0-9] ]] && [ "${#1}" -le 72 ] || {
+    echo "Subject must be 'docs(progress): <lowercase summary>' within 72 characters (N-4): $1" >&2
+    exit 1
+  }
 }
 clean() { [ -z "$tree" ] || { echo "Refusing with a dirty PRD tree" >&2; exit 1; }; }
 
@@ -289,6 +293,9 @@ if [ "$mode" = push ]; then
   publish_oid="$(git rev-parse HEAD)"
   fresh_batch "$publish_oid" || {
     echo "Refusing push; commit $publish_oid remains unpublished. Preserve tracker evidence, rebuild tracker-only commits from origin/$default, and rerun reconcile" >&2; exit 1; }
+  bash "$here/line-width.sh" check "origin/$default" "$publish_oid" >/dev/null || {
+    echo "Refusing push; commit $publish_oid remains unpublished." \
+      "Rewrap the reported tracker lines and rerun reconcile" >&2; exit 1; }
   git push -q origin "$publish_oid:refs/heads/$branch" || {
     echo "Batch push failed; local commit $publish_oid is preserved. Retry push after an outage; if another clone won, preserve this checkout, sync a clean clone, and rerun reconcile" >&2; exit 1; }
   git branch --set-upstream-to="origin/$branch" "$branch" >/dev/null
@@ -306,7 +313,8 @@ if [ "$mode" = push ]; then
     exit 1
   }
   if [ -z "$b" ]; then
-    gh pr create --repo "$repo" --base "$default" --head "$branch" --title "progress: batch tracker reconciliation" \
+    gh pr create --repo "$repo" --base "$default" --head "$branch" \
+      --title "docs(progress): batch tracker reconciliation" \
       --body "Tracker reconciliations batched for review; squash-merged at the next milestone." >/dev/null || {
       echo "Batch PR creation failed; $publish_oid is preserved locally and on origin/$branch. Retry push; if another clone opened the PR, sync a clean clone and rerun reconcile" >&2; exit 1; }
   fi

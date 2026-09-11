@@ -14,6 +14,7 @@ git checkout -qb issue/3-test; echo change >> file; git commit -qam change; git 
 printf OPEN > "$tmp/pr-state"; printf OPEN > "$tmp/issue-state"
 printf 'Delivery-Type: feat\n' > "$tmp/pr-body"
 printf 'Test the landing subject' > "$tmp/issue-title"
+printf 'Test the landing subject' > "$tmp/pr-title"; echo issue/3-test > "$tmp/pr-head"
 : > "$tmp/merge-subject"
 : > "$tmp/merge-count"
 
@@ -27,7 +28,8 @@ elif [ "$1 $2" = "pr view" ]; then
   key="${*: -1}"
   case "$key" in
     .state) cat "$root/pr-state";;
-    .headRefName) echo issue/3-test;;
+    .headRefName) cat "$root/pr-head";;
+    .title) cat "$root/pr-title";;
     .baseRefName) echo main;;
     .isCrossRepository|.isDraft) echo false;;
     '.reviewDecision // ""') echo APPROVED;;
@@ -61,6 +63,10 @@ elif [ "$1" = api ]; then
   key="${*: -1}"
   case "$key" in
     .commit.message) cat "$root/merge-subject";;
+    .visibility) echo private;;
+    *allow_squash_merge*)
+      if [ -f "$root/drift" ]; then echo "true true true false x y"
+      else echo "true false false true PR_TITLE PR_BODY"; fi;;
     *) echo 1;;
   esac
 else echo "unexpected gh: $*" >&2; exit 2
@@ -76,8 +82,7 @@ fresh() { # rebuild the work/origin pair and reset every recorded state file
   git init "$tmp/work" -q
   cd "$tmp/work"
   git config user.email test@example.com; git config user.name Test
-  [ -f "$tmp/held-conventions" ] && cp "$tmp/held-conventions" CLAUDE.md
-  echo base > file; git add file; [ -f CLAUDE.md ] && git add CLAUDE.md
+  echo base > file; git add file
   git commit -qm base; git branch -M main
   git remote add origin "$tmp/origin.git"; git push -qu origin main 2>/dev/null
   git checkout -qb issue/3-test; echo change >> file; git commit -qam change
@@ -85,7 +90,8 @@ fresh() { # rebuild the work/origin pair and reset every recorded state file
   printf OPEN > "$tmp/pr-state"; printf OPEN > "$tmp/issue-state"
   printf 'Delivery-Type: feat\n' > "$tmp/pr-body"
   printf 'Test the landing subject' > "$tmp/issue-title"
-  : > "$tmp/merge-subject"; : > "$tmp/merge-count"
+  printf 'Test the landing subject' > "$tmp/pr-title"; echo issue/3-test > "$tmp/pr-head"
+  : > "$tmp/merge-subject"; : > "$tmp/merge-count"; rm -f "$tmp/drift"
 }
 
 run() { PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 >/dev/null; }
@@ -123,11 +129,9 @@ refuses "a PR declaring Delivery-Type twice" "declares Delivery-Type 2 times"
 printf 'Delivery-Type: Feat\n' > "$tmp/pr-body"
 refuses "a Delivery-Type that is not a lowercase token" "is not a lowercase type token"
 
-# A declared repository vocabulary is binding.
-printf '# conventions\n\n  Types: `feat` `fix` `docs`\n' > CLAUDE.md
-git add CLAUDE.md; git commit -qm conventions
-printf 'Delivery-Type: chore\n' > "$tmp/pr-body"
-refuses "a Delivery-Type outside the repository's declared vocabulary" "is not one this repository allows"
+# One N-4 vocabulary binds every repository; none widens it.
+printf 'Delivery-Type: feature\n' > "$tmp/pr-body"
+refuses "a Delivery-Type outside the N-4 types" "is not an N-4 type"
 
 # The 72-character authored budget is a stop, never a truncation.
 printf 'Delivery-Type: feat\n' > "$tmp/pr-body"
@@ -135,18 +139,33 @@ printf 'Compose a landing subject that is deliberately far too long to fit insid
 refuses "an authored subject over the 72-character budget" "over the 72 budget"
 printf 'Test the landing subject' > "$tmp/issue-title"
 
-# A repository that declares no vocabulary is not constrained to one.
-mv CLAUDE.md "$tmp/held-conventions"
-git rm -q --cached CLAUDE.md; git commit -qm "drop conventions"
+# N-2: the PR title is the issue title, character for character.
+printf 'Test the landing subject.' > "$tmp/pr-title"
+refuses "a PR title that differs from its issue title" "(N-2)"
+printf 'Test the landing subject' > "$tmp/pr-title"
+
+# N-3: an issue lands only from its own issue branch.
+echo issue/4-test > "$tmp/pr-head"; refuses "the branch of another issue" "(N-3)"
+echo feature/test > "$tmp/pr-head"; refuses "a branch outside the naming convention" "(N-3)"
+echo issue/3-test > "$tmp/pr-head"
+
+# The default branch changes only through a squash-merged pull request.
+touch "$tmp/drift"; refuses "an unprotected default branch" "not protected"; rm "$tmp/drift"
+
+# No change lands a line over 100 characters.
+printf '%0101d\n' 0 >> file; git commit -qam wide; git push -q origin issue/3-test
+refuses "a head that adds a line over 100 characters" "over 100 characters: file:3"
+
+# Any listed type lands.
+fresh
 printf 'Delivery-Type: chore\n' > "$tmp/pr-body"
 PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 >/dev/null \
-  || { echo "idd-land rejected a well-formed type in a repository declaring none" >&2; exit 1; }
+  || { echo "idd-land rejected a listed N-4 type" >&2; exit 1; }
 [ "$(cat "$tmp/merge-subject")" = "chore: test the landing subject (#13)" ] || {
   echo "unexpected subject: $(cat "$tmp/merge-subject")" >&2; exit 1; }
 
 # The postcondition is real: if the provider records a subject other than the
 # composed one, landing must say so rather than accept it.
-cp CLAUDE.md "$tmp/held-conventions" 2>/dev/null || true
 fresh
 if err="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" LAND_TEST_WRONG_SUBJECT="something else entirely" \
     bash "$land_script" maximalfocus/test 3 13 2>&1 >/dev/null)"; then
@@ -160,7 +179,7 @@ esac
 # An initialism opening the title keeps its case; lowering only its first letter
 # would land a subject nobody wrote, and a landed subject cannot be rewritten.
 fresh
-printf 'READMEs omit the help flag' > "$tmp/issue-title"
+printf 'READMEs omit the help flag' > "$tmp/issue-title"; cp "$tmp/issue-title" "$tmp/pr-title"
 run
 [ "$(cat "$tmp/merge-subject")" = "feat: READMEs omit the help flag (#13)" ] || {
   echo "an initialism opening the title was not kept: $(cat "$tmp/merge-subject")" >&2; exit 1; }
@@ -195,7 +214,11 @@ case "$(head -5 "$land_script")" in
   *'exec bash "$root/skills/idd-land/scripts/land.sh"'*)
     bundled="$(cd "$(dirname "$land_script")/.." && pwd)/skills/idd-land/scripts/land.sh";;
 esac
-cp "$bundled" "$tmp/land-copy.sh"
+# The copy keeps its installed layout: land.sh resolves its sibling idd-plan scripts.
+copy="$tmp/skills/idd-land/scripts/land-copy.sh"
+mkdir -p "$(dirname "$copy")"
+ln -sfn "$(cd "$(dirname "$bundled")/../../idd-plan" && pwd)" "$tmp/skills/idd-plan"
+cp "$bundled" "$copy"
 cat > "$tmp/bin/git" <<FAKE
 #!/usr/bin/env bash
 if [ "\$1" = checkout ] && [ -n "\${LAND_TEST_REWRITE:-}" ]; then
@@ -204,8 +227,8 @@ fi
 exec "$real_git" "\$@"
 FAKE
 chmod +x "$tmp/bin/git"
-if out="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" LAND_TEST_REWRITE="$tmp/land-copy.sh" \
-    bash "$tmp/land-copy.sh" maximalfocus/test 3 13 2>&1)"; then
+if out="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" LAND_TEST_REWRITE="$copy" \
+    bash "$copy" maximalfocus/test 3 13 2>&1)"; then
   case "$out" in
     *LANDED*) ;;
     *) echo "landing from a rewritten source did not report completion: $out" >&2; exit 1;;

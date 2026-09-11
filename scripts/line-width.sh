@@ -2,4 +2,4 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec bash "$root/skills/idd-plan/scripts/protect-main.sh" "$@"
+exec bash "$root/skills/idd-plan/scripts/line-width.sh" "$@"

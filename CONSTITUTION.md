@@ -94,7 +94,12 @@ remains for judgment.
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - `skills/idd-publish/SKILL.md` ≤ 120 lines.
 - `skills/idd-acceptance/SKILL.md` ≤ 120 lines.
-- Every line of `skills/*/SKILL.md`, `CONSTITUTION.md`, and `CLAUDE.md` ≤ 100 characters.
+- Every line of `skills/*/SKILL.md`, `CONSTITUTION.md`, `CLAUDE.md`, and
+  `skills/idd-plan/references/conventions.md` ≤ 100 characters.
+- The shared conventions are scripted where mechanical: bootstrap applies default-branch
+  protection; `land.sh` refuses an unlisted N-4 type, an N-2 title mismatch, a non-N-3 head,
+  drifted protection, or an added line over the width; `progress-pr.sh`, `propose.sh`, and
+  `land-evolution.sh` gate their subjects and added lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and
   a quality gate.
 - `/idd-plan` requires private-by-default bootstrap publication with a draft-only opt-out,
@@ -161,8 +166,12 @@ task-owned paths; never `git add -A`. Never force-push. Greenfield `/idd-plan` a
 initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land`,
 `/idd-auto`, `/idd-publish`, or direct `--reconcile` authority permits automatic verified
 `PROGRESS.md` commits to the exact associated PRD's one open `progress/` batch and that batch's
-squash merge at a milestone. Failure after merge is disclosed and resumable. Project repositories
-otherwise remain governed by their own review policy.
+squash merge at a milestone. Failure after merge is disclosed and resumable. Every repository IDD
+manages — this one, each implementation repository, and its `{project}-prd` — shares one naming
+convention, a default branch that changes only through a squash-merged pull request, and a
+100-character width for every added line outside declared formatter-owned paths, as
+`skills/idd-plan/references/conventions.md` defines; bootstrap applies that protection and landing
+verifies it. A project's own review policy governs everything else.
 
 ## Article 7 — Preserve conceptual integrity
 

@@ -3,6 +3,7 @@ set -euo pipefail
 
 usage() { echo "usage: init-prd.sh REPOSITORY_PATH OWNER/PROJECT-prd" >&2; exit 64; }
 [ "$#" -eq 2 ] || usage
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 target="$1"; repo="$2"
 [[ "$repo" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+-prd$ ]] || usage
 [ -d "$target" ] || { echo "Missing PRD directory: $target" >&2; exit 1; }
@@ -21,6 +22,8 @@ if [ ! -d "$target/.git" ]; then
 else
   [ -z "$(git -C "$target" status --porcelain)" ] || { echo "PRD repository is dirty" >&2; exit 1; }
 fi
+# The initial commit is the one direct push a repository gets, so it carries no wide line.
+(cd "$target" && bash "$here/line-width.sh" check --root HEAD >/dev/null)
 
 expected="https://github.com/$repo.git"
 if git -C "$target" remote get-url origin >/dev/null 2>&1; then
@@ -44,4 +47,6 @@ fi
 
 readback="$(gh repo view "$repo" --json nameWithOwner,visibility,url --jq '[.nameWithOwner,.visibility,.url]|@tsv')"
 [[ "$readback" == "$repo"$'\tPRIVATE\t'* ]] || { echo "Private remote verification failed: $readback" >&2; exit 1; }
+# From here on the default branch changes only through a squash-merged pull request.
+bash "$here/protect-main.sh" apply "$repo" >&2
 printf 'repository=%s\ncommit=%s\n' "${readback##*$'\t'}" "$(git -C "$target" rev-parse HEAD)"

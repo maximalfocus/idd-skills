@@ -56,8 +56,8 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
    the model, its dependencies, and its own acceptance, which never requires a later slice's
    deliverable or a gate that applies only after all slices land. A slice owns a section from
    planning until validated: then its acceptance moves into the requirement it extends or becomes
-   a new requirement, and the slice collapses to one row of the Delivery slices table, a `prd`
-   commit by the user. Write `### Preserved artifacts`: one row per artifact a regeneration must
+   a new requirement, and the slice collapses to one row of the Delivery slices table, a `docs(prd)`
+   PR by the user. Write `### Preserved artifacts`: one row per artifact a regeneration must
    carry over unchanged — repository, path, why it is not regenerable, how final acceptance verifies
    it — from candidates the user names, never an invented path; an empty manifest is written
    explicitly as `None declared`. Draft `PROGRESS.md` as an implementation control panel with the
@@ -96,7 +96,7 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
    `--context <name>`, write `contexts/<name>/PRD.md` and `PROGRESS.md`, add the context's row to
    the index `## Contexts` table and the portfolio panel — creating both root files when the pair
    is new — and pass `scripts/contract.sh gate <contract-path>`. Bootstrap pushes only once;
-   existing-context contract changes require a user's `prd` pull request, never a default push.
+   existing-context contract changes require a user's `docs(prd)` PR, never a default push.
 
 ## Default mode — recommend one next issue
 
@@ -123,19 +123,19 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
    that still guide implementation. Never copy private PRD content into the public repository or
    claim acceptance live evidence does not prove. Never edit `PRD.md` or its manifest: when landed
    behavior contradicts requirement prose, report `PRD text stale` naming the requirement, repaired
-   by a user's `prd` commit. Run the bundled `scripts/manifest.sh drift <contract-path>`,
+   by a user's `docs(prd)` PR. Run the bundled `scripts/manifest.sh drift <contract-path>`,
    `scripts/prd-fold-gate.sh PRD.md PROGRESS.md`, and `scripts/prd-size-gate.sh PRD.md`; report an
    unlisted tracked file as drift, a validated slice still owning a PRD section as `PRD slices
    unfolded`, and an over-budget section or contract as `PRD over budget` naming it, changing
    nothing in `PRD.md` — the repair is folding, compressing, or narrowing the domain boundary in a
-   `prd` commit, never a raised budget. When partitioned also run
+   `docs(prd)` PR, never a raised budget. When partitioned also run
    `scripts/contract.sh gate <contract-path>` over the index and every context.
 3. Run the bundled `scripts/tracker-gate.sh PROGRESS.md`, repository instructions, requirement ID
    and Markdown link validation, and `git diff --check`. The gate's budgets live in the script and
    change only through `/idd-evolve`; a stopped gate is reported with its line and cell and repaired
    only by this mode folding and replacing state under the tracker's own update rule. Audit the
    diff for lifecycle-only changes. If byte-identical, report already reconciled; otherwise run
-   `scripts/progress-pr.sh push <contract-path> '<subject>' <tracker-paths>` with `progress:
+   `scripts/progress-pr.sh push <contract-path> '<subject>' <tracker-paths>` with `docs(progress):
    reconcile <owner/repo>#<issue>` or an equally specific repair subject and read back its commit.
    The batch merges only at a milestone — a row set `validated`, a release boundary collapsed, the
    step before `/idd-acceptance`, `/idd-publish`, or the `/idd-auto` completion audit, or a direct

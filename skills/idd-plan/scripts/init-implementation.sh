@@ -3,6 +3,7 @@ set -euo pipefail
 
 usage() { echo "usage: init-implementation.sh PRD_REPOSITORY_PATH" >&2; exit 64; }
 [ "$#" -eq 1 ] || usage
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 prd="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a PRD repository: $1" >&2; exit 1; }
 prd="$(cd "$prd" && pwd -P)"
 [ -f "$prd/PRD.md" ] && [ -f "$prd/PROGRESS.md" ] || { echo "PRD.md and PROGRESS.md are required" >&2; exit 1; }
@@ -31,9 +32,17 @@ created=false
 if gh repo view "$impl_repo" >/dev/null 2>&1; then
   (cd "$parent" && gh repo clone "$impl_repo" "$impl_name")
 else
-  (cd "$parent" && gh repo create "$impl_repo" --private --add-readme \
+  # Create it empty so the initial commit carries an N-4 subject, not the provider's
+  # untyped "Initial commit".
+  (cd "$parent" && gh repo create "$impl_repo" --private \
     --description "Private implementation repository for $impl_name." --clone)
   created=true
+  [ -d "$impl/.git" ] || { echo "Implementation clone was not created: $impl" >&2; exit 1; }
+  git -C "$impl" symbolic-ref HEAD refs/heads/main
+  printf '# %s\n' "$impl_name" > "$impl/README.md"
+  git -C "$impl" add README.md
+  git -C "$impl" commit -qm "docs: establish the implementation repository"
+  git -C "$impl" push -q -u origin main
 fi
 
 [ -d "$impl/.git" ] || { echo "Implementation clone was not created: $impl" >&2; exit 1; }
@@ -52,6 +61,8 @@ default_branch="${readback##*$'\t'}"
 [ -n "$default_branch" ] && [ "$(git -C "$impl" branch --show-current)" = "$default_branch" ] || {
   echo "Implementation default branch checkout mismatch" >&2; exit 1;
 }
+# From here on the default branch changes only through a squash-merged pull request.
+bash "$here/protect-main.sh" apply "$impl_repo" >&2
 printf 'implementation=%s\nrepository=%s\nvisibility=%s\ncommit=%s\ncreated=%s\n' \
   "$impl" "$(cut -f3 <<<"$readback")" "$(cut -f2 <<<"$readback")" \
   "$(git -C "$impl" rev-parse HEAD)" "$created"

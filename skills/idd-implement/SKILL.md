@@ -22,9 +22,8 @@ issue's repository.
 
 ## Input
 
-Take one issue number (`issue 6`, `#6`, or `6`) or GitHub issue URL from the invocation arguments
-or, on runners that do not inject arguments into skills, from the user's request. Default
-repository: the current git repository. One run handles one issue.
+Take one issue number (`issue 6`, `#6`, `6`) or GitHub issue URL from the arguments or, on runners
+that inject none, the user's request. Default repository: the current one. One run, one issue.
 
 ## Step 0 — establish a safe issue boundary
 
@@ -39,9 +38,8 @@ repository: the current git repository. One run handles one issue.
 3. Reject or ask to split an epic that cannot be reviewed and verified as one coherent change. For a
    bug, locate the reproduction; for a feature/change, locate the affected user or system boundary.
 4. If the working tree is dirty, do not discard or absorb it. Ask whether it is a prerequisite;
-   otherwise create a sibling worktree from the current committed base. If clean, create
-   `issue/<number>-<short-slug>` before the first write. Never implement on the default/shared
-   branch.
+   otherwise create a sibling worktree from the current committed base. If clean, create the N-3
+   branch `issue/<number>-<slug>` before the first write. Never implement on the default branch.
 5. Confirm GitHub auth and that push access or the repository's fork workflow is available. A
    tooling failure is a disclosed blocker, not a reason to bypass policy.
 
@@ -128,18 +126,20 @@ implementation may still open a non-closing PR.
 
 ## Step 4 — commit and open the PR
 
-1. Stage only issue-owned paths explicitly. Commit with the repository's message convention and a
-   concise issue-focused subject. Commit messages, branch names, and PR/issue text are
-   permanent provider surfaces no later publication can purge — retained pull-request refs outlive
-   any history rewrite — so never name a private companion repository, document, or section in
-   them; give the rationale generically instead.
-2. Push the dedicated branch. Open a focused PR using the repository template. Include summary,
-   verification commands/results, proven baseline failures, and risks/follow-ups. Declare exactly
-   one `Delivery-Type: <type>` field in the body, using a type the repository allows when it
-   declares a vocabulary (`Types:` in its `AGENTS.md`/`CLAUDE.md`); `/idd-land` composes the squash
-   subject from it and stops without it. Use `Closes #N` only when every acceptance item is proved
-   and the issue belongs to this repository; otherwise use a non-closing `Refs #N` (same repo) or
-   `Refs owner/repo#N`.
+1. Stage only issue-owned paths explicitly and commit with N-4 subjects, per the shared conventions
+   in the sibling `idd-plan/references/conventions.md`. Commit messages, branch names, and PR/issue
+   text are permanent provider surfaces no later publication can purge — retained pull-request refs
+   outlive any history rewrite — so never name a private companion repository, document, or section
+   in them; give the rationale generically instead. Then run the sibling
+   `idd-plan/scripts/line-width.sh check origin/<default>`: rewrap every reported line to 100
+   characters, or list its path on the repository's `Formatter-owned:` line only when a formatter,
+   generator, package manager, or recorder lays it out.
+2. Push the dedicated branch. Open a focused PR titled character-identically to the issue (N-2),
+   using the repository template. Include summary, verification commands/results, proven baseline
+   failures, and risks/follow-ups. Declare exactly one `Delivery-Type: <type>` field in the body
+   with an N-4 type; `/idd-land` composes the squash subject from it and stops without it. Use
+   `Closes #N` only when every acceptance item is proved and the issue belongs to this repository;
+   otherwise use a non-closing `Refs #N` (same repo) or `Refs owner/repo#N`.
 3. Read back the PR URL and state. Do not merge it, delete the branch, deploy, or close the issue
    directly. Merge policy and CI remain the repository's gate.
 

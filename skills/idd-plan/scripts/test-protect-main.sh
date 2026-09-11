@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-script="$root/skills/idd-evolve/scripts/protect-main.sh"
+script="${PROTECT_MAIN_SCRIPT:-$root/skills/idd-plan/scripts/protect-main.sh}"
 tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
 command -v jq >/dev/null || { echo "protect-main tests require jq" >&2; exit 1; }
 mkdir -p "$tmp/bin"
