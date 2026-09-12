@@ -71,8 +71,9 @@ part before the trailing ` (#N)` is capped at 72 characters and never truncated 
 subject is a title to shorten, not a rule to bend. Issue and PR titles stay untyped. Before any
 mutation the script also enforces the rest of the sibling `idd-plan/references/conventions.md`: the
 PR title equals the issue title (N-2), the head is `issue/<N>-<slug>` (N-3), `protect-main.sh
-verify` passes, and the head adds no line over 100 characters outside `Formatter-owned:` paths;
-repair the source, never the gate.
+verify` passes, and the head adds no line over 100 characters outside `Formatter-owned:` paths and
+Markdown table rows; repair the source, never the gate. Only the user's explicit instruction runs
+`apply`, which changes repository settings: see the conventions' adoption section.
 
 ## GATE — pre-merge snapshot
 

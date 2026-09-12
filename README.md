@@ -14,7 +14,8 @@ Every repository IDD manages — this methodology repository, each implementatio
 its `{project}-prd` — shares one convention set, defined in
 `skills/idd-plan/references/conventions.md`: N-1..N-4 naming, a default branch that changes only
 through a squash-merged pull request (bootstrap applies `protect-main.sh`, landing verifies it),
-and no added line over 100 characters outside the paths a repository declares `Formatter-owned:`.
+and no added line over 100 characters outside Markdown table rows and the paths a repository
+declares `Formatter-owned:`; an existing repository adopts them once, as that file describes.
 Landing, tracker batches, and evolution proposals enforce it with the bundled scripts.
 
 A product too large for one coherent contract partitions its `{project}-prd` into `contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel. Each context owns a scope of implementation paths, names the contexts it depends on without restating them, and is admitted only when work is planned there: `/idd-plan --reconstruct --scope <paths> --context <name>` reconstructs one, issues carry the context name as their label, changed files must resolve to the issue's context, and every gate runs over the index and each context.

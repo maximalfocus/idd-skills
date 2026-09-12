@@ -60,6 +60,10 @@ refuses() { # $1 = description, $2 = required stderr fragment, remaining = comma
 fresh 'true true true false COMMIT_OR_PR_TITLE COMMIT_MESSAGES'
 refuses "an unprotected repository" "no ruleset named require-pull-request" bash "$script" verify example/open
 refuses "drifted merge settings" "settings drift" bash "$script" verify example/open
+# The repair names the script as installed, runnable from any checkout.
+self="$(cd "$(dirname "$script")" && pwd)/$(basename "$script")"
+refuses "an unprotected repository" "bash $self apply example/open" \
+  bash "$script" verify example/open
 [ ! -f "$tmp/patch-body" ] || { echo "verify must not mutate" >&2; exit 1; }
 
 # --- apply creates the ruleset and reshapes the settings ----------------------

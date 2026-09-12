@@ -5,7 +5,8 @@ set -euo pipefail
 # width every IDD-managed repository shares (idd-plan/references/conventions.md). A path
 # listed on the repository's `Formatter-owned:` line in AGENTS.md or CLAUDE.md is left to
 # the tool that lays it out: a language formatter at its configured width, or a generator,
-# package manager, or recorder.
+# package manager, or recorder. A Markdown table row is one line that cannot be rewrapped,
+# so its cells answer to their own budgets (the tracker gate's) instead of this width.
 #
 #   line-width.sh check BASE [REV]      lines REV (default HEAD) adds since its merge base
 #   line-width.sh check BASE --cached   lines the index adds to BASE
@@ -59,7 +60,11 @@ records="$(git -c core.quotePath=false diff --no-color --no-ext-diff --no-textco
     /^diff --git / { hunk = 0; next }
     hunk && /^\+/ { printf "%s:%d\t%s\n", path, line, substr($0, 2); line++; next }
     !hunk && /^\+\+\+ / { path = substr($0, 5); sub(/^b\//, "", path); next }
-    /^@@ / { hunk = 1; split($3, start, ","); line = substr(start[1], 2) + 0; next }')"
+    /^@@ / { hunk = 1; split($3, start, ","); line = substr(start[1], 2) + 0; next }' |
+  awk -F '\t' '{ # drop Markdown table rows; a pipe line in code is still a line to wrap
+    loc = $1; path = loc; sub(/:[0-9]+$/, "", path)
+    if (path ~ /\.(md|markdown)$/ && substr($0, length(loc) + 2) ~ /^[ \t]*\|/) next
+    print }')"
 over=$'\t'".{$((limit + 1)),}\$" # the record's tab, then more than $limit characters of content
 wide="$(printf '%s\n' "$records" | LC_ALL=en_US.UTF-8 grep -E "$over" | cut -f1 || true)"
 if [ -n "$wide" ]; then

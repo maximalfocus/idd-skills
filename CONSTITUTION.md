@@ -169,9 +169,10 @@ initial private PRD commit/push unless the user requests draft-only output; expl
 squash merge at a milestone. Failure after merge is disclosed and resumable. Every repository IDD
 manages — this one, each implementation repository, and its `{project}-prd` — shares one naming
 convention, a default branch that changes only through a squash-merged pull request, and a
-100-character width for every added line outside declared formatter-owned paths, as
-`skills/idd-plan/references/conventions.md` defines; bootstrap applies that protection and landing
-verifies it. A project's own review policy governs everything else.
+100-character width for every added line outside declared formatter-owned paths and Markdown
+table rows, as `skills/idd-plan/references/conventions.md` defines; bootstrap applies that
+protection, an existing repository adopts it once on the user's instruction, and landing verifies
+it. A project's own review policy governs everything else.
 
 ## Article 7 — Preserve conceptual integrity
 

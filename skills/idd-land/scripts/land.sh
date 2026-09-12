@@ -93,8 +93,13 @@ if [ "$state" = OPEN ]; then
     echo "PR title differs from the issue title (N-2); edit the issue first, then match the PR" >&2
     exit 1
   }
-  # Its stderr names any drift and the apply that repairs it.
-  bash "$plan_scripts/protect-main.sh" verify "$repo" >/dev/null
+  # Its stderr names any drift and the apply that repairs it; apply changes repository
+  # settings, so landing never runs it.
+  bash "$plan_scripts/protect-main.sh" verify "$repo" >/dev/null || {
+    echo "Landing stops before any mutation; adopt default-branch protection on the user's" \
+      "instruction (idd-plan/references/conventions.md, Adopting an existing repository)" >&2
+    exit 1
+  }
 fi
 
 # The post-merge refresh is ff-only. Prove it can succeed before mutating GitHub; otherwise a

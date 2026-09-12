@@ -150,7 +150,8 @@ echo feature/test > "$tmp/pr-head"; refuses "a branch outside the naming convent
 echo issue/3-test > "$tmp/pr-head"
 
 # The default branch changes only through a squash-merged pull request.
-touch "$tmp/drift"; refuses "an unprotected default branch" "not protected"; rm "$tmp/drift"
+touch "$tmp/drift"
+refuses "an unprotected default branch" "Adopting an existing repository"; rm "$tmp/drift"
 
 # No change lands a line over 100 characters.
 printf '%0101d\n' 0 >> file; git commit -qam wide; git push -q origin issue/3-test

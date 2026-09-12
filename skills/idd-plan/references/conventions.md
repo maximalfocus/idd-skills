@@ -46,8 +46,10 @@ stops on drift.
 
 ## Line width
 
-No change adds a line over 100 characters to a tracked text file — prose, tables, code, and
-configuration alike; characters are counted, not bytes. A path listed on the repository's
+No change adds a line over 100 characters to a tracked text file — prose, code, and configuration
+alike; characters are counted, not bytes. A Markdown table row is exempt: it is one line that cannot
+be rewrapped, so its cells answer to their own budgets, such as the tracker gate's per-cell word
+budget in `PROGRESS.md`, rather than to the width. A path listed on the repository's
 `Formatter-owned:` line in `AGENTS.md` or `CLAUDE.md` takes the width its tool gives it instead: a
 language formatter at the width the repository configures and checks, or a generator, package
 manager, or recorder whose output nobody lays out by hand. The line lists git pathspec patterns and
@@ -60,3 +62,22 @@ Formatter-owned: `*.py` `*.go` `package-lock.json` `tests/fixtures/`
 The bundled `idd-plan/scripts/line-width.sh check <base> [<rev>|--cached]` is the gate: landing,
 tracker batches, and evolution proposals run it. Only added lines count, so a change never inherits
 the debt of lines it leaves alone.
+
+## Adopting an existing repository
+
+A repository created before these conventions adopts them from its next change; nothing rewrites
+its history or its legacy lines. Landing stops before any mutation until adoption is complete:
+
+1. **Protection.** `apply` changes repository settings, so it runs once per repository on the
+   user's explicit instruction, never as a landing repair: run the bundled
+   `idd-plan/scripts/protect-main.sh apply <owner>/<repo>` for the implementation repository and
+   its `{project}-prd`, then `verify` each.
+2. **Formatter-owned paths.** Before the first landing that adds formatter-laid lines over 100
+   characters, declare those paths in a reviewed change to `AGENTS.md` or `CLAUDE.md`. A `Types:`
+   line binds nothing any more and may go in the same change.
+3. **Open pull requests.** Retitle each to its issue title (N-2) and declare an N-4
+   `Delivery-Type`. One whose head is not `issue/<N>-<slug>` (N-3) is replaced: push the same
+   commits to that branch, open a pull request from it, and close the old one.
+
+An open `{project}-prd` progress batch whose commits still read `progress:` merges as it stands; its
+next tracker commit uses `docs(progress):`.

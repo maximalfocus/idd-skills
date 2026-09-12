@@ -77,6 +77,18 @@ printf '# rules\n\nFormatter-owned: `*.py` `package-lock.json` `tests/fixtures/`
 commit "docs: restore owned paths"
 passes "a declaration read from the checked revision" "$base"
 
+# A Markdown table row cannot be rewrapped, so its cells answer to their own budgets; a
+# pipe-led line outside Markdown, or prose beside the table, still answers to the width.
+printf '| id | %s |\n  | %s |\n' "$(wide t 120)" "$(wide u 120)" > "$tmp/repo/table.md"
+commit "docs: add a wide table"
+passes "wide Markdown table rows, indented or not" "$base"
+printf '  | %s\n' "$(wide q 120)" > "$tmp/repo/pipe.sh"; commit "feat: add a wide pipe line"
+refuses "a wide pipe-led line outside Markdown" "over 100 characters: pipe.sh:1" "$base"
+git -C "$tmp/repo" rm -q pipe.sh; commit "fix: drop the pipe line"
+printf 'prose %s\n' "$(wide r 120)" >> "$tmp/repo/table.md"; commit "docs: add wide prose"
+refuses "wide prose beside a table" "over 100 characters: table.md:3" "$base"
+git -C "$tmp/repo" checkout -q HEAD~1 -- table.md; commit "docs: drop wide prose"
+
 # A pure rename moves lines without adding them; a binary file has no lines.
 git -C "$tmp/repo" mv legacy.md moved.md; commit "refactor: rename legacy"
 printf '\000%s' "$(wide b 200)" > "$tmp/repo/blob.bin"; commit "chore: add a binary"
