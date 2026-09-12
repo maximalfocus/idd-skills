@@ -34,10 +34,31 @@ validate_skill idd-evolve 80
 validate_skill idd-publish 120
 validate_skill idd-acceptance 120
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
-if LC_ALL=en_US.UTF-8 grep -nE '^.{101,}' "$root"/skills/*/SKILL.md "$root/CONSTITUTION.md" "$root/CLAUDE.md"; then
-  echo "every line of the skills, CONSTITUTION.md, and CLAUDE.md must be 100 characters or fewer" >&2
+conventions="$root/skills/idd-plan/references/conventions.md"
+[ -f "$conventions" ] || { echo "Missing shared conventions: $conventions" >&2; exit 1; }
+if LC_ALL=en_US.UTF-8 grep -nE '^.{101,}' "$root"/skills/*/SKILL.md "$root/CONSTITUTION.md" \
+  "$root/CLAUDE.md" "$conventions"; then
+  echo "every line of the skills, CONSTITUTION.md, CLAUDE.md, and the conventions" \
+    "must be 100 characters or fewer" >&2
   exit 1
 fi
+shared='skills/idd-plan/references/conventions.md'
+has_phrase "$root/CONSTITUTION.md" "$shared" || {
+  echo "constitution must bind every managed repository to the shared conventions" >&2; exit 1; }
+has_phrase "$root/CLAUDE.md" "$shared" || {
+  echo "CLAUDE.md must take its conventions from the shared source" >&2; exit 1; }
+for script in skills/idd-land/scripts/land.sh skills/idd-plan/scripts/progress-pr.sh \
+  skills/idd-plan/scripts/init-prd.sh skills/idd-evolve/scripts/propose.sh \
+  skills/idd-evolve/scripts/land-evolution.sh; do
+  grep -q 'line-width.sh' "$root/$script" || {
+    echo "$script must gate the shared line width" >&2; exit 1; }
+done
+grep -q 'protect-main.sh" verify' "$root/skills/idd-land/scripts/land.sh" || {
+  echo "land.sh must verify default-branch protection" >&2; exit 1; }
+for script in init-prd init-implementation; do
+  grep -q 'protect-main.sh" apply' "$root/skills/idd-plan/scripts/$script.sh" || {
+    echo "$script.sh must protect the new default branch" >&2; exit 1; }
+done
 has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit target or current checkout' || { echo "idd-evolve must resolve the target methodology checkout" >&2; exit 1; }
 
 install_home="$(mktemp -d)"
@@ -155,7 +176,8 @@ grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
 
-for name in tracker-gate manifest prd-fold-gate prd-size-gate contract progress-pr protect-main propose land-evolution; do
+for name in tracker-gate manifest prd-fold-gate prd-size-gate contract progress-pr protect-main \
+  line-width propose land-evolution; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
   [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }

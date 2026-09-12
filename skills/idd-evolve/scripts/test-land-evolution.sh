@@ -281,19 +281,32 @@ if out="$(LANDEV_TEST_KEEP_REMOTE=1 run 2>&1)"; then echo "landing reported succ
 case "$out" in *"Cannot verify origin branch"*) ;; *) echo "wrong remote lookup diagnostic: $out" >&2; exit 1;; esac
 rm -f "$tmp/bin/git"
 
+# --- the shared line width -------------------------------------------------------
+# A review fix pushed after proposing still answers to the width before it lands.
+fresh
+( cd "$tmp/work"; git switch -q evolve/reviewed; printf '%0101d\n' 0 > z.txt
+  git commit -qam "fix: widen a line"; git push -q origin evolve/reviewed; git switch -q main )
+git -C "$tmp/work" rev-parse evolve/reviewed > "$tmp/pr-head-oid"
+git -C "$tmp/origin.git" update-ref refs/pull/5/head "$(cat "$tmp/pr-head-oid")"
+refuses "a head that adds a line over 100 characters" "over 100 characters: z.txt:1" run
+
 # --- running from a mutable source ---------------------------------------------
 # The checkout may serve the installed skill, so the mid-sequence branch switch
 # can rewrite this very script on disk; everything after it must already be parsed.
+# The copy keeps its installed layout so it resolves its sibling idd-plan scripts.
 fresh; git -C "$tmp/work" switch -q evolve/reviewed
 real_git="$(command -v git)"
-cp "$script" "$tmp/copy.sh"
+mkdir -p "$tmp/skills/idd-evolve/scripts"; ln -sfn "$root/skills/idd-plan" "$tmp/skills/idd-plan"
+copy="$tmp/skills/idd-evolve/scripts/copy.sh"
+cp "$script" "$copy"
 cat > "$tmp/bin/git" <<FAKE
 #!/usr/bin/env bash
 if [ "\$1" = switch ] && [ -n "\${REWRITE_TARGET:-}" ]; then yes 'exit 99' | head -4000 > "\$REWRITE_TARGET"; fi
 exec "$real_git" "\$@"
 FAKE
 chmod +x "$tmp/bin/git"
-out="$(cd "$tmp/work" && REWRITE_TARGET="$tmp/copy.sh" bash "$tmp/copy.sh" 5 2>&1)" || { echo "the script failed once its own source was rewritten mid-run: $out" >&2; exit 1; }
+out="$(cd "$tmp/work" && REWRITE_TARGET="$copy" bash "$copy" 5 2>&1)" || {
+  echo "the script failed once its own source was rewritten mid-run: $out" >&2; exit 1; }
 case "$out" in "landed example/demo#5 as "*) ;; *) echo "a rewritten source did not report completion: $out" >&2; exit 1;; esac
 rm -f "$tmp/bin/git"
 

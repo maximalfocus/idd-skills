@@ -22,6 +22,12 @@ if [ -z "$repo" ]; then
   repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 fi
 [[ "$repo" == */* ]] || usage
+self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+unprotected() { # apply changes repository settings: name it, runnable from any checkout
+  echo "$repo default branch is not protected; on the user's instruction run once:" \
+    "bash $self apply $repo" >&2
+  exit 1
+}
 
 ruleset_name="require-pull-request"
 # Expected shapes, as the canonical strings verify compares against.
@@ -72,7 +78,7 @@ settings="$(gh api "repos/$repo" --jq "$settings_query")"
 [ "$settings" = "$expected_settings" ] || {
   echo "settings drift: $repo has [$settings], want [$expected_settings] (squash-only, delete on merge, PR title/body)" >&2; drift=1; }
 if [ "$visibility" = private ]; then
-  [ "$drift" -eq 0 ] || { echo "$repo default branch is not protected; run: bash scripts/protect-main.sh apply $repo" >&2; exit 1; }
+  [ "$drift" -eq 0 ] || unprotected
   echo "$repo default branch: squash-only settings enforced; ruleset DEFERRED while private (branch and PR discipline only); rerun apply once public"
   exit 0
 fi
@@ -84,5 +90,5 @@ else
   [ "$ruleset" = "$expected_ruleset" ] || {
     echo "ruleset drift: $repo ruleset $ruleset_name is [$ruleset], want [$expected_ruleset] (target | enforcement | bypass count | includes | excludes | rules | approvals stale-review-dismissal thread-resolution merge-methods code-owner-review last-push-approval)" >&2; drift=1; }
 fi
-[ "$drift" -eq 0 ] || { echo "$repo default branch is not protected; run: bash scripts/protect-main.sh apply $repo" >&2; exit 1; }
+[ "$drift" -eq 0 ] || unprotected
 echo "$repo default branch protected: pull request required, squash only, linear, no force-push, no bypass"

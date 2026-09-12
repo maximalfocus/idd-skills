@@ -30,6 +30,7 @@ types='feat|fix|docs|test|refactor|perf|chore|build|ci|evolve'
 [ -z "$(sed -n 2p "$message")" ] || {
   echo "Message body must be separated from the subject by one blank line" >&2; exit 1; }
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repository" >&2; exit 1; }
 cd "$root"
 git remote get-url origin >/dev/null
@@ -57,6 +58,16 @@ git diff --cached --quiet || { echo "Index already has staged changes; unstage t
 for path in "${paths[@]}"; do
   [ -n "$(git status --porcelain --untracked-files=all -- "$path")" ] || { echo "No change under $path" >&2; exit 1; }
 done
+# Check the exact tree the commit will record against the shared line width, in a
+# scratch index so a refusal leaves the real index and checkout untouched.
+scratch="$(mktemp -d)"
+width_ok=true
+GIT_INDEX_FILE="$scratch/index" git read-tree HEAD
+GIT_INDEX_FILE="$scratch/index" git add -- "${paths[@]}"
+width_gate="$here/../../idd-plan/scripts/line-width.sh"
+GIT_INDEX_FILE="$scratch/index" bash "$width_gate" check HEAD --cached >/dev/null || width_ok=false
+rm -rf "$scratch"
+[ "$width_ok" = true ] || exit 1
 
 body="$(mktemp)"; created_branch=false
 finish_proposal() {

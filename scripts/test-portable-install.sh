@@ -46,8 +46,9 @@ for path in \
   idd-plan/scripts/prd-fold-gate.sh \
   idd-plan/scripts/prd-size-gate.sh \
   idd-plan/scripts/contract.sh \
+  idd-plan/scripts/protect-main.sh \
+  idd-plan/scripts/line-width.sh \
   idd-land/scripts/land.sh \
-  idd-evolve/scripts/protect-main.sh \
   idd-evolve/scripts/propose.sh \
   idd-evolve/scripts/land-evolution.sh \
   idd-publish/scripts/scan-exposure.sh \
@@ -90,6 +91,12 @@ PRD_SIZE_GATE_SCRIPT="$agents_root/idd-plan/scripts/prd-size-gate.sh" \
   bash "$root/scripts/test-prd-size-gate.sh"
 CONTRACT_SCRIPT="$agents_root/idd-plan/scripts/contract.sh" \
   bash "$root/scripts/test-contract.sh"
+LINE_WIDTH_SCRIPT="$agents_root/idd-plan/scripts/line-width.sh" \
+  bash "$root/scripts/test-line-width.sh"
+PROTECT_MAIN_SCRIPT="$agents_root/idd-plan/scripts/protect-main.sh" \
+  bash "$root/scripts/test-protect-main.sh"
+[ -f "$agents_root/idd-plan/references/conventions.md" ] || {
+  echo "Missing installed shared conventions" >&2; exit 1; }
 bash "$agents_root/idd-publish/scripts/test-scan-exposure.sh"
 
 grep -q 'npx skills add' "$root/README.md" || { echo "Missing ecosystem install command" >&2; exit 1; }

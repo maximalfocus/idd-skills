@@ -18,6 +18,7 @@ usage() { echo "usage: land-evolution.sh PR" >&2; exit 64; }
 [ "$#" -eq 1 ] && [[ "$1" =~ ^[0-9]+$ ]] || usage
 pr="$1"
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repository" >&2; exit 1; }
 cd "$root"
 tree="$(git status --porcelain)" || { echo "Cannot read the working tree state" >&2; exit 1; }
@@ -70,6 +71,8 @@ if [ "$state" = OPEN ]; then
     DIRTY) echo "PR #$pr conflicts with $default; rebase the evolve branch and rerun" >&2; exit 1;;
     *) echo "PR #$pr merge state is $merge_state, not CLEAN; rerun once GitHub reports it clean" >&2; exit 1;;
   esac
+  # Review fixes pushed after propose.sh answer to the same shared line width.
+  bash "$here/../../idd-plan/scripts/line-width.sh" check "origin/$default" "$head_oid" >/dev/null
   body="$(gh pr view "$pr" --repo "$repo" --json body --jq '.body // ""')"
   # Bind the merge to the head that passed the checks; a push in between must fail the merge, not land unreviewed.
   gh pr merge "$pr" --repo "$repo" --squash --match-head-commit "$head_oid" --subject "$subject" --body "$body"

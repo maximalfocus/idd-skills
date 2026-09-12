@@ -62,19 +62,18 @@ gaps, then proceed; never reinterpret the flag as proof or hide the gaps from th
 
 ## Delivery type and the landed subject
 
-GitHub derives a squash subject from the pull-request title, which the title conventions
-deliberately leave untyped, so the pull request declares the landed type in exactly one body field:
-
-```
-Delivery-Type: <type>
-```
-
+GitHub derives a squash subject from the pull-request title, which N-2 deliberately leaves untyped,
+so the pull request declares the landed type in exactly one body field, `Delivery-Type: <type>`.
 Landing composes `<type>: <issue title> (#<PR>)`, lowercasing the title's initial ASCII letter
 unless an initialism opens it, and passes it to the squash merge. It stops rather than guessing when
-the field is absent, repeated, not a lowercase type token, or outside the vocabulary the repository
-declares in `AGENTS.md`/`CLAUDE.md` (`Types:` line; a repository declaring none constrains nothing).
-The authored part before the trailing ` (#N)` is capped at 72 characters and never truncated — an
-over-budget subject is a title to shorten, not a rule to bend. Issue and PR titles stay untyped.
+the field is absent, repeated, or not an N-4 type, one vocabulary for every repository. The authored
+part before the trailing ` (#N)` is capped at 72 characters and never truncated — an over-budget
+subject is a title to shorten, not a rule to bend. Issue and PR titles stay untyped. Before any
+mutation the script also enforces the rest of the sibling `idd-plan/references/conventions.md`: the
+PR title equals the issue title (N-2), the head is `issue/<N>-<slug>` (N-3), `protect-main.sh
+verify` passes, and the head adds no line over 100 characters outside `Formatter-owned:` paths and
+Markdown table rows; repair the source, never the gate. Only the user's explicit instruction runs
+`apply`, which changes repository settings: see the conventions' adoption section.
 
 ## GATE — pre-merge snapshot
 
@@ -107,7 +106,7 @@ stopped gate is `landed, PRD reconciliation incomplete` with the reported line a
 read the sibling `skills/idd-plan/SKILL.md` and execute its Reconcile mode with the verified issue,
 PR, and squash commit; this is mandatory and requires no separate user invocation. When landed
 behavior makes `PRD.md` prose inaccurate, report `landed, PRD text stale` naming the requirement,
-repaired by the user's `prd` pull request, never a reconcile edit. Verify the batch push and any
+repaired by the user's `docs(prd)` PR, never a reconcile edit. Verify the batch push and any
 milestone merge — a merge refused for review state is `PRD batch awaiting review`, not a failed
 landing — then return to the implementation checkout. A reconciliation failure after merge never
 undoes or conceals the landing: it is `landed, PRD reconciliation incomplete`, resumable by this

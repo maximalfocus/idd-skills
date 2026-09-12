@@ -10,6 +10,14 @@ Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocatio
 
 Across both lifecycles, IDD treats the PRD as one coherent design contract and preserves its conceptual model over a cheap one-off change. New concepts, special cases, or fragmenting convenience features require an explicit recorded design decision; final acceptance verifies that the integrated product fits the model at its real boundary.
 
+Every repository IDD manages — this methodology repository, each implementation repository, and
+its `{project}-prd` — shares one convention set, defined in
+`skills/idd-plan/references/conventions.md`: N-1..N-4 naming, a default branch that changes only
+through a squash-merged pull request (bootstrap applies `protect-main.sh`, landing verifies it),
+and no added line over 100 characters outside Markdown table rows and the paths a repository
+declares `Formatter-owned:`; an existing repository adopts them once, as that file describes.
+Landing, tracker batches, and evolution proposals enforce it with the bundled scripts.
+
 A product too large for one coherent contract partitions its `{project}-prd` into `contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel. Each context owns a scope of implementation paths, names the contexts it depends on without restating them, and is admitted only when work is planned there: `/idd-plan --reconstruct --scope <paths> --context <name>` reconstructs one, issues carry the context name as their label, changed files must resolve to the issue's context, and every gate runs over the index and each context.
 
 ## Skill
@@ -44,7 +52,14 @@ Selective install is supported for standalone skills:
 npx skills add maximalfocus/idd-skills --skill idd-issue
 ```
 
-Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`, `idd-implement`, `idd-land`, and `idd-acceptance`; `idd-land` and `idd-acceptance` require `idd-plan`; `idd-implement` requires `idd-plan` when the companion contract is partitioned; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd` routes to whichever sibling the request selects and needs that sibling installed. Installing the complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current `idd-skills` methodology checkout because it edits and validates that repository rather than its installed workflow definition.
+Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`,
+`idd-implement`, `idd-land`, and `idd-acceptance`; `idd-implement`, `idd-land`, and
+`idd-acceptance` require `idd-plan`, which holds the shared conventions, line-width gate, and branch
+protection; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd`
+routes to whichever sibling the request selects and needs that sibling installed. Installing the
+complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current
+`idd-skills` methodology checkout because it edits and validates that repository rather than its
+installed workflow definition.
 
 Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
 
@@ -89,10 +104,15 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-acceptance/SKILL.md` — final integrated user-boundary acceptance workflow
 - `skills/idd-publish/SKILL.md` — fail-closed implementation-repository publication workflow
 - `CONSTITUTION.md` — evolution law and size gates; every kept evolution is proposed by `scripts/propose.sh` as a PR, squash-merged after review by `scripts/land-evolution.sh`, and `scripts/protect-main.sh` makes GitHub refuse anything else on `main`
+- `skills/idd-plan/references/conventions.md` — the naming, default-branch, and line-width
+  conventions every managed repository shares
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them
 - `scripts/install.sh` — development-only cross-runner symlink installer
 - `scripts/test-install.sh` — isolated preflight, rollback, clean-install, and idempotency regression gate
 - `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh`, `scripts/tracker-gate.sh`, `scripts/manifest.sh`, `scripts/prd-fold-gate.sh`, `scripts/prd-size-gate.sh`, `scripts/contract.sh` — checkout compatibility wrappers for bundled scripts
+- `scripts/line-width.sh`, `scripts/protect-main.sh` — checkout wrappers for the bundled width gate
+  and default-branch protection; `scripts/test-line-width.sh` and `scripts/test-protect-main.sh`
+  test them
 - `scripts/test-land.sh` — isolated mock lifecycle, idempotency, and rewritten-source test
 - `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-prd-fold-gate.sh`, `scripts/test-prd-size-gate.sh`, `scripts/test-contract.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, the PRD fold gate, the PRD size gate, the context contract tooling, and the acceptance static gate
 - `scripts/scan-exposure.sh`, `scripts/test-scan-exposure.sh` — checkout wrappers for the bundled publication scan and tests

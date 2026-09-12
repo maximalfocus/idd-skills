@@ -18,7 +18,7 @@ root="${PROGRESS_TEST_ROOT:?}"
 advance_head() {
   local head tip moved
   head="$(cat "$root/pr-head")"; tip="$(git rev-parse "origin/$head")"
-  moved="$(git commit-tree "$tip^{tree}" -p "$tip" -m 'progress: remote snapshot update')"
+  moved="$(git commit-tree "$tip^{tree}" -p "$tip" -m 'docs(progress): remote snapshot update')"
   git push -q origin "$moved:refs/heads/$head"
   echo "$moved" > "$root/snapshot-expected-head"
 }
@@ -132,7 +132,7 @@ elif [ "$1" = api ] && [[ "$*" == *"repos/example/demo-prd/pulls"* ]]; then
     merged)
       rm "$root/publish-race"
       before="$(git rev-parse origin/main)"
-      gh pr merge 7 --subject 'progress: web milestone (#7)' --body 'web merge' \
+      gh pr merge 7 --subject 'docs(progress): web milestone (#7)' --body 'web merge' \
         --match-head-commit "$(git rev-parse "origin/$(cat "$root/pr-head")")" >/dev/null
       # A web merge does not update the caller's remote-tracking ref until its next fetch.
       git update-ref refs/remotes/origin/main "$before";;
@@ -178,28 +178,28 @@ on() { git -C "$prd" symbolic-ref --short HEAD; }
 # --- unprotected batches honor each reviewer's latest submitted review ------------
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: reviewed row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): reviewed row" PROGRESS.md >/dev/null
 echo '[{"author":{"login":"maintainer"},"state":"CHANGES_REQUESTED"}]' \
   > "$tmp/latest-reviews"
-code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
 [ "$code" = 2 ] && [[ "$err" == *"PRD batch awaiting review"* ]] || {
   echo "unprotected requested changes must refuse with exit 2: $code $err" >&2; exit 1; }
 [ ! -f "$tmp/merge-count" ]
 # The running account's own unsubmitted review is a review in progress, not invalid data.
 echo '[{"author":{"login":"maintainer"},"state":"PENDING"}]' > "$tmp/latest-reviews"
-code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
 [ "$code" = 2 ] && [[ "$err" == *"review in progress"* ]] || {
   echo "a pending review must refuse with exit 2: $code $err" >&2; exit 1; }
 [ ! -f "$tmp/merge-count" ]
 # The provider's latestReviews replaces the same author's earlier request.
 echo '[{"author":{"login":"maintainer"},"state":"APPROVED"}]' > "$tmp/latest-reviews"
-run merge "$prd" "progress: approved milestone" >/dev/null
+run merge "$prd" "docs(progress): approved milestone" >/dev/null
 [ "$(cat "$tmp/merge-count")" = x ]
 
 # --- BLOCKED checks are plumbing failures, including legacy commit statuses --------
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: checked row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): checked row" PROGRESS.md >/dev/null
 echo BLOCKED > "$tmp/merge-state"
 for check in \
   '{"__typename":"CheckRun","name":"ci","status":"IN_PROGRESS","conclusion":""}' \
@@ -207,7 +207,7 @@ for check in \
   '{"__typename":"StatusContext","context":"ci","state":"PENDING"}' \
   '{"__typename":"StatusContext","context":"ci","state":"ERROR"}'; do
   echo "[$check]" > "$tmp/checks"
-  code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+  code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
   [ "$code" = 1 ] && [[ "$err" == *"check blocker: ci"* && "$err" != *"awaiting review"* ]] || {
     echo "BLOCKED checks must refuse with exit 1: $code $err" >&2; exit 1; }
   [ ! -f "$tmp/merge-count" ]
@@ -215,7 +215,7 @@ done
 echo '[{"__typename":"CheckRun","name":"ci","status":"COMPLETED","conclusion":"SUCCESS"},
   {"__typename":"StatusContext","context":"legacy","state":"SUCCESS"}]' > "$tmp/checks"
 echo REVIEW_REQUIRED > "$tmp/review"
-code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
 [ "$code" = 2 ]; [[ "$err" == *"PRD batch awaiting review"* ]]
 [ ! -f "$tmp/merge-count" ]
 
@@ -224,7 +224,7 @@ echo CLEAN > "$tmp/merge-state"; echo '' > "$tmp/review"; echo '[]' > "$tmp/chec
 for field in latest-reviews checks; do
   for invalid in null '{}' '[{}]' '[{"state":"UNRECOGNIZED","author":{"login":"m"}}]'; do
     echo "$invalid" > "$tmp/$field"
-    code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+    code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
     [ "$code" = 1 ]; [[ "$err" == *"Invalid batch review state"* ]]
     [ ! -f "$tmp/merge-count" ]
   done
@@ -234,10 +234,10 @@ done
 # --- sync fast-forwards HEAD despite branch mergeOptions=--squash ------------------
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: first row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): first row" PROGRESS.md >/dev/null
 before="$(git -C "$prd" rev-parse HEAD)"
 printf 'remote row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: remote row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): remote row" PROGRESS.md >/dev/null
 expected="$(git -C "$prd" rev-parse HEAD)"
 git -C "$prd" reset -q --hard "$before"
 git -C "$prd" config branch.progress/batch.mergeOptions --squash
@@ -269,9 +269,9 @@ grep -qx generated "$prd/sync-generated.txt"
 # --- the post-merge refresh reaches the landed default despite mergeOptions=--squash --
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: squash-proof row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): squash-proof row" PROGRESS.md >/dev/null
 git -C "$prd" config branch.main.mergeOptions --squash
-run merge "$prd" "progress: squash-proof milestone" >/dev/null
+run merge "$prd" "docs(progress): squash-proof milestone" >/dev/null
 [ "$(on)" = main ] || { echo "merge must return to main" >&2; exit 1; }
 [ "$(git -C "$prd" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse main)" ] || {
   echo 'merge refresh left main behind the landed squash' >&2; exit 1; }
@@ -283,14 +283,14 @@ run merge "$prd" "progress: squash-proof milestone" >/dev/null
 fresh
 out="$(run sync "$prd")"
 [ "$out" = "$(printf 'branch=main\npr=')" ] || { echo "unexpected sync output: $out" >&2; exit 1; }
-printf 'direct\n' >> "$prd/PROGRESS.md"; git -C "$prd" commit -qam "progress: direct"
+printf 'direct\n' >> "$prd/PROGRESS.md"; git -C "$prd" commit -qam "docs(progress): direct"
 if err="$(git -C "$prd" push -q origin main 2>&1)"; then echo "the guard must refuse a direct push to main" >&2; exit 1; fi
 case "$err" in *"changes only through a pull request"*) ;; *) echo "wrong guard refusal: $err" >&2; exit 1;; esac
 git -C "$prd" reset -q --hard origin/main
 
 # --- the first push opens the batch; main is untouched ---------------------------
 printf 'row 1\n' >> "$prd/PROGRESS.md"
-out="$(run push "$prd" "progress: reconcile example/demo#1" PROGRESS.md)"
+out="$(run push "$prd" "docs(progress): reconcile example/demo#1" PROGRESS.md)"
 branch="$(sed -n 's/^branch=//p' <<<"$out")"
 [ "$branch" = progress/batch ] || { echo "unexpected batch branch: $branch" >&2; exit 1; }
 grep -qx 'pr=7' <<<"$out" || { echo "push must report the opened batch: $out" >&2; exit 1; }
@@ -300,47 +300,64 @@ grep -qx 'pr=7' <<<"$out" || { echo "push must report the opened batch: $out" >&
 
 # --- refusals before any commit ----------------------------------------------------
 printf 'stray\n' >> "$prd/PRD.md"; printf 'row x\n' >> "$prd/PROGRESS.md"
-refuses "a change outside the named paths" "outside the named paths" run push "$prd" "progress: reconcile example/demo#2" PROGRESS.md
+refuses "a change outside the named paths" "outside the named paths" \
+  run push "$prd" "docs(progress): reconcile example/demo#2" PROGRESS.md
 git -C "$prd" checkout -q -- .
 printf 'row x\n' >> "$prd/PROGRESS.md"
-refuses "an untyped subject" "progress: <lowercase summary>" run push "$prd" "reconcile example/demo#2" PROGRESS.md
+refuses "an untyped subject" "docs(progress): <lowercase summary>" \
+  run push "$prd" "reconcile example/demo#2" PROGRESS.md
 refuses "a sync over a dirty tree" "dirty PRD tree" run sync "$prd"
 git -C "$prd" checkout -q -- .
+
+# --- a tracker row honors the shared line width before it is published -----------
+printf '%0101d\n' 0 >> "$prd/PROGRESS.md"
+refuses "a tracker row over 100 characters" "Rewrap the reported tracker lines" \
+  run push "$prd" "docs(progress): wide row" PROGRESS.md
+git -C "$tmp/origin.git" rev-parse "$branch" >/dev/null
+[ "$(git -C "$tmp/origin.git" rev-list --count "$branch")" = 2 ] || {
+  echo "a wide row must not be pushed" >&2; exit 1; }
+git -C "$prd" reset -q --hard "origin/$branch"
 
 # --- a second push joins the same batch, even after a sync from main ---------------
 git -C "$prd" switch -q main
 out="$(run sync "$prd")"
 [ "$out" = "$(printf 'branch=%s\npr=7' "$branch")" ] || { echo "sync must check out the open batch: $out" >&2; exit 1; }
 printf 'row 2\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: reconcile example/demo#2" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): reconcile example/demo#2" PROGRESS.md >/dev/null
 [ "$(cat "$tmp/create-count")" = x ] || { echo "a second push must not open a second batch" >&2; exit 1; }
 [ "$(git -C "$tmp/origin.git" rev-list --count "$branch")" = 3 ] || { echo "the batch must carry both reconciles" >&2; exit 1; }
 
 # --- merge refuses review state it must not bypass ---------------------------------
 echo 1 > "$tmp/unresolved"
-refuses "an unresolved review thread" "unresolved review thread" run merge "$prd" "progress: validate slice one"
+refuses "an unresolved review thread" "unresolved review thread" \
+  run merge "$prd" "docs(progress): validate slice one"
 echo 0 > "$tmp/unresolved"; echo CHANGES_REQUESTED > "$tmp/review"
-refuses "requested changes" "requested changes" run merge "$prd" "progress: validate slice one"
+refuses "requested changes" "requested changes" \
+  run merge "$prd" "docs(progress): validate slice one"
 echo "" > "$tmp/review"; echo DIRTY > "$tmp/merge-state"
-refuses "a conflicting batch" "merge conflict" run merge "$prd" "progress: validate slice one"
+refuses "a conflicting batch" "merge conflict" run merge "$prd" "docs(progress): validate slice one"
 echo CLEAN > "$tmp/merge-state"
-refuses "an untyped merge subject" "progress: <lowercase summary>" run merge "$prd" "Validate slice one"
+refuses "an untyped merge subject" "docs(progress): <lowercase summary>" \
+  run merge "$prd" "Validate slice one"
 echo "8 progress/other" >> "$tmp/open-pr"
-refuses "two open batches" "move the commits onto one batch, close the others, then retry" run merge "$prd" "progress: validate slice one"
+refuses "two open batches" "move the commits onto one batch, close the others, then retry" \
+  run merge "$prd" "docs(progress): validate slice one"
 echo "7 $branch" > "$tmp/open-pr"
 
 # --- the milestone merge lands one squash commit and removes the batch -------------
-out="$(run merge "$prd" "progress: validate slice one")"
-grep -qx 'subject=progress: validate slice one (#7)' <<<"$out" || { echo "unexpected merge output: $out" >&2; exit 1; }
+out="$(run merge "$prd" "docs(progress): validate slice one")"
+grep -qx 'subject=docs(progress): validate slice one (#7)' <<<"$out" || {
+  echo "unexpected merge output: $out" >&2; exit 1; }
 [ "$(on)" = main ] || { echo "merge must return to main" >&2; exit 1; }
 [ "$(git -C "$tmp/origin.git" rev-list --count main)" = 2 ] || { echo "the batch must land as exactly one commit" >&2; exit 1; }
 [ "$(git -C "$prd" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse main)" ] || { echo "local main must equal origin" >&2; exit 1; }
-want="$(printf 'progress: validate slice one (#7)\n\n- progress: reconcile example/demo#1\n- progress: reconcile example/demo#2')"
+want="$(printf '%s\n\n%s\n%s' 'docs(progress): validate slice one (#7)' \
+  '- docs(progress): reconcile example/demo#1' '- docs(progress): reconcile example/demo#2')"
 [ "$(git -C "$prd" log -1 --format=%B)" = "$want" ] || { echo "the landed body must list the batched reconciles" >&2; exit 1; }
 [ "$(tail -2 "$prd/PROGRESS.md" | tr '\n' ' ')" = "row 1 row 2 " ] || { echo "merged tracker content must be checked out" >&2; exit 1; }
 ! git -C "$prd" show-ref --verify --quiet "refs/heads/$branch" || { echo "the local batch must be deleted" >&2; exit 1; }
 ! git -C "$tmp/origin.git" show-ref --verify --quiet "refs/heads/$branch" || { echo "the remote batch must be deleted" >&2; exit 1; }
-out="$(run merge "$prd" "progress: validate slice one")"
+out="$(run merge "$prd" "docs(progress): validate slice one")"
 [ "$out" = "no open progress batch; main at $(git -C "$prd" rev-parse --short HEAD)" ] || { echo "a merge with no batch must be a no-op: $out" >&2; exit 1; }
 
 # --- someone else's pre-push hook is never overwritten -----------------------------
@@ -352,22 +369,25 @@ warns "a foreign hook" "existing pre-push hook left untouched" run sync "$prd"
 # --- literal paths and committed contamination cannot enter a batch ----------------
 fresh
 printf 'contract edit\n' >> "$prd/PRD.md"
-refuses "an explicitly named contract" "literal tracker path" run push "$prd" "progress: invalid" PRD.md
-refuses "a broad pathspec" "literal tracker path" run push "$prd" "progress: invalid" .
+refuses "an explicitly named contract" "literal tracker path" \
+  run push "$prd" "docs(progress): invalid" PRD.md
+refuses "a broad pathspec" "literal tracker path" run push "$prd" "docs(progress): invalid" .
 git -C "$prd" checkout -q -- .
 mkdir -p "$prd/contexts/core"
 printf 'context progress\n' > "$prd/contexts/core/PROGRESS.md"
-run push "$prd" "progress: context row" contexts/core/PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): context row" contexts/core/PROGRESS.md >/dev/null
 printf 'contract edit\n' >> "$prd/PRD.md"; git -C "$prd" commit -qam "docs: stray contract"
 printf 'row\n' >> "$prd/PROGRESS.md"
-refuses "committed non-tracker content" "Non-tracker path" run push "$prd" "progress: invalid" PROGRESS.md
+refuses "committed non-tracker content" "Non-tracker path" \
+  run push "$prd" "docs(progress): invalid" PROGRESS.md
 git -C "$prd" checkout -q -- .
 git -C "$prd" push -q origin HEAD
-refuses "a contaminated merge" "Non-tracker path" run merge "$prd" "progress: invalid"
+refuses "a contaminated merge" "Non-tracker path" run merge "$prd" "docs(progress): invalid"
 git -C "$prd" checkout -q origin/main -- PRD.md
 git -C "$prd" commit -qm "docs: revert stray contract"
 printf 'row\n' >> "$prd/PROGRESS.md"
-refuses "reverted non-tracker history" "Non-tracker path" run push "$prd" "progress: invalid" PROGRESS.md
+refuses "reverted non-tracker history" "Non-tracker path" \
+  run push "$prd" "docs(progress): invalid" PROGRESS.md
 
 # --- configured/shared, symlinked, and marker-containing hooks are untouched --------
 fresh
@@ -385,14 +405,16 @@ warns "a foreign marker hook" "existing pre-push hook" run sync "$prd"
 cmp "$tmp/foreign-hook" "$prd/.git/hooks/pre-push"
 chmod +x "$prd/.git/hooks/pre-push"
 printf 'row\n' >> "$prd/PROGRESS.md"
-warns "push with a foreign hook" "existing pre-push hook" run push "$prd" "progress: hooked row" PROGRESS.md
-warns "merge with a foreign hook" "existing pre-push hook" run merge "$prd" "progress: hooked milestone"
+warns "push with a foreign hook" "existing pre-push hook" \
+  run push "$prd" "docs(progress): hooked row" PROGRESS.md
+warns "merge with a foreign hook" "existing pre-push hook" \
+  run merge "$prd" "docs(progress): hooked milestone"
 cmp "$tmp/foreign-hook" "$prd/.git/hooks/pre-push"
 
 # --- a newer default must be incorporated before any batch reader/writer proceeds ---
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: initial row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): initial row" PROGRESS.md >/dev/null
 branch="$(on)"
 ( cd "$prd"; git switch -q --detach origin/main
   printf 'new requirement\n' >> PRD.md; git commit -qam 'docs: new requirement'
@@ -405,37 +427,39 @@ local_merge="$(git -C "$prd" rev-parse HEAD)"
 run sync "$prd" >/dev/null # local-only mechanical merges must remain resumable
 [ "$(git -C "$prd" rev-parse HEAD)" = "$local_merge" ]
 printf 'next row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: next row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): next row" PROGRESS.md >/dev/null
 [ "$(git -C "$prd" rev-parse HEAD)" = "$(git -C "$tmp/origin.git" rev-parse "$branch")" ]
-run merge "$prd" "progress: milestone" >/dev/null
+run merge "$prd" "docs(progress): milestone" >/dev/null
 [ "$(git -C "$tmp/origin.git" rev-list --count main)" = 3 ]
 grep -qx 'new requirement' "$prd/PRD.md"; grep -qx 'next row' "$prd/PROGRESS.md"
-[ "$(git -C "$prd" log -1 --format=%B)" = "$(printf 'progress: milestone (#7)\n\n- progress: initial row\n- progress: next row')" ]
+landed_message="$(printf '%s\n\n%s\n%s' 'docs(progress): milestone (#7)' \
+  '- docs(progress): initial row' '- docs(progress): next row')"
+[ "$(git -C "$prd" log -1 --format=%B)" = "$landed_message" ]
 
 # An older reviewed head merges onto current default, dropping only safe local sync merges.
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: initial row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): initial row" PROGRESS.md >/dev/null
 branch="$(on)"
 ( cd "$prd"; git switch -q --detach origin/main
   printf 'new requirement\n' >> PRD.md; git commit -qam 'docs: new requirement'
   git push -q --no-verify origin HEAD:main; git switch -q "$branch" )
 run sync "$prd" >/dev/null
-run merge "$prd" "progress: milestone" >/dev/null
+run merge "$prd" "docs(progress): milestone" >/dev/null
 grep -qx 'new requirement' "$prd/PRD.md"
 ! git -C "$prd" show-ref --verify --quiet "refs/heads/$branch"
 
 # Another clone advances the batch while this clone holds only a local sync merge.
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: initial row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): initial row" PROGRESS.md >/dev/null
 branch="$(on)"
 ( cd "$prd"; git switch -q --detach origin/main
   printf 'new requirement\n' >> PRD.md; git commit -qam 'docs: new requirement'
   git push -q --no-verify origin HEAD:main; git switch -q "$branch" )
 run sync "$prd" >/dev/null
 ( cd "$prd"; git switch -q --detach "origin/$branch"
-  printf 'remote row\n' >> PROGRESS.md; git commit -qam 'progress: remote row'
+  printf 'remote row\n' >> PROGRESS.md; git commit -qam 'docs(progress): remote row'
   git push -q origin "HEAD:$branch"; git switch -q "$branch" )
 remote_before="$(git -C "$tmp/origin.git" rev-parse "$branch")"
 run sync "$prd" >/dev/null
@@ -446,7 +470,7 @@ grep -qx 'new requirement' "$prd/PRD.md"; grep -qx 'remote row' "$prd/PROGRESS.m
 # A conflict aborts the mechanical merge and preserves the clean batch tree and evidence.
 fresh
 printf 'batch edit\n' > "$prd/PROGRESS.md"
-run push "$prd" "progress: batch row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): batch row" PROGRESS.md >/dev/null
 branch="$(on)"; before="$(git -C "$prd" rev-parse HEAD)"
 ( cd "$prd"; git switch -q --detach origin/main
   printf 'default edit\n' > PROGRESS.md; git commit -qam 'docs: tracker correction'
@@ -460,43 +484,46 @@ grep -qx 'batch edit' "$prd/PROGRESS.md"
 # A fabricated merge resolution is authored evidence, not a disposable sync merge.
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: initial row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): initial row" PROGRESS.md >/dev/null
 branch="$(on)"
 ( cd "$prd"; git switch -q --detach origin/main
   printf 'new requirement\n' >> PRD.md; git commit -qam 'docs: new requirement'
   git push -q --no-verify origin HEAD:main; git switch -q "$branch" )
 run sync "$prd" >/dev/null
 printf 'unpublished resolution\n' >> "$prd/PROGRESS.md"
-git -C "$prd" commit -qam 'progress: resolution' --amend
+git -C "$prd" commit -qam 'docs(progress): resolution' --amend
 refuses "an authored merge during sync" "unverified merges" run sync "$prd"
-refuses "an authored merge during cleanup" "unverified merges" run merge "$prd" "progress: milestone"
+refuses "an authored merge during cleanup" "unverified merges" \
+  run merge "$prd" "docs(progress): milestone"
 grep -qx 'unpublished resolution' "$prd/PROGRESS.md"
 
 # --- creation and push outages resume without duplicate commits or hidden evidence --
 fresh
 touch "$tmp/fail-create"; printf 'durable row\n' >> "$prd/PROGRESS.md"
-refuses "a create outage" "simulated create outage" run push "$prd" "progress: durable row" PROGRESS.md
+refuses "a create outage" "simulated create outage" \
+  run push "$prd" "docs(progress): durable row" PROGRESS.md
 oid="$(git -C "$prd" rev-parse HEAD)"; branch="$(on)"
 refuses "sync hiding orphan evidence" "Progress branches exist without an open PR" run sync "$prd"
 [ "$(on)" = "$branch" ]; grep -qx 'durable row' "$prd/PROGRESS.md"
 rm "$tmp/fail-create"
-run push "$prd" "progress: durable row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): durable row" PROGRESS.md >/dev/null
 [ "$(git -C "$prd" rev-parse HEAD)" = "$oid" ]; [ "$(cat "$tmp/create-count")" = x ]
 fresh
 printf '#!/bin/sh\necho "simulated push outage" >&2\nexit 1\n' > "$tmp/origin.git/hooks/pre-receive"
 chmod +x "$tmp/origin.git/hooks/pre-receive"
 printf 'durable row\n' >> "$prd/PROGRESS.md"
-refuses "a push outage" "simulated push outage" run push "$prd" "progress: durable row" PROGRESS.md
+refuses "a push outage" "simulated push outage" \
+  run push "$prd" "docs(progress): durable row" PROGRESS.md
 oid="$(git -C "$prd" rev-parse HEAD)"
 rm "$tmp/origin.git/hooks/pre-receive"
-run push "$prd" "progress: durable row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): durable row" PROGRESS.md >/dev/null
 [ "$(git -C "$prd" rev-parse HEAD)" = "$oid" ]
 
 # --- publication readback detects a closed batch or a concurrently changed head -----
 for race in closed merged head; do
   fresh
   printf 'reviewed row\n' >> "$prd/PROGRESS.md"
-  run push "$prd" "progress: reviewed row" PROGRESS.md >/dev/null
+  run push "$prd" "docs(progress): reviewed row" PROGRESS.md >/dev/null
   branch="$(on)"
   printf 'durable racing row\n' >> "$prd/PROGRESS.md"
   echo "$race" > "$tmp/publish-race"
@@ -507,13 +534,13 @@ for race in closed merged head; do
 set -e
 while read -r old new ref; do
   [ "$ref" = refs/heads/progress/batch ] || continue
-  moved="$(git commit-tree "$new^{tree}" -p "$new" -m 'progress: concurrent head')"
+  moved="$(git commit-tree "$new^{tree}" -p "$new" -m 'docs(progress): concurrent head')"
   git update-ref "$ref" "$moved" "$new"
 done
 HOOK
     chmod +x "$tmp/origin.git/hooks/post-receive"
   fi
-  if out="$(run push "$prd" "progress: racing row" PROGRESS.md 2>&1)"; then
+  if out="$(run push "$prd" "docs(progress): racing row" PROGRESS.md 2>&1)"; then
     echo "progress-pr accepted $race during publication" >&2; exit 1
   fi
   rm -f "$tmp/publish-race"
@@ -530,11 +557,11 @@ HOOK
       run sync "$prd"
     if [ "$race" = merged ]; then
       refuses "push resume after a web squash" "Batch lacks origin/main" \
-        run push "$prd" "progress: racing row" PROGRESS.md
+        run push "$prd" "docs(progress): racing row" PROGRESS.md
     fi
     # Follow the diagnostic: restore reviewability first, then import the new default.
     ( cd "$prd"; gh pr create --repo example/demo-prd --base main --head "$branch" \
-      --title 'progress: recover batch' --body 'Preserved tracker evidence' >/dev/null )
+      --title 'docs(progress): recover batch' --body 'Preserved tracker evidence' >/dev/null )
   fi
   if [ "$race" = merged ]; then
     refuses "sync conflict after a web squash" "merge conflict aborted" run sync "$prd"
@@ -545,13 +572,13 @@ HOOK
     # The published tracker contains both the squashed row and the new evidence.
     git -C "$prd" show "$oid:PROGRESS.md" > "$prd/PROGRESS.md"
     git -C "$prd" add PROGRESS.md
-    git -C "$prd" commit -qm 'progress: preserve tracker evidence after web squash'
-    run push "$prd" "progress: recovered resolution" PROGRESS.md >/dev/null
+    git -C "$prd" commit -qm 'docs(progress): preserve tracker evidence after web squash'
+    run push "$prd" "docs(progress): recovered resolution" PROGRESS.md >/dev/null
   fi
   run sync "$prd" >/dev/null
   git -C "$prd" merge-base --is-ancestor "$oid" HEAD
   git -C "$prd" merge-base --is-ancestor origin/main HEAD
-  out="$(run push "$prd" "progress: recovered batch" PROGRESS.md)"
+  out="$(run push "$prd" "docs(progress): recovered batch" PROGRESS.md)"
   grep -qx 'pr=7' <<<"$out"
   [ "$(cat "$tmp/open-pr")" = "7 $branch" ]
   [ "$(git -C "$tmp/origin.git" rev-parse "$branch")" = \
@@ -566,37 +593,41 @@ refuses "a list outage" "Cannot list progress batches" run sync "$prd"
 rm "$tmp/fail-list"; touch "$tmp/late-batch"
 run sync "$prd" | grep -qx 'pr=7'
 printf 'another row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: another row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): another row" PROGRESS.md >/dev/null
 [ "$(cat "$tmp/create-count")" = x ]
 touch "$tmp/fail-review"
-refuses "a review outage" "Cannot read batch review state" run merge "$prd" "progress: milestone"
+refuses "a review outage" "Cannot read batch review state" \
+  run merge "$prd" "docs(progress): milestone"
 rm "$tmp/fail-review"; touch "$tmp/fail-threads"
-refuses "a threads outage" "Cannot read all review threads" run merge "$prd" "progress: milestone"
+refuses "a threads outage" "Cannot read all review threads" \
+  run merge "$prd" "docs(progress): milestone"
 rm "$tmp/fail-threads"; echo true > "$tmp/late-thread"
-refuses "thread 101" "PRD batch awaiting review" run merge "$prd" "progress: milestone"
+refuses "thread 101" "PRD batch awaiting review" run merge "$prd" "docs(progress): milestone"
 echo false > "$tmp/late-thread"; echo true > "$tmp/draft"
-refuses "a draft batch" "PRD batch awaiting review" run merge "$prd" "progress: milestone"
+refuses "a draft batch" "PRD batch awaiting review" run merge "$prd" "docs(progress): milestone"
 echo false > "$tmp/draft"; echo UNKNOWN > "$tmp/merge-state"
-refuses "transient provider state" "provider merge state is UNKNOWN" run merge "$prd" "progress: milestone"
-if err="$(run merge "$prd" "progress: milestone" 2>&1)"; then exit 1; fi
+refuses "transient provider state" "provider merge state is UNKNOWN" \
+  run merge "$prd" "docs(progress): milestone"
+if err="$(run merge "$prd" "docs(progress): milestone" 2>&1)"; then exit 1; fi
 [[ "$err" != *"awaiting review"* ]]
 
 # --- exact merged orphan tips are retired after a web merge; unknown work survives ---
 for resume_mode in sync merge push; do
   fresh
   printf 'row\n' >> "$prd/PROGRESS.md"
-  run push "$prd" "progress: web batch" PROGRESS.md >/dev/null
+  run push "$prd" "docs(progress): web batch" PROGRESS.md >/dev/null
   branch="$(on)"; oid="$(git -C "$prd" rev-parse HEAD)"
-  ( cd "$prd"; gh pr merge 7 --subject 'progress: web milestone (#7)' --body 'web merge' --match-head-commit "$oid" )
+  ( cd "$prd"; gh pr merge 7 --subject 'docs(progress): web milestone (#7)' --body 'web merge' \
+    --match-head-commit "$oid" )
   case "$resume_mode" in
     sync)
       refs_before="$(git -C "$tmp/origin.git" for-each-ref)"
       run sync "$prd" >/dev/null
       [ "$(git -C "$tmp/origin.git" for-each-ref)" = "$refs_before" ];;
-    merge) run merge "$prd" "progress: already merged" >/dev/null;;
+    merge) run merge "$prd" "docs(progress): already merged" >/dev/null;;
     push)
       printf 'next row\n' >> "$prd/PROGRESS.md"
-      run push "$prd" "progress: next batch" PROGRESS.md >/dev/null;;
+      run push "$prd" "docs(progress): next batch" PROGRESS.md >/dev/null;;
   esac
   if [ "$resume_mode" = push ]; then
     # Every new batch reuses the canonical name, but never the merged head.
@@ -609,7 +640,7 @@ for resume_mode in sync merge push; do
       # Repeat sync, then write: the leftover merged canonical ref must not block reuse.
       run sync "$prd" >/dev/null
       printf 'after sync\n' >> "$prd/PROGRESS.md"
-      run push "$prd" "progress: after sync" PROGRESS.md >/dev/null
+      run push "$prd" "docs(progress): after sync" PROGRESS.md >/dev/null
       [ "$(on)" = "$branch" ]
       [ "$(git -C "$tmp/origin.git" rev-parse "$branch")" != "$oid" ]
     else
@@ -621,11 +652,12 @@ for resume_mode in sync merge push; do
 done
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: web batch" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): web batch" PROGRESS.md >/dev/null
 branch="$(on)"; oid="$(git -C "$prd" rev-parse HEAD)"
-( cd "$prd"; gh pr merge 7 --subject 'progress: web milestone (#7)' --body 'web merge' --match-head-commit "$oid" )
+( cd "$prd"; gh pr merge 7 --subject 'docs(progress): web milestone (#7)' --body 'web merge' \
+  --match-head-commit "$oid" )
 printf 'unmerged work\n' >> "$prd/PROGRESS.md"
-git -C "$prd" commit -qam 'progress: unpublished'
+git -C "$prd" commit -qam 'docs(progress): unpublished'
 refuses "an advanced local orphan" "unexplained tips" run sync "$prd"
 grep -qx 'unmerged work' "$prd/PROGRESS.md"
 git -C "$prd" show-ref --verify --quiet "refs/heads/$branch"
@@ -633,14 +665,14 @@ git -C "$prd" show-ref --verify --quiet "refs/heads/$branch"
 # --- classifications and dependency/default recovery messages are actionable -------
 fresh
 printf 'local default work\n' >> "$prd/PROGRESS.md"
-git -C "$prd" commit -qam 'progress: local default work'
+git -C "$prd" commit -qam 'docs(progress): local default work'
 refuses "default-branch local commits" "move them onto a branch and open a pull request" run sync "$prd"
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): row" PROGRESS.md >/dev/null
 for state in DIRTY BEHIND BLOCKED DRAFT UNKNOWN; do
   echo "$state" > "$tmp/merge-state"
-  code=0; err="$(run merge "$prd" "progress: milestone" 2>&1)" || code=$?
+  code=0; err="$(run merge "$prd" "docs(progress): milestone" 2>&1)" || code=$?
   case "$state" in
     DIRTY) [ "$code" = 1 ]; [[ "$err" == *"merge conflict"* && "$err" != *"awaiting review"* ]];;
     BEHIND) [ "$code" = 1 ]; [[ "$err" == *"requires a base update"* && "$err" != *"awaiting review"* ]];;
@@ -667,70 +699,73 @@ refuses "missing jq" "Missing dependency: jq; install jq before retrying" env PA
 for effect in none head draft requested latest checks threads; do
   fresh
   printf 'row\n' >> "$prd/PROGRESS.md"
-  run push "$prd" "progress: pending provider state" PROGRESS.md >/dev/null
+  run push "$prd" "docs(progress): pending provider state" PROGRESS.md >/dev/null
   printf 'UNKNOWN\nUNKNOWN\nCLEAN\n' > "$tmp/snapshot-sequence"
   echo "$effect" > "$tmp/snapshot-effect"
   case "$effect" in
     none|head)
-      run merge "$prd" "progress: settled milestone" >/dev/null
+      run merge "$prd" "docs(progress): settled milestone" >/dev/null
       [ "$(cat "$tmp/merge-count")" = x ]
       if [ "$effect" = head ]; then cmp "$tmp/snapshot-expected-head" "$tmp/pr-merged-head"; fi;;
     checks)
-      code=0; err="$(run merge "$prd" 'progress: settled milestone' 2>&1)" || code=$?
+      code=0; err="$(run merge "$prd" 'docs(progress): settled milestone' 2>&1)" || code=$?
       [ "$code" = 1 ]; [[ "$err" == *"check blocker: ci"* ]]
       [ ! -f "$tmp/merge-count" ];;
-    *) refuses "a refreshed $effect gate" "PRD batch awaiting review" run merge "$prd" "progress: settled milestone";;
+    *) refuses "a refreshed $effect gate" "PRD batch awaiting review" \
+      run merge "$prd" "docs(progress): settled milestone";;
   esac
   [ "$(cat "$tmp/snapshot-count")" = 3 ]
 done
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: persistent unknown" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): persistent unknown" PROGRESS.md >/dev/null
 echo UNKNOWN > "$tmp/merge-state"
-code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
 [ "$code" = 1 ]; [[ "$err" == *"UNKNOWN after 5 snapshots"* && "$err" != *"awaiting review"* ]]
 [ "$(cat "$tmp/snapshot-count")" = 5 ]; [ ! -f "$tmp/merge-count" ]
 echo CLEAN > "$tmp/merge-state"; touch "$tmp/advance-after-snapshot"
-refuses "a head advanced after the snapshot" "Head branch was modified" run merge "$prd" "progress: milestone"
+refuses "a head advanced after the snapshot" "Head branch was modified" \
+  run merge "$prd" "docs(progress): milestone"
 
 # --- reviews or checks beyond the evaluated provider page fail closed --------------
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: counted row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): counted row" PROGRESS.md >/dev/null
 echo 101 > "$tmp/review-total"
 refuses "reviews beyond one page" "more reviews or checks than one provider page" \
-  run merge "$prd" "progress: milestone"
+  run merge "$prd" "docs(progress): milestone"
 rm "$tmp/review-total"; echo 101 > "$tmp/check-total"
 refuses "checks beyond one page" "more reviews or checks than one provider page" \
-  run merge "$prd" "progress: milestone"
+  run merge "$prd" "docs(progress): milestone"
 rm "$tmp/check-total"; touch "$tmp/advance-before-counts"
-refuses "a head moved before the count" "or its head moved" run merge "$prd" "progress: milestone"
+refuses "a head moved before the count" "or its head moved" \
+  run merge "$prd" "docs(progress): milestone"
 rm "$tmp/advance-before-counts"
-run merge "$prd" "progress: counted milestone" >/dev/null
+run merge "$prd" "docs(progress): counted milestone" >/dev/null
 [ "$(cat "$tmp/merge-count")" = x ] || { echo "complete totals must still merge" >&2; exit 1; }
 
 # --- a later comment cannot hide an outstanding change request ----------------------
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: commented row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): commented row" PROGRESS.md >/dev/null
 echo '[{"author":{"login":"maintainer"},"state":"COMMENTED"}]' > "$tmp/latest-reviews"
 echo '[{"author":{"login":"maintainer"},"state":"CHANGES_REQUESTED"}]' > "$tmp/opinionated-reviews"
-code=0; err="$(run merge "$prd" 'progress: milestone' 2>&1)" || code=$?
+code=0; err="$(run merge "$prd" 'docs(progress): milestone' 2>&1)" || code=$?
 [ "$code" = 2 ] && [[ "$err" == *"has requested changes"* ]] || {
   echo "a comment after a change request must still refuse with exit 2: $code $err" >&2; exit 1; }
 [ ! -f "$tmp/merge-count" ]
 echo 101 > "$tmp/opinionated-total"
 refuses "opinionated reviews beyond one page" "more reviews or checks than one provider page" \
-  run merge "$prd" "progress: milestone"
+  run merge "$prd" "docs(progress): milestone"
 rm "$tmp/opinionated-total"
 echo '[{"author":{"login":"maintainer"},"state":"APPROVED"}]' > "$tmp/opinionated-reviews"
-run merge "$prd" "progress: approved after comment" >/dev/null
+run merge "$prd" "docs(progress): approved after comment" >/dev/null
 [ "$(cat "$tmp/merge-count")" = x ] || { echo "an approval must clear the change request" >&2; exit 1; }
 
 # --- mechanical imports ignore ff-only/squash configuration and clean up failures --
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: initial row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): initial row" PROGRESS.md >/dev/null
 branch="$(on)"
 ( cd "$prd"; git switch -q --detach origin/main
   printf 'new requirement\n' >> PRD.md; git commit -qam 'docs: new requirement'
@@ -749,7 +784,7 @@ run sync "$prd" >/dev/null
 # Simulate a non-conflict Git failure that modifies a tracked file but creates no merge state.
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: initial row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): initial row" PROGRESS.md >/dev/null
 before="$(git -C "$prd" rev-parse HEAD)"
 real_git="$(command -v git)"; export PROGRESS_TEST_REAL_GIT="$real_git"
 cat > "$tmp/bin/git" <<'GIT'
@@ -771,7 +806,7 @@ rm "$tmp/bin/git"
 # --- reverted non-tracker edits in merge commits cannot hide in batch history ------
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): row" PROGRESS.md >/dev/null
 ( cd "$prd"
   before="$(git rev-parse HEAD)"
   printf 'contract smuggled in merge\n' >> PRD.md; git add PRD.md
@@ -780,23 +815,26 @@ run push "$prd" "progress: row" PROGRESS.md >/dev/null
   git reset -q --hard "$restored"
 )
 printf 'next row\n' >> "$prd/PROGRESS.md"
-refuses "non-tracker merge history" "Non-tracker path in batch: PRD.md" run push "$prd" "progress: next row" PROGRESS.md
+refuses "non-tracker merge history" "Non-tracker path in batch: PRD.md" \
+  run push "$prd" "docs(progress): next row" PROGRESS.md
 git -C "$prd" checkout -q -- .
 git -C "$prd" push -q origin HEAD
-refuses "published non-tracker merge history" "Non-tracker path in batch: PRD.md" run merge "$prd" "progress: milestone"
+refuses "published non-tracker merge history" "Non-tracker path in batch: PRD.md" \
+  run merge "$prd" "docs(progress): milestone"
 
 # Git omits remerge diffs for octopus merges; they must fail closed rather than hide edits.
 fresh
 printf 'row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): row" PROGRESS.md >/dev/null
 ( cd "$prd"
   before="$(git rev-parse HEAD)"
-  side="$(git commit-tree 'origin/main^{tree}' -p origin/main -m 'progress: side')"
+  side="$(git commit-tree 'origin/main^{tree}' -p origin/main -m 'docs(progress): side')"
   octopus="$(git commit-tree "$before^{tree}" -p "$before" -p origin/main -p "$side" -m 'merge: octopus')"
   git reset -q --hard "$octopus"
 )
 printf 'next row\n' >> "$prd/PROGRESS.md"
-refuses "an octopus history blind spot" "Unsupported octopus merge in batch" run push "$prd" "progress: next row" PROGRESS.md
+refuses "an octopus history blind spot" "Unsupported octopus merge in batch" \
+  run push "$prd" "docs(progress): next row" PROGRESS.md
 
 # --- a commit hook cannot add non-tracker content after the index check ------------
 for hook in pre-commit post-commit; do
@@ -813,7 +851,7 @@ HOOK
   chmod +x "$prd/.git/hooks/$hook"
   printf 'hook tracker evidence\n' >> "$prd/PROGRESS.md"
   refuses "$hook contamination" "remains unpublished" \
-    run push "$prd" "progress: hooked evidence" PROGRESS.md
+    run push "$prd" "docs(progress): hooked evidence" PROGRESS.md
   git -C "$prd" show HEAD:PROGRESS.md | grep -qx 'hook tracker evidence'
   git -C "$prd" show HEAD:PRD.md | grep -qx 'hook contract edit'
   [ -z "$(git -C "$tmp/origin.git" for-each-ref refs/heads/progress/)" ]
@@ -825,24 +863,24 @@ done
 fresh
 git -C "$prd" switch -q -c progress/legacy
 printf 'legacy evidence\n' >> "$prd/PROGRESS.md"
-git -C "$prd" commit -qam 'progress: legacy row'
+git -C "$prd" commit -qam 'docs(progress): legacy row'
 refuses "a legacy orphan creating another head" "Legacy orphan progress/legacy" \
-  run push "$prd" "progress: legacy row" PROGRESS.md
+  run push "$prd" "docs(progress): legacy row" PROGRESS.md
 git -C "$prd" show HEAD:PROGRESS.md | grep -qx 'legacy evidence'
 git -C "$prd" branch -m progress/batch
-run push "$prd" "progress: legacy row" PROGRESS.md >/dev/null
+run push "$prd" "docs(progress): legacy row" PROGRESS.md >/dev/null
 
 # Already-open legacy batches still sync, accumulate, and merge normally.
 fresh
 git -C "$prd" switch -q -c progress/legacy
 printf 'legacy evidence\n' >> "$prd/PROGRESS.md"
-git -C "$prd" commit -qam 'progress: legacy row'
+git -C "$prd" commit -qam 'docs(progress): legacy row'
 git -C "$prd" push -q origin HEAD
 echo '7 progress/legacy' > "$tmp/open-pr"; echo progress/legacy > "$tmp/pr-head"
 run sync "$prd" >/dev/null
 printf 'next legacy row\n' >> "$prd/PROGRESS.md"
-run push "$prd" "progress: next legacy row" PROGRESS.md >/dev/null
-run merge "$prd" "progress: legacy milestone" >/dev/null
+run push "$prd" "docs(progress): next legacy row" PROGRESS.md >/dev/null
+run merge "$prd" "docs(progress): legacy milestone" >/dev/null
 grep -qx 'next legacy row' "$prd/PROGRESS.md"
 
 real_git="$(command -v git)"; export PROGRESS_TEST_REAL_GIT="$real_git"
@@ -885,9 +923,9 @@ exec "$PROGRESS_TEST_REAL_GIT" "$@"
 GIT
   chmod +x "$tmp/bin/git"
   export GIT_AUTHOR_DATE='2026-09-11T00:00:00Z' GIT_COMMITTER_DATE='2026-09-11T00:00:00Z'
-  run push "$prd" "progress: racing row" PROGRESS.md > "$tmp/race/one.out" 2>&1 &
+  run push "$prd" "docs(progress): racing row" PROGRESS.md > "$tmp/race/one.out" 2>&1 &
   one=$!
-  run push "$tmp/second-prd" "progress: racing row" PROGRESS.md \
+  run push "$tmp/second-prd" "docs(progress): racing row" PROGRESS.md \
     > "$tmp/race/two.out" 2>&1 &
   two=$!
   one_code=0; wait "$one" || one_code=$?
