@@ -28,6 +28,7 @@ cd "$top"
 declared() { # $1 = conventions file as the checked side holds it; prints its owned paths
   local text
   if [ "$rev" = --cached ]; then text="$(git show ":$1" 2>/dev/null || true)"
+  elif [ -n "$measured" ]; then text="$(cat -- "$1" 2>/dev/null || true)"
   else text="$(git show "$rev:$1" 2>/dev/null || true)"; fi
   printf '%s\n' "$text" | awk '
     /^[[:space:]]*Formatter-owned:/ {
@@ -35,12 +36,6 @@ declared() { # $1 = conventions file as the checked side holds it; prints its ow
     on && /^[[:space:]]*(`[^`]+`[[:space:]]*)+$/ { print; next }
     { on = 0 }' | tr -d '`'
 }
-set -f # owned paths are pathspec patterns, never shell globs
-excludes=()
-for conventions in AGENTS.md CLAUDE.md; do
-  for owned in $(declared "$conventions"); do excludes+=(":(exclude)$owned"); done
-done
-set +f
 
 empty_tree="$(git hash-object -t tree /dev/null)"
 measured=
@@ -59,6 +54,13 @@ else
     range=("$merge_base"); measured=" (working tree)"
   fi
 fi
+
+set -f # owned paths are pathspec patterns, never shell globs
+excludes=()
+for conventions in AGENTS.md CLAUDE.md; do
+  for owned in $(declared "$conventions"); do excludes+=(":(exclude)$owned"); done
+done
+set +f
 
 # One record per added line: "path:line<TAB>content". Headers only precede a file's first
 # hunk, and every hunk line carries a +, -, or \ prefix, so content never reads as a header.

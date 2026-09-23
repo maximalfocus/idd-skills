@@ -110,6 +110,20 @@ refuses "a wide line still in the working tree" "inhand.md:1" "$tip"
 passes "the same tree when HEAD is named explicitly" "$tip" HEAD
 git -C "$tmp/repo" rm -q -f inhand.md
 passes "a clean tree with nothing wide" "$tip"
+wide w 140 >> "$tmp/repo/notes.md"
+refuses "an unstaged wide line" "notes.md:3" "$tip"
+git -C "$tmp/repo" checkout -q HEAD -- notes.md
+
+# Working-tree content uses working-tree formatter declarations, including their removal.
+printf '# rules\n' > "$rules"
+wide p 140 >> "$tmp/repo/pkg/app.py"
+refuses "a removed working-tree exemption" "pkg/app.py:1" "$tip"
+passes "committed exemptions with an explicit revision" "$tip" HEAD
+git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md pkg/app.py
+printf 'Formatter-owned: `notes.md`\n' >> "$rules"
+wide w 140 >> "$tmp/repo/notes.md"
+passes "a new working-tree exemption" "$tip"
+git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md notes.md
 
 # --root reads every tracked line, legacy included.
 refuses "legacy debt under --root" "moved.md:2" --root
