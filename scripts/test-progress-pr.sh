@@ -43,8 +43,13 @@ elif [ "$1 $2" = "pr view" ]; then
     number,state,headRefName,headRefOid)
       head="$(cat "$root/pr-head")"
       state="$(cat "$root/pr-state" 2>/dev/null || echo OPEN)"
+      oid="$(git ls-remote origin "refs/heads/$head" | cut -f1)"
+      # stale-reads models GitHub reporting the previous head for a few reads after a push.
+      if [ -s "$root/stale-reads" ]; then
+        oid=0000000000000000000000000000000000000000; sed -i '$d' "$root/stale-reads"
+      fi
       jq -n --argjson number "$3" --arg state "$state" --arg head "$head" \
-        --arg oid "$(git ls-remote origin "refs/heads/$head" | cut -f1)" \
+        --arg oid "$oid" \
         '{number:$number,state:$state,headRefName:$head,headRefOid:$oid}' ;;
     isDraft,reviewDecision,*)
       count="$(cat "$root/snapshot-count" 2>/dev/null || echo 0)"; count=$((count + 1))
@@ -520,6 +525,24 @@ run push "$prd" "docs(progress): durable row" PROGRESS.md >/dev/null
 [ "$(git -C "$prd" rev-parse HEAD)" = "$oid" ]
 
 # --- publication readback detects a closed batch or a concurrently changed head -----
+# A stale head read right after a push is retried; a head that never matches still fails.
+fresh
+printf 'lagging row\n' >> "$prd/PROGRESS.md"
+run push "$prd" "docs(progress): lagging row" PROGRESS.md >/dev/null
+printf 'x\nx\nx\n' > "$tmp/stale-reads"
+printf 'second lagging row\n' >> "$prd/PROGRESS.md"
+out="$(run push "$prd" "docs(progress): second lagging row" PROGRESS.md 2>&1)" || {
+  echo "progress-pr failed on a stale head read: $out" >&2; exit 1; }
+grep -q '^pr=' <<<"$out"
+[ ! -s "$tmp/stale-reads" ] || { echo "stale reads were not consumed" >&2; exit 1; }
+printf 'x\nx\nx\nx\nx\nx\n' > "$tmp/stale-reads"
+printf 'third lagging row\n' >> "$prd/PROGRESS.md"
+if out="$(run push "$prd" "docs(progress): third lagging row" PROGRESS.md 2>&1)"; then
+  echo "progress-pr accepted a head that never read back" >&2; exit 1
+fi
+[[ "$out" == *"is closed or its head changed"* ]]
+rm -f "$tmp/stale-reads"
+
 for race in closed merged head; do
   fresh
   printf 'reviewed row\n' >> "$prd/PROGRESS.md"

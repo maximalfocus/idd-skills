@@ -324,11 +324,20 @@ if [ "$mode" = push ]; then
   [ -z "$b" ] || [ "$readback" = "$b" ] || \
     publication_failed "expected batch $b; found $readback"
   b="$readback"
-  published="$(gh pr view "${b%% *}" --repo "$repo" \
-    --json number,state,headRefName,headRefOid)" || publication_failed "cannot read batch head"
-  jq -e --argjson pr "${b%% *}" --arg branch "$branch" --arg oid "$publish_oid" '
-    .number == $pr and .state == "OPEN" and .headRefName == $branch and .headRefOid == $oid
-  ' <<<"$published" >/dev/null || publication_failed "batch #${b%% *} is closed or its head changed"
+  # GitHub can report the previous head for a few seconds after a push; re-read before failing.
+  [[ "${PROGRESS_PR_RETRY_DELAY:-2}" =~ ^[0-5]$ ]] || {
+    echo "PROGRESS_PR_RETRY_DELAY must be 0..5 seconds" >&2; exit 1; }
+  tries=0
+  while :; do
+    published="$(gh pr view "${b%% *}" --repo "$repo" \
+      --json number,state,headRefName,headRefOid)" || publication_failed "cannot read batch head"
+    jq -e --argjson pr "${b%% *}" --arg branch "$branch" --arg oid "$publish_oid" '
+      .number == $pr and .state == "OPEN" and .headRefName == $branch and .headRefOid == $oid
+    ' <<<"$published" >/dev/null && break
+    tries=$((tries + 1))
+    [ "$tries" -lt 5 ] || publication_failed "batch #${b%% *} is closed or its head changed"
+    sleep "${PROGRESS_PR_RETRY_DELAY:-2}"
+  done
   echo "branch=$branch"
   echo "pr=${b%% *}"
   echo "commit=$publish_oid"
