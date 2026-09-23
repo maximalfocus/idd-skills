@@ -8,7 +8,9 @@ set -euo pipefail
 # package manager, or recorder. A Markdown table row is one line that cannot be rewrapped,
 # so its cells answer to their own budgets (the tracker gate's) instead of this width.
 #
-#   line-width.sh check BASE [REV]      lines REV (default HEAD) adds since its merge base
+#   line-width.sh check BASE            lines the change in hand adds since its merge base:
+#                                       the working tree when it is dirty, else HEAD
+#   line-width.sh check BASE REV        lines REV adds since its merge base
 #   line-width.sh check BASE --cached   lines the index adds to BASE
 #   line-width.sh check --root [REV]    every line of REV's tracked text files
 #
@@ -16,7 +18,7 @@ set -euo pipefail
 # the debt of lines it leaves alone, and a pure rename adds none.
 usage() { echo "usage: line-width.sh check BASE|--root [REV|--cached]" >&2; exit 64; }
 [ "$#" -ge 2 ] && [ "$#" -le 3 ] && [ "$1" = check ] || usage
-base="$2"; rev="${3:-HEAD}"
+base="$2"; rev="${3:-HEAD}"; given_rev="${3:-}"
 limit=100
 [ "$base:$rev" != --root:--cached ] || usage
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || {
@@ -41,6 +43,7 @@ done
 set +f
 
 empty_tree="$(git hash-object -t tree /dev/null)"
+measured=
 if [ "$rev" = --cached ]; then
   range=(--cached "$base")
 elif [ "$base" = --root ]; then
@@ -49,6 +52,12 @@ else
   merge_base="$(git merge-base "$base" "$rev")" || {
     echo "No merge base between $base and $rev" >&2; exit 1; }
   range=("$merge_base" "$rev")
+  # Asked about the change in hand, measure the change in hand. With no REV the old default
+  # was HEAD, so running this while still working passed on the previous commit and reported
+  # a width no one had checked; the same content failed once committed.
+  if [ -z "$given_rev" ] && [ -n "$(git diff --name-only "$rev" -- . 2>/dev/null)" ]; then
+    range=("$merge_base"); measured=" (working tree)"
+  fi
 fi
 
 # One record per added line: "path:line<TAB>content". Headers only precede a file's first
@@ -74,4 +83,4 @@ if [ -n "$wide" ]; then
     "lays it out (idd-plan/references/conventions.md)" >&2
   exit 1
 fi
-echo "PASS: no added line over $limit characters"
+echo "PASS: no added line over $limit characters$measured"
