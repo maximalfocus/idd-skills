@@ -101,6 +101,30 @@ refuses "a wide staged line" "staged.md:1" "$tip" --cached
 git -C "$tmp/repo" rm -q --cached staged.md; rm "$tmp/repo/staged.md"
 passes "an index with nothing wide" "$tip" --cached
 
+# Asked with no revision, the gate measures the change in hand. It used to measure HEAD, so a
+# wide line still in the working tree passed and the same content failed once committed.
+tip="$(git -C "$tmp/repo" rev-parse HEAD)"
+wide w 130 > "$tmp/repo/inhand.md"
+git -C "$tmp/repo" add inhand.md
+refuses "a wide line still in the working tree" "inhand.md:1" "$tip"
+passes "the same tree when HEAD is named explicitly" "$tip" HEAD
+git -C "$tmp/repo" rm -q -f inhand.md
+passes "a clean tree with nothing wide" "$tip"
+wide w 140 >> "$tmp/repo/notes.md"
+refuses "an unstaged wide line" "notes.md:3" "$tip"
+git -C "$tmp/repo" checkout -q HEAD -- notes.md
+
+# Working-tree content uses working-tree formatter declarations, including their removal.
+printf '# rules\n' > "$rules"
+wide p 140 >> "$tmp/repo/pkg/app.py"
+refuses "a removed working-tree exemption" "pkg/app.py:1" "$tip"
+passes "committed exemptions with an explicit revision" "$tip" HEAD
+git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md pkg/app.py
+printf 'Formatter-owned: `notes.md`\n' >> "$rules"
+wide w 140 >> "$tmp/repo/notes.md"
+passes "a new working-tree exemption" "$tip"
+git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md notes.md
+
 # --root reads every tracked line, legacy included.
 refuses "legacy debt under --root" "moved.md:2" --root
 refuses "an unknown mode" "usage:" --root --cached
