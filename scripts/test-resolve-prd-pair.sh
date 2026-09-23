@@ -37,4 +37,18 @@ if bash "$resolve_script" "$tmp/widget" >/dev/null 2>&1; then
   echo "mismatched PRD origin was accepted" >&2; exit 1
 fi
 
+git -C "$tmp/widget" config idd.prdRepo other/gadget-prd
+if bash "$resolve_script" "$tmp/widget" >/dev/null 2>&1; then
+  echo "PRD origin not named by idd.prdRepo was accepted" >&2; exit 1
+fi
+git -C "$tmp/widget" config idd.prdRepo other/widget-prd
+[ "$(bash "$resolve_script" "$tmp/widget")" = "$expected" ]
+[ "$(bash "$resolve_script" "$tmp/widget-prd")" = "$expected" ]
+[ "$(bash "$resolve_script" "$tmp/widget-worktree")" = "$worktree_expected" ]
+git -C "$tmp/widget" config idd.prdRepo other/gadget-prd
+git -C "$tmp/widget-prd" remote set-url origin https://github.com/other/gadget-prd.git
+if bash "$resolve_script" "$tmp/widget" >/dev/null 2>&1; then
+  echo "idd.prdRepo with a foreign project name was accepted" >&2; exit 1
+fi
+
 echo "IDD PRD-pair resolution valid"

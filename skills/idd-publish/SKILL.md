@@ -17,12 +17,12 @@ deployment or hosting.
 ## Orient and prepare
 
 1. Resolve this installed skill directory and the sibling `idd-plan` skill in the same installation
-   root; run `idd-plan/scripts/resolve-prd-pair.sh`. Require matching origins, authenticated GitHub
-   access, clean trees with the PRD synced by `idd-plan/scripts/progress-pr.sh sync`, and a private
-   PRD. The implementation must be private except when resuming after this run changed visibility;
-   that resume must verify the same completed preparation and exposure/readback evidence, then
-   finish reconciliation without a new preparation issue. Read `PRD.md`, `PROGRESS.md`, live
-   issues/PRs, and repository instructions.
+   root; run `idd-plan/scripts/resolve-prd-pair.sh`. Require same-owner origins (never an
+   `idd.prdRepo` pair), authenticated GitHub access, clean trees with the PRD synced by
+   `idd-plan/scripts/progress-pr.sh sync`, and a private PRD. The implementation must be private
+   except when resuming after this run changed visibility; that resume must verify the same
+   completed preparation and exposure/readback evidence, then finish reconciliation without a new
+   preparation issue. Read `PRD.md`, `PROGRESS.md`, live issues/PRs, and repository instructions.
    A missing sibling is an incomplete installation and stops. Execute `idd-plan` Reconcile mode
    at this pre-publication milestone; stop on any batch refusal before changing visibility.
 2. Resolve sibling `idd-issue`, `idd-implement`, and `idd-land` skills from the same installation

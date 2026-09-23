@@ -47,11 +47,17 @@ git -C "$prd" rev-parse --show-toplevel >/dev/null 2>&1 || {
 
 impl_repo="$(normalize_github_remote "$(git -C "$impl" remote get-url origin)")"
 prd_repo="$(normalize_github_remote "$(git -C "$prd" remote get-url origin)")"
-[ "$impl_repo" = "$owner/$impl_name" ] || {
-  echo "Implementation origin $impl_repo does not match expected $owner/$impl_name" >&2; exit 1;
+impl_owner="${impl_repo%%/*}"
+[ "$impl_repo" = "$impl_owner/$impl_name" ] || {
+  echo "Implementation origin $impl_repo does not match expected */$impl_name" >&2; exit 1;
 }
-[ "$prd_repo" = "$owner/$impl_name-prd" ] || {
-  echo "PRD origin $prd_repo does not match expected $owner/$impl_name-prd" >&2; exit 1;
-}
+# A PRD under another owner is associated only when the implementation checkout's local git
+# config names it exactly (git config idd.prdRepo OWNER/NAME-prd); nothing is committed for it.
+optin="$(git -C "$impl" config --get idd.prdRepo || true)"
+if [ "$prd_repo" != "$impl_owner/$impl_name-prd" ] \
+  && { [ "$prd_repo" != "$optin" ] || [ "${prd_repo#*/}" != "$impl_name-prd" ]; }; then
+  echo "PRD origin $prd_repo does not match expected $impl_owner/$impl_name-prd" \
+    "or the implementation's idd.prdRepo" >&2; exit 1
+fi
 
 printf 'implementation=%s\nprd=%s\n' "$impl" "$prd"

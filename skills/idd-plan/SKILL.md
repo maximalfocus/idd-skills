@@ -20,12 +20,12 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
 ## Orient and select the mode
 
 1. Resolve this installed skill directory and run its bundled `scripts/resolve-prd-pair.sh`: the
-   only automatic association is `{implementation-name}-prd` with matching origins and PRD/tracker.
-   Before any existing-contract reads or gates, run
-   `scripts/progress-pr.sh sync <contract-path>`; stop on refusal. Read repository instructions.
-   Run `scripts/contract.sh list <contract-path>`: names mean a partitioned contract whose root
-   `PRD.md` is the index and root `PROGRESS.md` the portfolio panel; `--context <name>` selects one,
-   a reading mode reads the index plus that context, and a writing mode passes
+   only association is `{implementation-name}-prd` with PRD/tracker and a same-owner origin, or the
+   one the implementation's local `git config idd.prdRepo` names. Before any existing-contract reads
+   or gates, run `scripts/progress-pr.sh sync <contract-path>`; stop on refusal. Read repository
+   instructions. Run `scripts/contract.sh list <contract-path>`: names mean a partitioned contract
+   whose root `PRD.md` is the index and root `PROGRESS.md` the portfolio panel; `--context <name>`
+   selects one, a reading mode reads the index plus that context, and a writing mode passes
    `scripts/contract.sh gate <contract-path>` first. GitHub is lifecycle authority; the PRD is
    requirement authority. Default mode permits only bundled sync's local branch selection,
    default-import merge, and guard hook; never edits content, remote refs, issues, or the tracker.
