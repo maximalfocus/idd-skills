@@ -41,10 +41,19 @@ elif [ "$1 $2" = "pr view" ]; then
   [ ! -f "$root/fail-review" ] || { echo "simulated review outage" >&2; exit 1; }
   case "${*: -1}" in
     number,state,headRefName,headRefOid)
+      printf x >> "$root/head-read-count"
       head="$(cat "$root/pr-head")"
       state="$(cat "$root/pr-state" 2>/dev/null || echo OPEN)"
+      oid="$(git ls-remote origin "refs/heads/$head" | cut -f1)"
+      # stale-reads models GitHub reporting the previous head for a few reads after a push.
+      if [ -s "$root/stale-reads" ]; then
+        oid="$(cat "$root/stale-head")"
+        # Rewrite without the incompatible BSD/GNU `sed -i` option forms.
+        sed '$d' "$root/stale-reads" > "$root/stale-reads.n"
+        mv "$root/stale-reads.n" "$root/stale-reads"
+      fi
       jq -n --argjson number "$3" --arg state "$state" --arg head "$head" \
-        --arg oid "$(git ls-remote origin "refs/heads/$head" | cut -f1)" \
+        --arg oid "$oid" \
         '{number:$number,state:$state,headRefName:$head,headRefOid:$oid}' ;;
     isDraft,reviewDecision,*)
       count="$(cat "$root/snapshot-count" 2>/dev/null || echo 0)"; count=$((count + 1))
@@ -520,6 +529,38 @@ run push "$prd" "docs(progress): durable row" PROGRESS.md >/dev/null
 [ "$(git -C "$prd" rev-parse HEAD)" = "$oid" ]
 
 # --- publication readback detects a closed batch or a concurrently changed head -----
+# A stale head read right after a push is retried; a head that never matches still fails.
+fresh
+printf 'lagging row\n' >> "$prd/PROGRESS.md"
+run push "$prd" "docs(progress): lagging row" PROGRESS.md >/dev/null
+git -C "$prd" rev-parse HEAD > "$tmp/stale-head"
+: > "$tmp/head-read-count"
+printf 'x\nx\nx\n' > "$tmp/stale-reads"
+printf 'second lagging row\n' >> "$prd/PROGRESS.md"
+out="$(run push "$prd" "docs(progress): second lagging row" PROGRESS.md 2>&1)" || {
+  echo "progress-pr failed on a stale head read: $out" >&2; exit 1; }
+grep -q '^pr=' <<<"$out"
+[ "$(cat "$tmp/head-read-count")" = xxxx ]
+[ ! -s "$tmp/stale-reads" ] || { echo "stale reads were not consumed" >&2; exit 1; }
+: > "$tmp/head-read-count"
+printf 'x\nx\nx\nx\nx\nx\n' > "$tmp/stale-reads"
+printf 'third lagging row\n' >> "$prd/PROGRESS.md"
+if out="$(run push "$prd" "docs(progress): third lagging row" PROGRESS.md 2>&1)"; then
+  echo "progress-pr accepted a head that never read back" >&2; exit 1
+fi
+[[ "$out" == *"Batch publication could not be verified"* ]]
+[[ "$out" == *"head did not read back after 5 attempts"* ]]
+[ "$(cat "$tmp/head-read-count")" = xxxxx ]
+[ "$(cat "$tmp/stale-reads")" = x ]
+rm -f "$tmp/stale-reads" "$tmp/stale-head"
+for delay in -1 6 999 0.1 invalid; do
+  oid="$(git -C "$prd" rev-parse HEAD)"
+  refuses "invalid retry delay $delay" "PROGRESS_PR_RETRY_DELAY must be 0..5" \
+    env PROGRESS_PR_RETRY_DELAY="$delay" bash "$script" \
+    push "$prd" "docs(progress): invalid delay" PROGRESS.md
+  [ "$(git -C "$prd" rev-parse HEAD)" = "$oid" ]
+done
+
 for race in closed merged head; do
   fresh
   printf 'reviewed row\n' >> "$prd/PROGRESS.md"
@@ -527,6 +568,7 @@ for race in closed merged head; do
   branch="$(on)"
   printf 'durable racing row\n' >> "$prd/PROGRESS.md"
   echo "$race" > "$tmp/publish-race"
+  : > "$tmp/head-read-count"
   if [ "$race" = head ]; then
     # The remote moves after accepting the push, even when the caller never reads back.
     cat > "$tmp/origin.git/hooks/post-receive" <<'HOOK'
@@ -542,6 +584,13 @@ HOOK
   fi
   if out="$(run push "$prd" "docs(progress): racing row" PROGRESS.md 2>&1)"; then
     echo "progress-pr accepted $race during publication" >&2; exit 1
+  fi
+  if [ "$race" = head ]; then
+    [[ "$out" == *"remote head changed"* ]]
+    [ "$(cat "$tmp/head-read-count")" = x ]
+  else
+    [[ "$out" == *"no open batch reads back"* ]]
+    [ ! -s "$tmp/head-read-count" ]
   fi
   rm -f "$tmp/publish-race"
   rm -f "$tmp/origin.git/hooks/post-receive"
