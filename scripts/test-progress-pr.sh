@@ -46,7 +46,10 @@ elif [ "$1 $2" = "pr view" ]; then
       oid="$(git ls-remote origin "refs/heads/$head" | cut -f1)"
       # stale-reads models GitHub reporting the previous head for a few reads after a push.
       if [ -s "$root/stale-reads" ]; then
-        oid=0000000000000000000000000000000000000000; sed -i '$d' "$root/stale-reads"
+        oid=0000000000000000000000000000000000000000
+        # Drop one read. `sed -i` needs an argument on BSD and refuses one on GNU, so rewrite.
+        sed '$d' "$root/stale-reads" > "$root/stale-reads.n"
+        mv "$root/stale-reads.n" "$root/stale-reads"
       fi
       jq -n --argjson number "$3" --arg state "$state" --arg head "$head" \
         --arg oid "$oid" \
