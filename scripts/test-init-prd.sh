@@ -21,6 +21,7 @@ case "$1 $2" in
   "api --method") cat >/dev/null; touch "$MOCK_PROTECTED" ;;
   "api repos/example/demo-prd")
     if [[ "$*" == *.visibility* ]]; then echo private
+    elif [[ "$*" == *.default_branch* ]]; then echo main
     elif [ -f "$MOCK_PROTECTED" ]; then echo "true false false true PR_TITLE PR_BODY"
     else echo "true true true false COMMIT_OR_PR_TITLE COMMIT_MESSAGES"; fi ;;
   *) echo "unexpected gh call: $*" >&2; exit 1 ;;

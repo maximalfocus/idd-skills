@@ -18,6 +18,15 @@ and no added line over 100 characters outside Markdown table rows and the paths 
 declares `Formatter-owned:`; an existing repository adopts them once, as that file describes.
 Landing, tracker batches, and evolution proposals enforce it with the bundled scripts.
 
+Branch strategy: an implementation repository integrates on `dev`, its GitHub default branch.
+Every issue PR targets `dev` and `/idd-land` squash-merges it there; `main` is the release branch,
+changed only by the explicit, optional `/idd-promote` through one merge-commit `dev`→`main` pull
+request. `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` start with `protect-main.sh ensure`,
+which prints `integration=… release=…` and integrates an existing repository on first use whatever
+`main`'s history: it creates `dev`, makes it default, retargets open PRs, and applies both rulesets.
+A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts out. A `{project}-prd` and
+this methodology repository stay single-branch on `main`.
+
 A product too large for one coherent contract partitions its `{project}-prd` into `contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel. Each context owns a scope of implementation paths, names the contexts it depends on without restating them, and is admitted only when work is planned there: `/idd-plan --reconstruct --scope <paths> --context <name>` reconstructs one, issues carry the context name as their label, changed files must resolve to the issue's context, and every gate runs over the index and each context.
 
 ## Skill
@@ -32,6 +41,7 @@ A product too large for one coherent contract partitions its `{project}-prd` int
 | `/idd-auto <project-name-or-path>` | Sequentially finish an exact PRD-linked project through the existing gated lifecycle |
 | `/idd-evolve [post-plan\|post-create\|post-issue\|simplify\|land <PR>]` | Filter proven run lessons into IDD as a reviewed PR, or land one reviewed evolution PR; rejected candidates leave no log |
 | `/idd-acceptance <project-name-or-path>` | Exercise the completed product at its real CLI, API, browser, service, container, or migration boundary |
+| `/idd-promote [--open-only] [OWNER/REPO]` | Promote the integration branch `dev` into the release branch `main` through one reviewed merge-commit PR |
 | `/idd-publish <project-name-or-path>` | Prepare one private pair, audit every public surface, and make only the implementation repository public |
 
 The workflow was initially derived from a production implementation issue: live issue/comments as intent, a clean issue branch, exhaustive entry-point search, repository-native tests, explicit separation of introduced versus baseline failures, and smoke-testing the built runtime boundary. Its first evolve pass absorbed an implementation-proven runtime-flag gap: verify precedence, invalid values, unsupported profiles, and baked behavior when startup hooks are bypassed.
@@ -59,7 +69,7 @@ protection; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and
 routes to whichever sibling the request selects and needs that sibling installed. Installing the
 complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current
 `idd-skills` methodology checkout because it edits and validates that repository rather than its
-installed workflow definition.
+installed workflow definition. `idd-promote` requires `idd-plan` for branch protection.
 
 Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
 
@@ -103,6 +113,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-evolve/SKILL.md` — pass-or-nothing evolution workflow
 - `skills/idd-acceptance/SKILL.md` — final integrated user-boundary acceptance workflow
 - `skills/idd-publish/SKILL.md` — fail-closed implementation-repository publication workflow
+- `skills/idd-promote/SKILL.md` — optional explicit `dev`→`main` release promotion workflow
 - `CONSTITUTION.md` — evolution law and size gates; every kept evolution is proposed by `scripts/propose.sh` as a PR, squash-merged after review by `scripts/land-evolution.sh`, and `scripts/protect-main.sh` makes GitHub refuse anything else on `main`
 - `skills/idd-plan/references/conventions.md` — the naming, default-branch, and line-width
   conventions every managed repository shares
@@ -115,6 +126,8 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
   test them
 - `scripts/test-land.sh` — isolated mock lifecycle, idempotency, and rewritten-source test
 - `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-prd-fold-gate.sh`, `scripts/test-prd-size-gate.sh`, `scripts/test-contract.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, the PRD fold gate, the PRD size gate, the context contract tooling, and the acceptance static gate
+- `scripts/promote.sh`, `scripts/test-promote.sh` — checkout wrappers for the bundled promotion
+  script and its tests
 - `scripts/scan-exposure.sh`, `scripts/test-scan-exposure.sh` — checkout wrappers for the bundled publication scan and tests
 - `scripts/test-portable-install.sh` — isolated standard-copy and installed-runtime regression gate
 - `scripts/validate.sh` — structural and lifecycle validation

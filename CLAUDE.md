@@ -3,11 +3,12 @@
 ## Sources of truth
 
 Author `/idd`, `/idd-plan`, `/idd-issue`, `/idd-implement`, `/idd-land`, `/idd-auto`,
-`/idd-acceptance`, `/idd-publish`, and `/idd-evolve` in their matching `skills/*/SKILL.md` sources.
-`CONSTITUTION.md` governs methodology changes. Do not create a `commands/` mirror; Claude Code,
-Codex, Pi, and OpenCode consume the same Agent Skills sources through symlinks created by
-`scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/` links). Keep skill inputs
-portable: runners that do not inject `$ARGUMENTS` must be able to use the user's request.
+`/idd-acceptance`, `/idd-promote`, `/idd-publish`, and `/idd-evolve` in their matching
+`skills/*/SKILL.md` sources. `CONSTITUTION.md` governs methodology changes. Do not create a
+`commands/` mirror; Claude Code, Codex, Pi, and OpenCode consume the same Agent Skills sources
+through symlinks created by `scripts/install.sh` (OpenCode discovers the shared `~/.agents/skills/`
+links). Keep skill inputs portable: runners that do not inject `$ARGUMENTS` must be able to use the
+user's request.
 
 ## Scope
 
@@ -22,15 +23,17 @@ reached through it only when the request names that action (Constitution Article
 inference reaches only read-only default mode; bootstrap, reconstruct, and reconcile require the
 request to name that mode. `/idd-land` is the gated merge/closure phase and reconciles an exact
 associated PRD after landing. `/idd-auto` may sequence those current phases only after explicit
-invocation, one issue at a time, and must stop on any red or ambiguous gate. Evolution stays in
-`/idd-evolve`. Prefer repository-native tests and git/PR history.
+invocation, one issue at a time, and must stop on any red or ambiguous gate. `/idd-promote` alone
+moves an implementation repository's `dev` into its release branch `main`, on explicit invocation.
+Evolution stays in `/idd-evolve`. Prefer repository-native tests and git/PR history.
 
 ## Editing discipline
 
 - Keep `skills/idd/SKILL.md` ≤60 lines, `skills/idd-plan/SKILL.md` ≤160 lines,
   `skills/idd-issue/SKILL.md` ≤70 lines, `skills/idd-implement/SKILL.md` ≤160,
   `skills/idd-land/SKILL.md` ≤120, `skills/idd-auto/SKILL.md` ≤120, `skills/idd-acceptance/SKILL.md`
-  ≤120, `skills/idd-publish/SKILL.md` ≤120, and `skills/idd-evolve/SKILL.md` ≤80.
+  ≤120, `skills/idd-publish/SKILL.md` ≤120, `skills/idd-promote/SKILL.md` ≤60, and
+  `skills/idd-evolve/SKILL.md` ≤80.
 - Keep every line of `skills/*/SKILL.md`, `CONSTITUTION.md`, and this file at or under 100
   characters, counted in characters: fold a long front-matter scalar with `>-`, rewrap prose at 100
   columns, and compress a file that would then exceed its line cap rather than raise the cap.
@@ -45,6 +48,13 @@ invocation, one issue at a time, and must stop on any red or ambiguous gate. Evo
   `/idd-land` or `/idd-auto` authority, or `/idd-publish` authority for its one preparation PR, may
   merge a project PR; a PRD's `progress/` batch PR merges only at a milestone reconcile under that
   authority or a direct `/idd-plan --reconcile`; nothing may force-push.
+
+## Branch strategy
+
+This methodology repository stays single-branch on `main` (Constitution Article 6); the line below
+keeps `protect-main.sh ensure` from integrating it on `dev`:
+
+Integration-branch: main
 
 ## Naming conventions
 

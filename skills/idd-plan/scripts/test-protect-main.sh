@@ -15,6 +15,8 @@ cat > "$tmp/bin/gh" <<'FAKE'
 set -e
 root="${PROTECT_TEST_ROOT:?}"
 if [ "$1 $2" = "repo view" ]; then echo maximalfocus/current; exit 0; fi
+if [ "$1 $2" = "pr list" ]; then cat "$root/open-prs" 2>/dev/null || true; exit 0; fi
+if [ "$1 $2" = "pr edit" ]; then echo "$3 $*" >> "$root/retargeted"; exit 0; fi
 [ "$1" = api ] || { echo "unexpected gh: $*" >&2; exit 2; }
 shift
 method=GET; path=""; jq=""
@@ -31,13 +33,43 @@ printf 'x' >> "$root/calls"
 if { [ "$method" != GET ] && [ -f "$root/refuse-writes" ]; } || { [[ "$path" == */rulesets* ]] && [ -f "$root/refuse-rulesets" ]; }; then
   echo "gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)" >&2; exit 1
 fi
+rs() { # $1 = name, $2 = id file
+  [ ! -f "$root/$2" ] || jq -n --arg n "$1" --argjson id "$(cat "$root/$2")" '{name:$n,id:$id}'
+}
 case "$method $path" in
-  "PATCH repos/"*) cat > "$root/patch-body"; cp "$root/patch-body" "$root/settings";;
-  "POST repos/"*"/rulesets") cat > "$root/post-body"; echo 42 > "$root/ruleset-id"; cp "$root/post-body" "$root/ruleset";;
+  "PATCH repos/"*)
+    body="$(cat)"
+    if [[ "$body" == *default_branch* ]]; then
+      jq -r .default_branch <<<"$body" > "$root/default-branch"
+    else printf '%s' "$body" > "$root/patch-body"; cp "$root/patch-body" "$root/settings"; fi;;
+  "POST repos/"*"/git/refs") cat > "$root/ref-body"; touch "$root/branch-dev";;
+  "POST repos/"*"/rulesets")
+    body="$(cat)"
+    if [ "$(jq -r .name <<<"$body")" = protect-release ]; then
+      printf '%s' "$body" > "$root/release-post-body"; echo 43 > "$root/release-ruleset-id"
+      cp "$root/release-post-body" "$root/release-ruleset"
+    else
+      printf '%s' "$body" > "$root/post-body"; echo 42 > "$root/ruleset-id"
+      cp "$root/post-body" "$root/ruleset"
+    fi;;
+  "PUT repos/"*"/rulesets/43")
+    cat > "$root/release-put-body"; cp "$root/release-put-body" "$root/release-ruleset";;
   "PUT repos/"*"/rulesets/"*) cat > "$root/put-body"; cp "$root/put-body" "$root/ruleset";;
+  "GET repos/"*"/rulesets/43") jq -r "$jq" "$root/release-ruleset";;
   "GET repos/"*"/rulesets/"*) jq -r "$jq" "$root/ruleset";;
-  "GET repos/"*"/rulesets") if [ -f "$root/ruleset-id" ]; then jq -n --argjson id "$(cat "$root/ruleset-id")" '[{name:"require-pull-request",id:$id}]'; else echo '[]'; fi | jq -r "$jq";;
-  "GET repos/"*) if [ "$jq" = .visibility ]; then cat "$root/visibility"; else jq -r "$jq" "$root/settings"; fi;;
+  "GET repos/"*"/rulesets")
+    { rs require-pull-request ruleset-id; rs protect-release release-ruleset-id; } |
+      jq -s . | jq -r "$jq";;
+  "GET repos/"*"/branches/"*)
+    [ -f "$root/branch-${path##*/}" ] || { echo "gh: Branch not found (HTTP 404)" >&2; exit 1; }
+    echo "${path##*/}";;
+  "GET repos/"*"/git/ref/heads/"*) echo 0123abc;;
+  "GET repos/"*)
+    case "$jq" in
+      .visibility) cat "$root/visibility";;
+      .default_branch) cat "$root/default-branch" 2>/dev/null || echo main;;
+      *) jq -r "$jq" "$root/settings";;
+    esac;;
   *) echo "unexpected gh api: $method $path" >&2; exit 2;;
 esac
 FAKE
@@ -49,7 +81,12 @@ settings_fixture() {
   jq -n --arg fields "$1" '$fields | split(" ") | {allow_squash_merge:(.[0]|fromjson),allow_merge_commit:(.[1]|fromjson),allow_rebase_merge:(.[2]|fromjson),delete_branch_on_merge:(.[3]|fromjson),squash_merge_commit_title:.[4],squash_merge_commit_message:.[5]}' > "$tmp/settings"
 }
 
-fresh() { rm -f "$tmp"/{calls,patch-body,post-body,put-body,ruleset-id,ruleset,refuse-writes,refuse-rulesets}; settings_fixture "$1"; echo public > "$tmp/visibility"; }
+fresh() {
+  rm -f "$tmp"/{calls,patch-body,post-body,put-body,ruleset-id,ruleset,refuse-writes} \
+    "$tmp"/{refuse-rulesets,default-branch,ref-body,open-prs,retargeted} "$tmp"/branch-* \
+    "$tmp"/release-*
+  settings_fixture "$1"; echo public > "$tmp/visibility"; touch "$tmp/branch-main"
+}
 refuses() { # $1 = description, $2 = required stderr fragment, remaining = command
   local desc="$1" want="$2" err; shift 2
   if err="$("$@" 2>&1 >/dev/null)"; then echo "protect-main accepted $desc" >&2; exit 1; fi
@@ -145,5 +182,70 @@ case "$out" in "maximalfocus/current default branch protected"*) ;; *) echo "ver
 # --- usage ---------------------------------------------------------------------
 refuses "an unknown mode" "usage:" bash "$script" enable example/open
 refuses "a bare repository name" "usage:" bash "$script" verify open
+
+# --- a dev integration branch adds a merge-only release ruleset on main ---------
+fail() { echo "$*" >&2; exit 1; }
+good='true false false true PR_TITLE PR_BODY'
+fresh "$good"; echo 7 > "$tmp/ruleset-id"; cp "$tmp/protected-ruleset" "$tmp/ruleset"
+out="$(bash "$script" show example/open)"
+[ "$out" = "integration=main release=none" ] || fail "single-branch show: $out"
+echo dev > "$tmp/default-branch"; touch "$tmp/branch-dev"
+out="$(bash "$script" show example/open)"
+[ "$out" = "integration=dev release=main" ] || fail "show must report dev and main: $out"
+refuses "a release branch without its ruleset" "no ruleset named protect-release" \
+  bash "$script" verify example/open
+refuses "squash-only settings on a two-branch repository" "settings drift" \
+  bash "$script" verify example/open
+bash "$script" apply example/open >/dev/null
+for want in '"refs/heads/main"' '"allowed_merge_methods":["merge"]' '"type":"deletion"' \
+  '"type":"non_fast_forward"' '"bypass_actors":[]'; do
+  grep -Fq "$want" "$tmp/release-post-body" || fail "release ruleset body lacks $want"
+done
+! grep -Fq required_linear_history "$tmp/release-post-body" ||
+  fail "the release branch must accept merge commits"
+grep -Fq '"allow_merge_commit":true' "$tmp/patch-body" ||
+  fail "a release branch needs merge commits enabled"
+out="$(bash "$script" verify example/open)"
+case "$out" in
+  *"main by merge-commit pull request only"*) ;;
+  *) fail "two-branch verify: $out";;
+esac
+jq '(.rules[] | select(.type=="pull_request").parameters.allowed_merge_methods) = ["squash"]' \
+  "$tmp/release-ruleset" > "$tmp/r" && mv "$tmp/r" "$tmp/release-ruleset"
+refuses "a squash-only release ruleset" "ruleset drift: example/open ruleset protect-release" \
+  bash "$script" verify example/open
+
+# --- integrate creates dev from main, makes it default, retargets open PRs ------
+fresh "$good"; printf '5\n' > "$tmp/open-prs"
+bash "$script" integrate example/open >/dev/null 2>"$tmp/err" || fail "$(cat "$tmp/err")"
+[ "$(cat "$tmp/default-branch")" = dev ] || fail "integrate must make dev the default branch"
+grep -Fq '"ref":"refs/heads/dev","sha":"0123abc"' "$tmp/ref-body" ||
+  fail "integrate must create dev at main"
+grep -q '^5 .*--base dev' "$tmp/retargeted" || fail "integrate must retarget open PRs to dev"
+[ -f "$tmp/release-post-body" ] || fail "integrate must protect the release branch"
+rm "$tmp/ref-body"; bash "$script" integrate example/open >/dev/null 2>&1
+[ ! -f "$tmp/ref-body" ] || fail "a second integrate must not recreate dev"
+echo master > "$tmp/default-branch"
+refuses "integrating a non-main default" "integrate expects default branch main or dev" \
+  bash "$script" integrate example/open
+
+# --- ensure integrates a brownfield repository unless it opts out ---------------
+fresh "$good"
+git init -q "$tmp/co"; git -C "$tmp/co" commit -q --allow-empty -m base
+ensure() { (cd "$tmp/co" && bash "$script" ensure "$@"); }
+out="$(ensure example/open 2>/dev/null)"
+[ "$out" = "integration=dev release=main" ] || fail "ensure must integrate by default: $out"
+out="$(ensure example/open 2>/dev/null)"
+[ "$out" = "integration=dev release=main" ] || fail "ensure must be idempotent: $out"
+fresh "$good"; printf 'Integration-branch: `main`\n' > "$tmp/co/AGENTS.md"
+out="$(ensure example/open)"
+[ "$out" = "integration=main release=none" ] && [ ! -f "$tmp/default-branch" ] ||
+  fail "Integration-branch: main must opt out: $out"
+printf 'Integration-branch: trunk\n' > "$tmp/co/AGENTS.md"
+refuses "an unknown integration branch" "must be dev or main" ensure example/open
+rm "$tmp/co/AGENTS.md"
+out="$(ensure example/open-prd)"
+[ "$out" = "integration=main release=none" ] && [ ! -f "$tmp/default-branch" ] ||
+  fail "a -prd repository stays single-branch: $out"
 
 echo "protect-main tests passed"

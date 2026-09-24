@@ -23,9 +23,10 @@ mismatch, or a dirty tree.
 
 ## Step 0 — resolve and fail closed
 
-1. Resolve repo root, `origin`, default branch, current branch, and status. Require a clean working
-   tree and `gh auth status`; require the issue repository to match `gh repo view --json
-   nameWithOwner`.
+1. First run the sibling `idd-plan/scripts/protect-main.sh ensure` and print its `integration=…
+   release=…` line; landing merges into the integration (default) branch and never promotes. Resolve
+   repo root, `origin`, current branch, and status. Require a clean working tree and `gh auth
+   status`; require the issue repository to match `gh repo view --json nameWithOwner`.
 2. Read the live issue and comments. Allow `OPEN`; allow `CLOSED` only when resuming a partially
    completed landing whose linked PR is already merged.
 3. Resolve PRs from the issue's cross-references and closing references: require exactly one

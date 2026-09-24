@@ -27,7 +27,9 @@ that inject none, the user's request. Default repository: the current one. One r
 
 ## Step 0 — establish a safe issue boundary
 
-1. Resolve repo root, default branch, remotes, current branch, and status. Read root `AGENTS.md`/
+1. First run the sibling `idd-plan/scripts/protect-main.sh ensure` and print its `integration=…
+   release=…` line: the integration branch (`dev` unless opted out) is the default branch every PR
+   targets. Resolve repo root, remotes, current branch, and status. Read root `AGENTS.md`/
    `CLAUDE.md` plus the instructions they reference. Never overwrite or stage unrelated work.
 2. Fetch the issue with body **and comments** (`gh issue view … --json
    number,title,body,comments,labels,state,url`); require `OPEN` and require its repository to match
@@ -45,13 +47,10 @@ that inject none, the user's request. Default repository: the current one. One r
 
 ## Step 1 — turn live intent into a small execution contract
 
-In chat, summarize:
-
-- required outcome and explicit acceptance criteria;
-- chosen path when the issue offers alternatives (follow an explicit recommendation; ask when no
-  preference is authoritative);
-- non-goals and likely files/boundaries;
-- verification commands or observable checks.
+In chat, summarize the required outcome and explicit acceptance criteria; the chosen path when the
+issue offers alternatives (follow an explicit recommendation; ask when no preference is
+authoritative); non-goals and likely files/boundaries; and verification commands or observable
+checks.
 
 Inspect code and discoverable facts before asking. Ask only when conflicting or missing intent would
 materially change behavior, security, data, API shape, or scope, never for choices the repository
@@ -134,12 +133,13 @@ implementation may still open a non-closing PR.
    `idd-plan/scripts/line-width.sh check origin/<default>`: rewrap every reported line to 100
    characters, or list its path on the repository's `Formatter-owned:` line only when a formatter,
    generator, package manager, or recorder lays it out.
-2. Push the dedicated branch. Open a focused PR titled character-identically to the issue (N-2),
-   using the repository template. Include summary, verification commands/results, proven baseline
-   failures, and risks/follow-ups. Declare exactly one `Delivery-Type: <type>` field in the body
-   with an N-4 type; `/idd-land` composes the squash subject from it and stops without it. Use
-   `Closes #N` only when every acceptance item is proved and the issue belongs to this repository;
-   otherwise use a non-closing `Refs #N` (same repo) or `Refs owner/repo#N`.
+2. Push the dedicated branch. Open a focused PR into the integration branch, never the release
+   branch, titled character-identically to the issue (N-2), using the repository template. Include
+   summary, verification commands/results, proven baseline failures, and risks/follow-ups. Declare
+   exactly one `Delivery-Type: <type>` field in the body with an N-4 type; `/idd-land` composes the
+   squash subject from it and stops without it. Use `Closes #N` only when every acceptance item is
+   proved and the issue belongs to this repository; otherwise use a non-closing `Refs #N` (same
+   repo) or `Refs owner/repo#N`.
 3. Read back the PR URL and state. Do not merge it, delete the branch, deploy, or close the issue
    directly. Merge policy and CI remain the repository's gate.
 

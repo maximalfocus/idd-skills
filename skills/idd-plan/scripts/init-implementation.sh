@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() { echo "usage: init-implementation.sh PRD_REPOSITORY_PATH" >&2; exit 64; }
+usage() { echo "usage: init-implementation.sh [--single-branch] PRD_REPOSITORY_PATH" >&2; exit 64; }
+single=false
+[ "${1:-}" != --single-branch ] || { single=true; shift; }
 [ "$#" -eq 1 ] || usage
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 prd="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a PRD repository: $1" >&2; exit 1; }
@@ -41,11 +43,21 @@ else
   git -C "$impl" symbolic-ref HEAD refs/heads/main
   printf '# %s\n' "$impl_name" > "$impl/README.md"
   git -C "$impl" add README.md
+  if [ "$single" = true ]; then # the recorded opt-out keeps ensure from integrating on dev later
+    printf 'Integration-branch: main\n' > "$impl/AGENTS.md"
+    git -C "$impl" add AGENTS.md
+  fi
   git -C "$impl" commit -qm "docs: establish the implementation repository"
   git -C "$impl" push -q -u origin main
+  if [ "$single" = false ]; then
+    git -C "$impl" switch -q -c dev
+    git -C "$impl" push -q -u origin dev
+  fi
 fi
-
 [ -d "$impl/.git" ] || { echo "Implementation clone was not created: $impl" >&2; exit 1; }
+# Pull requests integrate on dev and main becomes the release branch, unless opted out; from here
+# on each changes only through a pull request.
+(cd "$impl" && bash "$here/protect-main.sh" ensure "$impl_repo" >&2)
 pair="$(bash "$(dirname "${BASH_SOURCE[0]}")/resolve-prd-pair.sh" "$prd")"
 expected="implementation=$impl
 prd=$prd"
@@ -61,8 +73,8 @@ default_branch="${readback##*$'\t'}"
 [ -n "$default_branch" ] && [ "$(git -C "$impl" branch --show-current)" = "$default_branch" ] || {
   echo "Implementation default branch checkout mismatch" >&2; exit 1;
 }
-# From here on the default branch changes only through a squash-merged pull request.
+# ensure leaves an opted-out repository as it found it; protection is unconditional.
 bash "$here/protect-main.sh" apply "$impl_repo" >&2
-printf 'implementation=%s\nrepository=%s\nvisibility=%s\ncommit=%s\ncreated=%s\n' \
+printf 'implementation=%s\nrepository=%s\nvisibility=%s\ncommit=%s\ncreated=%s\nintegration=%s\n' \
   "$impl" "$(cut -f3 <<<"$readback")" "$(cut -f2 <<<"$readback")" \
-  "$(git -C "$impl" rev-parse HEAD)" "$created"
+  "$(git -C "$impl" rev-parse HEAD)" "$created" "$default_branch"
