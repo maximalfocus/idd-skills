@@ -1,9 +1,9 @@
 # IDD Constitution
 
 The law governing `/idd`, `/idd-plan`, `/idd-issue`, `/idd-implement`, `/idd-land`, `/idd-auto`,
-`/idd-acceptance`, `/idd-publish`, `/idd-evolve`, and changes to this repository. Evolution is a
-filter, not an accumulator: kept lessons change the skills and reach git; rejected lessons leave no
-log.
+`/idd-acceptance`, `/idd-promote`, `/idd-publish`, `/idd-evolve`, and changes to this repository.
+Evolution is a filter, not an accumulator: kept lessons change the skills and reach git; rejected
+lessons leave no log.
 
 ## Article 1 — Preserve the lightweight boundary
 
@@ -44,9 +44,12 @@ repository, then repeat the current plan, create, implement, and land phases for
 one issue at a time, until PRD implementation completion or a fail-closed blocker. `/idd-publish` is
 the separate publication phase: one explicit invocation may complete one publication-preparation
 issue and then make only the implementation repository public after exposure and anonymous-readback
-gates; its companion PRD remains private. No command creates golden-file suites, trace artifacts,
-mandatory review waves, deployment, speculative backlogs, or parallel delivery. `/idd-evolve` is
-separate methodology maintenance; no command adds methodology traces to project repositories.
+gates; its companion PRD remains private. `/idd-promote` is the separate optional release phase: one
+explicit invocation may open, and unless asked only to open, merge one reviewed
+integration-to-release pull request with a merge commit; no other command promotes. No command
+creates golden-file suites, trace artifacts, mandatory review waves, deployment, speculative
+backlogs, or parallel delivery. `/idd-evolve` is separate methodology maintenance; no command adds
+methodology traces to project repositories.
 
 `/idd-acceptance` is the separate final integrated acceptance phase: it verifies the completed
 product at its real user-facing boundary and never deploys or changes the contract. It verifies each
@@ -94,6 +97,7 @@ remains for judgment.
 - `skills/idd-evolve/SKILL.md` ≤ 80 lines.
 - `skills/idd-publish/SKILL.md` ≤ 120 lines.
 - `skills/idd-acceptance/SKILL.md` ≤ 120 lines.
+- `skills/idd-promote/SKILL.md` ≤ 60 lines.
 - Every line of `skills/*/SKILL.md`, `CONSTITUTION.md`, `CLAUDE.md`, and
   `skills/idd-plan/references/conventions.md` ≤ 100 characters.
 - The shared conventions are scripted where mechanical: bootstrap applies default-branch
@@ -142,6 +146,11 @@ remains for judgment.
   scripted exposure audit covering every commit message and retained pull-request ref with denylist
   terms matched by bare stem, implementation-only visibility mutation, anonymous readback, and
   private PRD verification.
+- `/idd-promote` requires explicit invocation, a verified release branch, the bundled
+  `promote.sh`, one integration-to-release PR merged only in a clean state as a merge commit, and
+  no squash, rebase, direct push, or force-push onto either branch.
+- `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` begin with the bundled `protect-main.sh
+  ensure` and print its `integration=… release=…` line before any other step.
 - `/idd-acceptance` requires an exact completed pair, a real product boundary, complete applicable
   journeys, readiness and teardown evidence, manifest rows verified by existence and identity
   without executing goldens, failure classification, and no deployment or residual acceptance.
@@ -169,10 +178,16 @@ initial private PRD commit/push unless the user requests draft-only output; expl
 squash merge at a milestone. Failure after merge is disclosed and resumable. Every repository IDD
 manages — this one, each implementation repository, and its `{project}-prd` — shares one naming
 convention, a default branch that changes only through a squash-merged pull request, and a
-100-character width for every added line outside declared formatter-owned paths and Markdown
-table rows, as `skills/idd-plan/references/conventions.md` defines; bootstrap applies that
-protection, an existing repository adopts it once on the user's instruction, and landing verifies
-it. A project's own review policy governs everything else.
+100-character width for every added line outside declared formatter-owned paths and Markdown table
+rows, as `skills/idd-plan/references/conventions.md` defines; bootstrap applies that protection, an
+existing repository adopts it once on the user's instruction or through the integration below, and
+landing verifies it. An implementation repository integrates on `dev`, its GitHub default branch,
+whatever `main`'s history: every issue PR targets and squash-merges into `dev`, and `main` is the
+release branch, changed after its initial commit only by `/idd-promote`. Bootstrap creates `dev`;
+any other repository is integrated by the first IDD flow that starts in it, which retargets its open
+pull requests to `dev`. A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts a
+repository out, keeping `main` as its single default branch; a `{project}-prd` and this methodology
+repository stay single-branch. A project's own review policy governs everything else.
 
 ## Article 7 — Preserve conceptual integrity
 

@@ -17,7 +17,8 @@ and name the rule they refuse; the rest is review. Cite the rule IDs in issues a
 - **Branch (N-3).** One lowercase kebab-case form per kind of change: `issue/<issue-number>-<slug>`
   delivers an issue, `progress/batch` carries a `{project}-prd` tracker batch, `prd/<slug>` changes
   a product contract, and `evolve/<slug>` evolves a methodology repository. The slug is a handle,
-  not the title.
+  not the title. `dev` is an implementation repository's long-lived integration branch and the head
+  of its promotion pull request, titled `chore(release): promote dev to main`.
 - **Commit subject (N-4).** `<type>(<scope>)?: <lowercase imperative>`, at most 72 authored
   characters — a provider-added trailing ` (#N)` sits outside that budget. Scope is one kebab-case
   identifier: no spaces, no colon, one scope only. Evidence, rationale and measurements belong in
@@ -43,6 +44,23 @@ body as the commit, linear history, no force-push, no deletion, no bypass. GitHu
 that ruleset only on a public repository, so a private one keeps the settings plus branch and pull
 request discipline, and becoming public requires rerunning `apply`. Landing runs `verify` and
 stops on drift.
+
+An implementation repository integrates on `dev`: bootstrap pushes the initial commit to `main`,
+creates `dev` from it, and makes `dev` the default branch, so every issue pull request targets and
+squash-merges into `dev` and `Closes #N` still closes on merge. `main` is the release branch: a
+second ruleset lets it change only through a merge-commit pull request from `dev`, opened and merged
+by the explicit, optional `/idd-promote`; a squash or rebase there would make `main` diverge from
+`dev`. `protect-main.sh ensure` begins every IDD flow and prints `integration=<branch>
+release=<main|none>`. In a repository not yet integrated it creates `dev` from `main` whatever
+`main`'s history, makes it the default, retargets open pull requests from `main`, applies both
+rulesets, and switches a clean checkout on `main` to `dev`. A root `AGENTS.md` or `CLAUDE.md` line
+opts out and keeps `main` the single default branch:
+
+```
+Integration-branch: main
+```
+
+A `{project}-prd` never integrates on `dev`; its tracker and contract changes merge to `main`.
 
 ## Line width
 
@@ -72,7 +90,8 @@ its history or its legacy lines. Landing stops before any mutation until adoptio
 1. **Protection.** `apply` changes repository settings, so it runs once per repository on the
    user's explicit instruction, never as a landing repair: run the bundled
    `idd-plan/scripts/protect-main.sh apply <owner>/<repo>` for the implementation repository and
-   its `{project}-prd`, then `verify` each.
+   its `{project}-prd`, then `verify` each. The exception is integration: the first IDD flow in an
+   implementation repository that has not opted out runs `ensure`, which applies both rulesets.
 2. **Formatter-owned paths.** Before the first landing that adds formatter-laid lines over 100
    characters, declare those paths in a reviewed change to `AGENTS.md` or `CLAUDE.md`. A `Types:`
    line binds nothing any more and may go in the same change.

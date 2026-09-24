@@ -64,6 +64,7 @@ elif [ "$1" = api ]; then
   case "$key" in
     .commit.message) cat "$root/merge-subject";;
     .visibility) echo private;;
+    .default_branch) echo main;;
     *allow_squash_merge*)
       if [ -f "$root/drift" ]; then echo "true true true false x y"
       else echo "true false false true PR_TITLE PR_BODY"; fi;;

@@ -33,6 +33,7 @@ validate_skill idd-auto 120
 validate_skill idd-evolve 80
 validate_skill idd-publish 120
 validate_skill idd-acceptance 120
+validate_skill idd-promote 60
 [ -f "$root/CONSTITUTION.md" ] || { echo "Missing CONSTITUTION.md" >&2; exit 1; }
 conventions="$root/skills/idd-plan/references/conventions.md"
 [ -f "$conventions" ] || { echo "Missing shared conventions: $conventions" >&2; exit 1; }
@@ -55,6 +56,16 @@ for script in skills/idd-land/scripts/land.sh skills/idd-plan/scripts/progress-p
 done
 grep -q 'protect-main.sh" verify' "$root/skills/idd-land/scripts/land.sh" || {
   echo "land.sh must verify default-branch protection" >&2; exit 1; }
+for name in idd idd-implement idd-land idd-auto; do
+  has_phrase "$root/skills/$name/SKILL.md" 'protect-main.sh ensure' || {
+    echo "$name must start by ensuring and printing the branch strategy" >&2; exit 1; }
+done
+grep -q 'protect-main.sh" ensure' "$root/skills/idd-plan/scripts/init-implementation.sh" || {
+  echo "init-implementation.sh must integrate a new implementation repository on dev" >&2; exit 1; }
+grep -q -- '--merge --match-head-commit' "$root/skills/idd-promote/scripts/promote.sh" || {
+  echo "promote.sh must promote with a merge commit bound to the reviewed head" >&2; exit 1; }
+grep -q '^Integration-branch: main$' "$root/CLAUDE.md" || {
+  echo "this methodology repository must opt out of the dev integration branch" >&2; exit 1; }
 for script in init-prd init-implementation; do
   grep -q 'protect-main.sh" apply' "$root/skills/idd-plan/scripts/$script.sh" || {
     echo "$script.sh must protect the new default branch" >&2; exit 1; }
@@ -64,7 +75,8 @@ has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit target or current checko
 install_home="$(mktemp -d)"
 trap 'rm -rf "$install_home"' EXIT
 HOME="$install_home" CODEX_HOME="$install_home/.codex" bash "$root/scripts/install.sh" >/dev/null
-for name in idd idd-plan idd-issue idd-implement idd-land idd-auto idd-evolve idd-publish idd-acceptance; do
+for name in idd idd-plan idd-issue idd-implement idd-land idd-auto idd-evolve idd-publish \
+  idd-acceptance idd-promote; do
   source_dir="$root/skills/$name"
   for link in \
     "$install_home/.claude/skills/$name" \
@@ -177,7 +189,7 @@ grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" ||
 bash "$root/scripts/test-land.sh"
 
 for name in tracker-gate manifest prd-fold-gate prd-size-gate contract progress-pr protect-main \
-  line-width propose land-evolution; do
+  line-width propose land-evolution promote; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
   [ -x "$root/scripts/$name.sh" ] || { echo "$name.sh must be executable" >&2; exit 1; }
