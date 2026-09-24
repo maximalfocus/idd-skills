@@ -246,6 +246,8 @@ if [ "$mode" = sync ]; then
 fi
 
 if [ "$mode" = push ]; then
+  [[ "${PROGRESS_PR_RETRY_DELAY:-2}" =~ ^[0-5]$ ]] || {
+    echo "PROGRESS_PR_RETRY_DELAY must be 0..5 seconds" >&2; exit 1; }
   subject="$1"; shift; paths=("$@")
   check_subject "$subject"; guard
   excludes=()
@@ -325,17 +327,21 @@ if [ "$mode" = push ]; then
     publication_failed "expected batch $b; found $readback"
   b="$readback"
   # GitHub can report the previous head for a few seconds after a push; re-read before failing.
-  [[ "${PROGRESS_PR_RETRY_DELAY:-2}" =~ ^[0-5]$ ]] || {
-    echo "PROGRESS_PR_RETRY_DELAY must be 0..5 seconds" >&2; exit 1; }
   tries=0
   while :; do
     published="$(gh pr view "${b%% *}" --repo "$repo" \
       --json number,state,headRefName,headRefOid)" || publication_failed "cannot read batch head"
-    jq -e --argjson pr "${b%% *}" --arg branch "$branch" --arg oid "$publish_oid" '
-      .number == $pr and .state == "OPEN" and .headRefName == $branch and .headRefOid == $oid
-    ' <<<"$published" >/dev/null && break
+    jq -e --argjson pr "${b%% *}" --arg branch "$branch" '
+      .number == $pr and .state == "OPEN" and .headRefName == $branch
+    ' <<<"$published" >/dev/null || publication_failed "batch #${b%% *} is closed or changed"
+    jq -e --arg oid "$publish_oid" '.headRefOid == $oid' <<<"$published" >/dev/null && break
+    remote_head="$(git ls-remote origin "refs/heads/$branch")" || \
+      publication_failed "cannot read remote batch head"
+    [ "$remote_head" = "$(printf '%s\trefs/heads/%s' "$publish_oid" "$branch")" ] || \
+      publication_failed "batch #${b%% *} remote head changed"
     tries=$((tries + 1))
-    [ "$tries" -lt 5 ] || publication_failed "batch #${b%% *} is closed or its head changed"
+    [ "$tries" -lt 5 ] || \
+      publication_failed "batch #${b%% *} head did not read back after 5 attempts"
     sleep "${PROGRESS_PR_RETRY_DELAY:-2}"
   done
   echo "branch=$branch"
