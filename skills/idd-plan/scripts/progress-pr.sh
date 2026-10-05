@@ -170,6 +170,7 @@ merge_default() {
   # Explicit options keep ff-only, squash, signing, autostash and branch options
   # from changing this mechanical import into another operation.
   if ! git -c "branch.$branch.mergeOptions=" -c rerere.enabled=false merge -q --no-edit \
+    -m "docs(progress): import the default branch" \
     --ff --no-squash --commit --no-autostash --no-gpg-sign --no-verify-signatures -s ort "origin/$default"; then
     [ -z "$(git ls-files -u)" ] || conflict=true
     if git rev-parse -q --verify MERGE_HEAD >/dev/null; then
