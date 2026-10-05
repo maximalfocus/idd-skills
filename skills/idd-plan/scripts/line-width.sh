@@ -89,7 +89,10 @@ done
 # The content side of the measured range, and its index or tree entry.
 right_side() { # $1 = path
   if [ "$rev" = --cached ]; then git cat-file blob ":$1"
-  elif [ -n "$measured" ]; then cat -- "$1" 2>/dev/null || true
+  elif [ -n "$measured" ]; then
+    # git diff shows a symlink's link text, never the target it points at.
+    if [ -L "$1" ]; then readlink -- "$1" 2>/dev/null || true
+    else cat -- "$1" 2>/dev/null || true; fi
   else git cat-file blob "$rev:$1"; fi
 }
 entry_of() { # $1 = path

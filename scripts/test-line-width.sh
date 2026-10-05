@@ -172,6 +172,19 @@ git -C "$tmp/repo" update-index --add --cacheinfo \
   "160000,1111111111111111111111111111111111111111,module"
 passes "a submodule whose objects are absent locally" "$tip" --cached
 
+# A symlink's width is its link text, the content git diff shows, not its target's; a
+# binary target must not exempt it in the working-tree default.
+symdir="$(wide s 110)"
+mkdir -p "$tmp/repo/$symdir"
+printf '\000\000' > "$tmp/repo/$symdir/blob"
+symtip="$(git -C "$tmp/repo" rev-parse HEAD)"
+ln -s "$symdir/blob" "$tmp/repo/symlink-new"
+git -C "$tmp/repo" add -N symlink-new
+refuses "a wide symlink in the working tree" "symlink-new:1" "$symtip"
+git -C "$tmp/repo" reset -q -- symlink-new
+rm -f "$tmp/repo/symlink-new"
+rm -rf "$tmp/repo/$symdir"
+
 # Batch encoding cases into one tree per width, keeping the locale/mode matrix small.
 encoding="$tmp/encoding"
 git init -q -b main "$encoding"
