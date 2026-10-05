@@ -466,6 +466,8 @@ esac
 head_oid="$(jq -r .headRefOid <<<"$review")"
 git fetch -q --prune origin
 tracker_batch "$head_oid"
+# A reviewed head can carry wide rows the local push gate never saw.
+bash "$here/line-width.sh" check "origin/$default" "$head_oid" >/dev/null
 local_oid=""
 if git show-ref --verify --quiet "refs/heads/$branch"; then
   local_oid="$(git rev-parse "refs/heads/$branch")"
