@@ -128,5 +128,140 @@ git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md notes.md
 # --root reads every tracked line, legacy included.
 refuses "legacy debt under --root" "moved.md:2" --root
 refuses "an unknown mode" "usage:" --root --cached
+refuses "a diff option passed as REV" "Needed a single revision" --root --name-only
+
+# Declarations preserve spaces and Git magic; unrelated paths remain gated.
+git -C "$tmp/repo" reset -q --hard HEAD
+printf 'Formatter-owned: `generated files/`\n' > "$rules"
+printf '%0101d\n' 0 > "$tmp/repo/generated"
+commit "test: keep a spaced exemption narrow"
+refuses "a space-split exemption" "generated:1" "$tip"
+printf 'short\n' > "$tmp/repo/generated"
+mkdir -p "$tmp/repo/generated files"
+printf '%0101d\n' 0 > "$tmp/repo/generated files/output.txt"
+commit "test: exempt the actual spaced path"
+passes "the declared path with spaces" "$tip"
+printf 'Formatter-owned: `:(glob)generated files/*.txt`\n' > "$rules"
+commit "test: use pathspec magic"
+passes "a glob magic declaration" "$tip"
+printf 'Formatter-owned: `:(exclude)generated`\n' > "$rules"
+git -C "$tmp/repo" add CLAUDE.md
+refuses "a negative formatter pathspec" "must be positive" "$tip" --cached
+git -C "$tmp/repo" restore --source=HEAD --staged --worktree CLAUDE.md
+
+# Attributes cannot turn plain text into a width exemption.
+printf 'generated -diff\n' > "$tmp/repo/.gitattributes"
+printf '%0101d\n' 0 > "$tmp/repo/generated"
+commit "test: disguise plain text as binary"
+refuses "text with a binary diff attribute" "generated:1" "$tip"
+refuses "text with a binary diff attribute in the index" "generated:1" "$tip" --cached
+refuses "text with a binary diff attribute at bootstrap" "generated:1" --root
+printf 'short\n' > "$tmp/repo/generated"
+printf 'blob.bin diff\n' >> "$tmp/repo/.gitattributes"
+commit "test: force a binary diff"
+passes "actual binary content even with the diff attribute" "$tip"
+
+# Unusual names cannot hide a line, and rename detection still ignores legacy debt.
+printf '%0101d\n' 0 > "$tmp/repo/odd"$'\t\n'"name.txt"
+commit "test: add a wide line under an unusual name"
+refuses "a tab and newline in the filename" "over 100 characters:" "$tip"
+git -C "$tmp/repo" rm -q -- "odd"$'\t\n'"name.txt"
+commit "test: remove the unusual file"
+passes "only exempt files and unchanged legacy debt" "$tip"
+git -C "$tmp/repo" update-index --add --cacheinfo \
+  "160000,1111111111111111111111111111111111111111,module"
+passes "a submodule whose objects are absent locally" "$tip" --cached
+
+# A symlink's width is its link text, the content git diff shows, not its target's; a
+# binary target must not exempt it in the working-tree default.
+symdir="$(wide s 110)"
+mkdir -p "$tmp/repo/$symdir"
+printf '\000\000' > "$tmp/repo/$symdir/blob"
+symtip="$(git -C "$tmp/repo" rev-parse HEAD)"
+ln -s "$symdir/blob" "$tmp/repo/symlink-new"
+git -C "$tmp/repo" add -N symlink-new
+refuses "a wide symlink in the working tree" "symlink-new:1" "$symtip"
+git -C "$tmp/repo" reset -q -- symlink-new
+rm -f "$tmp/repo/symlink-new"
+rm -rf "$tmp/repo/$symdir"
+
+# working-tree-encoding gives git diff a converted worktree side; scanning the raw
+# worktree bytes must not exempt a wide line in the working-tree default.
+printf 'enc.txt working-tree-encoding=UTF-16\n' > "$tmp/repo/.gitattributes"
+{ printf '\377\376'
+  for ((i = 0; i < 101; i++)); do printf 'x\000'; done
+  printf '\n\000'; } > "$tmp/repo/enc.txt"
+commit "test: add a UTF-16 encoded file"
+encbase="$(git -C "$tmp/repo" rev-parse HEAD)"
+{ printf '\377\376'
+  for ((i = 0; i < 101; i++)); do printf 'x\000'; done
+  printf '\n\000'
+  for ((i = 0; i < 101; i++)); do printf 'y\000'; done
+  printf '\n\000'; } > "$tmp/repo/enc.txt"
+refuses "a wide UTF-16 worktree line" "enc.txt:2" "$encbase"
+git -C "$tmp/repo" checkout -q HEAD -- enc.txt
+
+# The measured side is what git diff shows: a symlinked CLAUDE.md contributes its link
+# text, not the declaration in the file it points at, which would exempt everything.
+clbase="$(git -C "$tmp/repo" rev-parse HEAD)"
+printf 'Formatter-owned: `*`\n' > "$tmp/repo/symlink-rules.md"
+ln -sf symlink-rules.md "$tmp/repo/CLAUDE.md"
+printf '%0101d\n' 0 > "$tmp/repo/symlinked.txt"
+git -C "$tmp/repo" add -N symlinked.txt
+refuses "a declaration behind a symlinked CLAUDE.md" "symlinked.txt:1" "$clbase"
+git -C "$tmp/repo" reset -q -- symlinked.txt
+rm -f "$tmp/repo/symlinked.txt" "$tmp/repo/symlink-rules.md" "$tmp/repo/CLAUDE.md"
+git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md
+
+# Batch encoding cases into one tree per width, keeping the locale/mode matrix small.
+encoding="$tmp/encoding"
+git init -q -b main "$encoding"
+git -C "$encoding" commit -q --allow-empty -m 'chore: seed encoding tests'
+encoding_base="$(git -C "$encoding" rev-parse HEAD)"
+encoding_check() { # check both status and the complete path/line diagnostic list
+  local output actual status=0
+  output="$(cd "$encoding" && bash "$script" check "$@" 2>&1)" || status=$?
+  actual="$(printf '%s\n' "$output" | sed -n 's/^over 100 characters: //p')"
+  [ "$status" = "$((width - 100))" ] && [ "$actual" = "$expected" ] || {
+    echo "encoding check failed ($test_locale, $*): $status / $output" >&2; exit 1; }
+}
+bad_path=$'caf\351.txt' # put it in the index: some filesystems reject non-UTF-8 names
+for width in 100 101; do
+  expected='"caf\351.txt":2'; line=1
+  printf 'short\n' > "$encoding/encoded.txt"
+  # Valid 2/3/4-byte scalars, overlong, surrogate, out-of-range, truncated, lone byte,
+  # and an invalid prefix followed by a valid sequence. Each row states its character count.
+  while read -r count octets; do
+    { printf '%0*d' "$((width - count))" 0; printf '%b\n' "$octets"; } \
+      >> "$encoding/encoded.txt"
+    line=$((line + 1)); expected="$expected"$'\n'"encoded.txt:$line"
+  done <<'OCTETS'
+1 \302\200
+1 \340\240\200
+1 \364\217\277\277
+2 \300\257
+3 \355\240\200
+4 \364\220\200\200
+2 \342\202
+1 \351
+2 \342\303\251
+OCTETS
+  printf '# caf\351 short\n' > "$encoding/CLAUDE.md"
+  # NUL at offset 8000 is outside the binary sample; it must still count once.
+  { for ((i = 0; i < 4000; i++)); do printf 'a\n'; done
+    printf '\000%0*d\n' "$((width - 1))" 0; } > "$encoding/late-nul.txt"
+  expected="$expected"$'\n''late-nul.txt:4001'
+  git -C "$encoding" add encoded.txt CLAUDE.md late-nul.txt
+  blob="$(printf 'short\n%0*d\n' "$width" 0 | git -C "$encoding" hash-object -w --stdin)"
+  git -C "$encoding" update-index --add --cacheinfo "100644,$blob,$bad_path"
+  tree="$(git -C "$encoding" write-tree)"
+  rev="$(git -C "$encoding" commit-tree "$tree" -p HEAD -m 'docs: add encoding fixtures')"
+  [ "$width" != 100 ] || expected=""
+  for test_locale in C en_SG.UTF-8; do
+    LC_ALL="$test_locale" encoding_check "$encoding_base" --cached
+    LC_ALL="$test_locale" encoding_check "$encoding_base" "$rev"
+    LC_ALL="$test_locale" encoding_check --root "$rev"
+  done
+done
 
 echo "line width gate valid"

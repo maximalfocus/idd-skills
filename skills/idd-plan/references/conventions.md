@@ -65,13 +65,16 @@ A `{project}-prd` never integrates on `dev`; its tracker and contract changes me
 ## Line width
 
 No change adds a line over 100 characters to a tracked text file — prose, code, and configuration
-alike; characters are counted, not bytes. A Markdown table row is exempt: it is one line that cannot
-be rewrapped, so its cells answer to their own budgets, such as the tracker gate's per-cell word
-budget in `PROGRESS.md`, rather than to the width. A path listed on the repository's
-`Formatter-owned:` line in `AGENTS.md` or `CLAUDE.md` takes the width its tool gives it instead: a
-language formatter at the width the repository configures and checks, or a generator, package
-manager, or recorder whose output nobody lays out by hand. The line lists git pathspec patterns and
-may continue on lines holding only backticked patterns:
+alike; characters are counted, not bytes, and the count never depends on the locale: a valid UTF-8
+sequence counts once and every byte outside one counts once. A Markdown table row is exempt: it is
+one line that cannot be rewrapped, so its cells answer to their own budgets, such as the tracker
+gate's per-cell word budget in `PROGRESS.md`, rather than to the width. A path listed on the
+repository's `Formatter-owned:` line in `AGENTS.md` or `CLAUDE.md` takes the width its tool gives it
+instead: a language formatter at the width the repository configures and checks, or a generator,
+package manager, or recorder whose output nobody lays out by hand. The line lists backticked
+positive Git pathspec patterns (including paths with spaces) and may continue on lines holding only
+backticked patterns. Exclude pathspecs are refused; use explicit positive patterns for the files the
+tool owns:
 
 ```
 Formatter-owned: `*.py` `*.go` `package-lock.json` `tests/fixtures/`
