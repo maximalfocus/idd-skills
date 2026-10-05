@@ -185,6 +185,34 @@ git -C "$tmp/repo" reset -q -- symlink-new
 rm -f "$tmp/repo/symlink-new"
 rm -rf "$tmp/repo/$symdir"
 
+# working-tree-encoding gives git diff a converted worktree side; scanning the raw
+# worktree bytes must not exempt a wide line in the working-tree default.
+printf 'enc.txt working-tree-encoding=UTF-16\n' > "$tmp/repo/.gitattributes"
+{ printf '\377\376'
+  for ((i = 0; i < 101; i++)); do printf 'x\000'; done
+  printf '\n\000'; } > "$tmp/repo/enc.txt"
+commit "test: add a UTF-16 encoded file"
+encbase="$(git -C "$tmp/repo" rev-parse HEAD)"
+{ printf '\377\376'
+  for ((i = 0; i < 101; i++)); do printf 'x\000'; done
+  printf '\n\000'
+  for ((i = 0; i < 101; i++)); do printf 'y\000'; done
+  printf '\n\000'; } > "$tmp/repo/enc.txt"
+refuses "a wide UTF-16 worktree line" "enc.txt:2" "$encbase"
+git -C "$tmp/repo" checkout -q HEAD -- enc.txt
+
+# The measured side is what git diff shows: a symlinked CLAUDE.md contributes its link
+# text, not the declaration in the file it points at, which would exempt everything.
+clbase="$(git -C "$tmp/repo" rev-parse HEAD)"
+printf 'Formatter-owned: `*`\n' > "$tmp/repo/symlink-rules.md"
+ln -sf symlink-rules.md "$tmp/repo/CLAUDE.md"
+printf '%0101d\n' 0 > "$tmp/repo/symlinked.txt"
+git -C "$tmp/repo" add -N symlinked.txt
+refuses "a declaration behind a symlinked CLAUDE.md" "symlinked.txt:1" "$clbase"
+git -C "$tmp/repo" reset -q -- symlinked.txt
+rm -f "$tmp/repo/symlinked.txt" "$tmp/repo/symlink-rules.md" "$tmp/repo/CLAUDE.md"
+git -C "$tmp/repo" checkout -q HEAD -- CLAUDE.md
+
 # Batch encoding cases into one tree per width, keeping the locale/mode matrix small.
 encoding="$tmp/encoding"
 git init -q -b main "$encoding"

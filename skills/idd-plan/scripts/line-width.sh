@@ -35,10 +35,30 @@ if [ "$base" != --root ]; then
   base="$(git rev-parse --verify --end-of-options "$base^{commit}")"
 fi
 
+# git diff shows a symlink's link text and a worktree file through its filters and
+# working-tree encoding. Read the same content for the measured side; -w stores the
+# object in the scratch store, so the repository's own objects stay untouched.
+scratch="$(mktemp -d)"; trap 'rm -rf "$scratch"' EXIT
+scratch_objects="$scratch/objects"; mkdir -p "$scratch_objects"
+real_objects="$(git rev-parse --path-format=absolute --git-path objects)"
+worktree_side() { # $1 = path; the content git diff shows for the worktree side
+  if [ -L "$1" ]; then readlink -- "$1" 2>/dev/null || true
+  elif [ -r "$1" ]; then
+    local oid
+    oid="$(GIT_OBJECT_DIRECTORY="$scratch_objects" \
+      GIT_ALTERNATE_OBJECT_DIRECTORIES="$real_objects" \
+      git hash-object -w --path="$1" --stdin < "$1" 2>/dev/null || true)"
+    [ -n "$oid" ] || return 0
+    GIT_OBJECT_DIRECTORY="$scratch_objects" \
+    GIT_ALTERNATE_OBJECT_DIRECTORIES="$real_objects" \
+    git cat-file blob "$oid" 2>/dev/null || true
+  fi
+}
+
 declared() { # $1 = conventions file as the checked side holds it; prints its owned paths
   local text
   if [ "$rev" = --cached ]; then text="$(git show ":$1" 2>/dev/null || true)"
-  elif [ -n "$measured" ]; then text="$(cat -- "$1" 2>/dev/null || true)"
+  elif [ -n "$measured" ]; then text="$(worktree_side "$1")"
   else text="$(git show "$rev:$1" 2>/dev/null || true)"; fi
   printf '%s\n' "$text" | awk '
     /^[[:space:]]*Formatter-owned:/ {
@@ -89,10 +109,7 @@ done
 # The content side of the measured range, and its index or tree entry.
 right_side() { # $1 = path
   if [ "$rev" = --cached ]; then git cat-file blob ":$1"
-  elif [ -n "$measured" ]; then
-    # git diff shows a symlink's link text, never the target it points at.
-    if [ -L "$1" ]; then readlink -- "$1" 2>/dev/null || true
-    else cat -- "$1" 2>/dev/null || true; fi
+  elif [ -n "$measured" ]; then worktree_side "$1"
   else git cat-file blob "$rev:$1"; fi
 }
 entry_of() { # $1 = path
@@ -106,7 +123,6 @@ entry_of() { # $1 = path
 # Classify changed blobs by their contents, not .gitattributes' diff presentation, so an
 # attribute cannot turn plain text into a width exemption and a real binary stays out.
 # NUL-delimited names preserve whitespace, tabs, newlines, and pathspec metacharacters.
-scratch="$(mktemp -d)"; trap 'rm -rf "$scratch"' EXIT
 git diff --no-ext-diff --no-textconv --find-renames --name-only -z --diff-filter=ACMRT \
   "${range[@]}" -- . ${excludes[@]+"${excludes[@]}"} > "$scratch/paths"
 while IFS= read -r -d '' path; do
