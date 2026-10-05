@@ -15,8 +15,8 @@ resynchronization. After bootstrap the PRD default branch changes only through a
 configured/shared hooks, symlinked hooks, or an existing foreign hook, it leaves them untouched,
 warns that the guard is NOT installed, and continues under the skill rules. Standalone acceptance
 requires an authorized reconcile first when a batch is open. Bootstrap applies squash-only settings
-automatically; the protection script defers the ruleset on a private repository, and publication
-reruns it so GitHub enforces the ruleset once the repository is public. Publication is a separate
+automatically; because the PRD stays private, the protection script defers the ruleset (branch and
+PR discipline only). Publication is a separate
 explicit visibility operation, never an implicit consequence of implementation or acceptance.
 
 Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocation repeatedly selects, creates, implements, verifies, lands, and reconciles one issue at a time. It stops rather than bypassing ambiguity, residual acceptance, red CI/reviews, external prerequisites, or material product decisions.

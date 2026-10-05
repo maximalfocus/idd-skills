@@ -57,7 +57,7 @@ failure. Then read each artifact against the identity statement its row makes. N
 golden or compare input-output pairs; a product whose primary standard needs that is a CDD project,
 and acceptance stops at naming the artifact. Also run the sibling `idd-plan/scripts/prd-fold-gate.sh
 <contract-path>/PRD.md <contract-path>/PROGRESS.md`: a validated slice that still owns a PRD section
-is reported as `PRD slices unfolded` with its size, a user `docs(prd)` PR and never a product
+is reported as `PRD slices unfolded` with its size, a user's `docs(prd)` PR and never a product
 failure; a partitioned contract also runs `idd-plan/scripts/contract.sh gate <contract-path>`,
 reported the same way.
 
