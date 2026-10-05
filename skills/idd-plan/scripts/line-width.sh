@@ -39,8 +39,8 @@ fi
 # working-tree encoding. Read the same content for the measured side; -w stores the
 # object in the scratch store, so the repository's own objects stay untouched.
 scratch="$(mktemp -d)"; trap 'rm -rf "$scratch"' EXIT
-scratch_objects="$scratch/objects"; mkdir -p "$scratch_objects"
-real_objects="$(git rev-parse --path-format=absolute --git-path objects)"
+scratch_objects="$scratch/objects"
+real_objects=
 worktree_side() { # $1 = path; the content git diff shows for the worktree side
   if [ -L "$1" ]; then readlink -- "$1" 2>/dev/null || true
   elif [ -r "$1" ]; then
@@ -83,6 +83,15 @@ else
   if [ -z "$given_rev" ] && [ -n "$(git diff --name-only "$rev" -- . 2>/dev/null)" ]; then
     range=("$merge_base"); measured=" (working tree)"
   fi
+fi
+
+# Only the working-tree mode reads a worktree file, so resolve the repository's object
+# directory as the scratch store's alternate only then, making the possibly-relative
+# path absolute without relying on a newer (Git 2.31) rev-parse option.
+if [ -n "$measured" ]; then
+  mkdir -p "$scratch_objects"
+  real_objects="$(git rev-parse --git-path objects)"
+  case "$real_objects" in /*) ;; *) real_objects="$top/$real_objects" ;; esac
 fi
 
 # Owned paths are Git pathspec patterns: keep each whole, spaces included, and refuse the
