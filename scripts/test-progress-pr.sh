@@ -1001,4 +1001,14 @@ GIT
   fi
 done
 
+# A direct update after publication must also pass width before the reviewed merge.
+fresh
+printf 'row\n' >> "$prd/PROGRESS.md"
+run push "$prd" 'docs(progress): initial row' PROGRESS.md >/dev/null
+printf '%0101d\n' 0 >> "$prd/PROGRESS.md"
+git -C "$prd" commit -qam 'docs(progress): remote wide row'
+git -C "$prd" push -q origin progress/batch
+refuses "a wide reviewed batch head" "over 100 characters: PROGRESS.md:3" \
+  run merge "$prd" 'docs(progress): milestone'
+
 echo "IDD progress batch valid"

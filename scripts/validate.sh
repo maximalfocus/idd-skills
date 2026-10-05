@@ -49,7 +49,8 @@ has_phrase "$root/CONSTITUTION.md" "$shared" || {
 has_phrase "$root/CLAUDE.md" "$shared" || {
   echo "CLAUDE.md must take its conventions from the shared source" >&2; exit 1; }
 for script in skills/idd-land/scripts/land.sh skills/idd-plan/scripts/progress-pr.sh \
-  skills/idd-plan/scripts/init-prd.sh skills/idd-evolve/scripts/propose.sh \
+  skills/idd-plan/scripts/init-prd.sh skills/idd-plan/scripts/init-implementation.sh \
+  skills/idd-evolve/scripts/propose.sh \
   skills/idd-evolve/scripts/land-evolution.sh; do
   grep -q 'line-width.sh' "$root/$script" || {
     echo "$script must gate the shared line width" >&2; exit 1; }

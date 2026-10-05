@@ -48,6 +48,8 @@ else
     git -C "$impl" add AGENTS.md
   fi
   git -C "$impl" commit -qm "docs: establish the implementation repository"
+  # Gate the first push, so the new repository never starts with a line landing would refuse.
+  (cd "$impl" && bash "$here/line-width.sh" check --root HEAD >/dev/null)
   git -C "$impl" push -q -u origin main
   if [ "$single" = false ]; then
     git -C "$impl" switch -q -c dev
