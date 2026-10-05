@@ -51,7 +51,7 @@ chmod +x "$tmp/bin/git"
 bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd >/dev/null 2>&1
 before="$(git --git-dir="$tmp/remote.git" rev-parse main)"
 printf 'later row\n' >> "$tmp/demo-prd/PROGRESS.md"
-git -C "$tmp/demo-prd" commit -qam 'progress: later row'
+git -C "$tmp/demo-prd" commit -qam 'docs(progress): later row'
 if err="$(bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd 2>&1)"; then
   echo "Bootstrap retry must not push a post-bootstrap commit" >&2; exit 1
 fi

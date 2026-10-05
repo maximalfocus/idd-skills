@@ -39,7 +39,8 @@ failures="$(awk -v section_budget="$SECTION_WORD_BUDGET" -v total_budget="$TOTAL
 
 if [ -n "$failures" ]; then
   printf '%s\n' "$failures" >&2
-  echo "FAIL: prd size gate ($prd): fold validated slices into their requirements, compress, or narrow the domain boundary and state the remainder as a non-goal (a prd commit)" >&2
+  echo "FAIL: prd size gate ($prd): fold validated slices into their requirements, compress," \
+    "or narrow the domain boundary and state the remainder as a non-goal (a docs(prd) PR)" >&2
   exit 1
 fi
 printf 'PASS: prd size gate (%s)\n' "$prd"

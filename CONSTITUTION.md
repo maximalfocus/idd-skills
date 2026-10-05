@@ -29,7 +29,7 @@ and the local guard hook. It never changes repository content, remote refs, issu
 Reconcile mode may update only its existing `PROGRESS.md` from verified live lifecycle evidence,
 behind the bundled tracker gate, through one open progress-batch PR squash-merged only at a
 milestone, and never `PRD.md`: stale requirement prose is reported and repaired only by a user's
-`prd` commit. `/idd-issue` creates one implementation-ready GitHub issue from evidence after
+`docs(prd)` PR. `/idd-issue` creates one implementation-ready GitHub issue from evidence after
 explicit authorization; it does not implement, branch, or open a PR. `/idd-implement` delivers one
 well-scoped live issue through native verification and a linked PR. `/idd` is the entry point: it
 routes one request to the one phase that owns it and adds no authority of its own, so a phase that

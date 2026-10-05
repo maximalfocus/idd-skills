@@ -68,7 +68,8 @@ done <<<"$validated"
 
 if [ -n "$failures" ]; then
   printf '%s' "$failures" >&2
-  echo "FAIL: prd fold gate ($prd): move each section's acceptance into the requirement it extends and collapse the slice to one row (a prd commit)" >&2
+  echo "FAIL: prd fold gate ($prd): move each section's acceptance into the requirement it" \
+    "extends and collapse the slice to one row (a docs(prd) PR)" >&2
   exit 1
 fi
 printf 'PASS: prd fold gate (%s)\n' "$prd"

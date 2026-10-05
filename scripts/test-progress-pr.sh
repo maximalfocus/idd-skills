@@ -433,6 +433,7 @@ run sync "$prd" >/dev/null
 grep -qx 'new requirement' "$prd/PRD.md"
 [ "$(git -C "$tmp/origin.git" rev-parse "$branch")" = "$remote_before" ]
 local_merge="$(git -C "$prd" rev-parse HEAD)"
+[ "$(git -C "$prd" log -1 --format=%s)" = "docs(progress): import the default branch" ]
 run sync "$prd" >/dev/null # local-only mechanical merges must remain resumable
 [ "$(git -C "$prd" rev-parse HEAD)" = "$local_merge" ]
 printf 'next row\n' >> "$prd/PROGRESS.md"
