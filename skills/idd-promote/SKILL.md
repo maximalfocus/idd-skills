@@ -20,8 +20,8 @@ current checkout. `--open-only` opens the PR for review and stops; a rerun resum
 ## Orient
 
 1. Resolve this installed skill directory and the sibling `idd-plan` skill; a missing sibling stops.
-2. Run `idd-plan/scripts/protect-main.sh show` and print its `integration=… release=…` line first,
-   so the user sees which branch is which before anything changes. `release=none` means the
+2. Run `idd-plan/scripts/integration-branch.sh show` and print its `integration=… release=…` line
+   first, so the user sees which branch is which before anything changes. `release=none` means the
    repository opted out with `Integration-branch: main` or was never integrated: stop and say so.
 3. Read root `AGENTS.md`/`CLAUDE.md`. A project's own release policy (required approvals, a release
    checklist, a freeze window) governs whether to merge now; when it demands review first, use
@@ -29,12 +29,13 @@ current checkout. `--open-only` opens the PR for review and stops; a rerun resum
 
 ## Promote
 
-Run the bundled `scripts/promote.sh [--open-only] [OWNER/REPO]`. It verifies both branches'
-protection, reports `NOTHING to promote` when `main` already contains `dev`, and otherwise opens or
-reuses the one open `dev`→`main` PR titled `chore(release): promote dev to main` (N-2 for an
-issue-less PR) whose body lists the promoted commit subjects. It merges only a non-draft PR in
-`CLEAN` merge state without requested changes, as a merge commit bound to the reviewed head, with
-subject `<title> (#<PR>)`, then verifies the commit's second parent is that head.
+Run the bundled `scripts/promote.sh [--open-only] [OWNER/REPO]`. It checks no branch protection (the
+user's repositories have none, 2026-10-07), reports `NOTHING to promote` when `main` already
+contains `dev`, and otherwise opens or reuses the one open `dev`→`main` PR titled `chore(release):
+promote dev to main` (N-2 for an issue-less PR) whose body lists the promoted commit subjects. It
+merges only a non-draft PR in `CLEAN` merge state without requested changes, as a merge commit bound
+to the reviewed head, with subject `<title> (#<PR>)`, then verifies the commit's second parent is
+that head.
 
 ## GATE — explicit, reviewed, never rewritten
 

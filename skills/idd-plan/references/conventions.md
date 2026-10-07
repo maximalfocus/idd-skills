@@ -38,23 +38,20 @@ and name the rule they refuse; the rest is review. Cite the rule IDs in issues a
 ## Default branch
 
 The default branch changes only through a squash-merged pull request, and nothing force-pushes.
-Bootstrap pushes a new repository's single initial commit, then runs the bundled
-`idd-plan/scripts/protect-main.sh apply`: pull request required, squash only with the PR title and
-body as the commit, linear history, no force-push, no deletion, no bypass. GitHub Free enforces
-that ruleset only on a public repository, so a private one keeps the settings plus branch and pull
-request discipline, and becoming public requires rerunning `apply`. Landing runs `verify` and
-stops on drift.
+Bootstrap pushes a new repository's single initial commit; every later change goes through a
+reviewed pull request. That is practice, not enforcement: the user's repositories have no branch
+protection (their decision, 2026-10-07), so no step applies, checks, or suggests it.
 
 An implementation repository integrates on `dev`: bootstrap pushes the initial commit to `main`,
 creates `dev` from it, and makes `dev` the default branch, so every issue pull request targets and
-squash-merges into `dev` and `Closes #N` still closes on merge. `main` is the release branch: a
-second ruleset lets it change only through a merge-commit pull request from `dev`, opened and merged
-by the explicit, optional `/idd-promote`; a squash or rebase there would make `main` diverge from
-`dev`. `protect-main.sh ensure` begins every IDD flow and prints `integration=<branch>
+squash-merges into `dev` and `Closes #N` still closes on merge. `main` is the release branch: it
+changes only through a merge-commit pull request from `dev`, opened and merged by the explicit,
+optional `/idd-promote`; a squash or rebase there would make `main` diverge from `dev`.
+`integration-branch.sh ensure` begins every IDD flow and prints `integration=<branch>
 release=<main|none>`. In a repository not yet integrated it creates `dev` from `main` whatever
-`main`'s history, makes it the default, retargets open pull requests from `main`, applies both
-rulesets, and switches a clean checkout on `main` to `dev`. A root `AGENTS.md` or `CLAUDE.md` line
-opts out and keeps `main` the single default branch:
+`main`'s history, makes it the default (allowing the merge commits promotion needs), retargets open
+pull requests from `main`, and switches a clean checkout on `main` to `dev`. A root `AGENTS.md` or
+`CLAUDE.md` line opts out and keeps `main` the single default branch:
 
 ```
 Integration-branch: main
@@ -88,14 +85,10 @@ tree while it is dirty — so running it before committing cannot pass on the pr
 ## Adopting an existing repository
 
 A repository created before these conventions adopts them from its next change; nothing rewrites
-its history or its legacy lines. Landing stops before any mutation until adoption is complete:
+its history or its legacy lines. The first IDD flow in an implementation repository that has not
+opted out runs `ensure`, which integrates it on `dev`. Before landing:
 
-1. **Protection.** `apply` changes repository settings, so it runs once per repository on the
-   user's explicit instruction, never as a landing repair: run the bundled
-   `idd-plan/scripts/protect-main.sh apply <owner>/<repo>` for the implementation repository and
-   its `{project}-prd`, then `verify` each. The exception is integration: the first IDD flow in an
-   implementation repository that has not opted out runs `ensure`, which applies both rulesets.
-2. **Formatter-owned paths.** Before the first landing that adds formatter-laid lines over 100
+1. **Formatter-owned paths.** Before the first landing that adds formatter-laid lines over 100
    characters, declare those paths in a reviewed change to `AGENTS.md` or `CLAUDE.md`. A `Types:`
    line binds nothing any more and may go in the same change.
 3. **Open pull requests.** Retitle each to its issue title (N-2) and declare an N-4

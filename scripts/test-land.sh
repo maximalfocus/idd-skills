@@ -60,14 +60,13 @@ elif [ "$1 $2" = "issue view" ]; then
   esac
 elif [ "$1 $2" = "issue close" ]; then echo CLOSED > "$root/issue-state"
 elif [ "$1" = api ]; then
+  # Landing reads no branch protection or merge settings (user, 2026-10-07).
+  case "$*" in *rulesets*|*allow_squash_merge*|*--method*)
+    echo "unexpected protection call: gh $*" >&2; exit 2;; esac
   key="${*: -1}"
   case "$key" in
     .commit.message) cat "$root/merge-subject";;
-    .visibility) echo private;;
     .default_branch) echo main;;
-    *allow_squash_merge*)
-      if [ -f "$root/drift" ]; then echo "true true true false x y"
-      else echo "true false false true PR_TITLE PR_BODY"; fi;;
     *) echo 1;;
   esac
 else echo "unexpected gh: $*" >&2; exit 2
@@ -92,7 +91,7 @@ fresh() { # rebuild the work/origin pair and reset every recorded state file
   printf 'Delivery-Type: feat\n' > "$tmp/pr-body"
   printf 'Test the landing subject' > "$tmp/issue-title"
   printf 'Test the landing subject' > "$tmp/pr-title"; echo issue/3-test > "$tmp/pr-head"
-  : > "$tmp/merge-subject"; : > "$tmp/merge-count"; rm -f "$tmp/drift"
+  : > "$tmp/merge-subject"; : > "$tmp/merge-count"
 }
 
 run() { PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 >/dev/null; }
@@ -149,10 +148,6 @@ printf 'Test the landing subject' > "$tmp/pr-title"
 echo issue/4-test > "$tmp/pr-head"; refuses "the branch of another issue" "(N-3)"
 echo feature/test > "$tmp/pr-head"; refuses "a branch outside the naming convention" "(N-3)"
 echo issue/3-test > "$tmp/pr-head"
-
-# The default branch changes only through a squash-merged pull request.
-touch "$tmp/drift"
-refuses "an unprotected default branch" "Adopting an existing repository"; rm "$tmp/drift"
 
 # No change lands a line over 100 characters.
 printf '%0101d\n' 0 >> file; git commit -qam wide; git push -q origin issue/3-test

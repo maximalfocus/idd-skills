@@ -14,9 +14,9 @@ resynchronization. After bootstrap the PRD default branch changes only through a
 `progress-pr.sh sync` installs a local pre-push hook refusing a direct push to it. With
 configured/shared hooks, symlinked hooks, or an existing foreign hook, it leaves them untouched,
 warns that the guard is NOT installed, and continues under the skill rules. Standalone acceptance
-requires an authorized reconcile first when a batch is open. Bootstrap applies squash-only settings
-automatically; because the PRD stays private, the protection script defers the ruleset (branch and
-PR discipline only). Publication is a separate
+requires an authorized reconcile first when a batch is open. Bootstrap applies no branch protection
+(the user's repositories have none, 2026-10-07): branch and PR discipline is practice. Publication
+is a separate
 explicit visibility operation, never an implicit consequence of implementation or acceptance.
 
 Autonomous lifecycle: `/idd-auto <project-name-or-path>`. One explicit invocation repeatedly selects, creates, implements, verifies, lands, and reconciles one issue at a time. It stops rather than bypassing ambiguity, residual acceptance, red CI/reviews, external prerequisites, or material product decisions.
@@ -26,7 +26,7 @@ Across both lifecycles, IDD treats the PRD as one coherent design contract and p
 Every repository IDD manages — this methodology repository, each implementation repository, and
 its `{project}-prd` — shares one convention set, defined in
 `skills/idd-plan/references/conventions.md`: N-1..N-4 naming, a default branch that changes only
-through a squash-merged pull request (bootstrap applies `protect-main.sh`, landing verifies it),
+through a squash-merged pull request (practice; no branch protection, user 2026-10-07),
 and no added line over 100 characters outside Markdown table rows and the paths a repository
 declares `Formatter-owned:`; an existing repository adopts them once, as that file describes.
 Landing, tracker batches, and evolution proposals enforce it with the bundled scripts.
@@ -34,9 +34,10 @@ Landing, tracker batches, and evolution proposals enforce it with the bundled sc
 Branch strategy: an implementation repository integrates on `dev`, its GitHub default branch.
 Every issue PR targets `dev` and `/idd-land` squash-merges it there; `main` is the release branch,
 changed only by the explicit, optional `/idd-promote` through one merge-commit `dev`→`main` pull
-request. `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` start with `protect-main.sh ensure`,
-which prints `integration=… release=…` and integrates an existing repository on first use whatever
-`main`'s history: it creates `dev`, makes it default, retargets open PRs, and applies both rulesets.
+request. `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` start with
+`integration-branch.sh ensure`, which prints `integration=… release=…` and integrates an existing
+repository on first use whatever `main`'s history: it creates `dev`, makes it default (allowing the
+merge commits promotion needs), and retargets open PRs.
 A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts out. A `{project}-prd` and
 this methodology repository stay single-branch on `main`.
 
@@ -76,15 +77,16 @@ npx skills add maximalfocus/idd-skills --skill idd-issue
 ```
 
 Composite dependencies must be installed together. `idd-auto` requires `idd-plan`, `idd-issue`,
-`idd-implement`, `idd-land`, and `idd-acceptance`; `idd-implement`, `idd-land`, and
-`idd-acceptance` require `idd-plan`, which holds the shared conventions, line-width gate, and branch
-protection; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd`
+`idd-implement`, `idd-land`, and `idd-acceptance`; `idd-implement`, `idd-land`, and `idd-acceptance`
+require `idd-plan`, which holds the shared conventions, line-width gate, and integration-branch
+script; `idd-publish` requires `idd-plan`, `idd-issue`, `idd-implement`, and `idd-land`; `idd`
 routes to whichever sibling the request selects and needs that sibling installed. Installing the
 complete suite is the simplest safe choice. `idd-evolve` also requires an explicit or current
 `idd-skills` methodology checkout because it edits and validates that repository rather than its
-installed workflow definition. `idd-promote` requires `idd-plan` for branch protection.
+installed workflow definition. `idd-promote` requires `idd-plan` for the integration-branch script.
 
-Contributor validation runs offline with `bash scripts/validate.sh`; the protection tests require `jq` to evaluate API queries against JSON fixtures.
+Contributor validation runs offline with `bash scripts/validate.sh`; the integration-branch tests
+require `jq` to read the fake API's JSON bodies.
 
 ## Reviewed evolutions in another repository
 
@@ -141,9 +143,9 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `scripts/install.sh` — development-only cross-runner symlink installer
 - `scripts/test-install.sh` — isolated preflight, rollback, clean-install, and idempotency regression gate
 - `scripts/resolve-prd-pair.sh`, `scripts/init-prd.sh`, `scripts/land.sh`, `scripts/tracker-gate.sh`, `scripts/manifest.sh`, `scripts/prd-fold-gate.sh`, `scripts/prd-size-gate.sh`, `scripts/contract.sh` — checkout compatibility wrappers for bundled scripts
-- `scripts/line-width.sh`, `scripts/protect-main.sh` — checkout wrappers for the bundled width gate
-  and default-branch protection; `scripts/test-line-width.sh` and `scripts/test-protect-main.sh`
-  test them
+- `scripts/line-width.sh`, `scripts/integration-branch.sh` — checkout wrappers for the bundled
+  width gate and integration-branch script; `scripts/test-line-width.sh` and
+  `scripts/test-integration-branch.sh` test them
 - `scripts/test-land.sh` — isolated mock lifecycle, idempotency, and rewritten-source test
 - `scripts/test-tracker-gate.sh`, `scripts/test-manifest.sh`, `scripts/test-prd-fold-gate.sh`, `scripts/test-prd-size-gate.sh`, `scripts/test-contract.sh`, `scripts/test-static-gate.sh` — isolated tests for the tracker gate, the preserved-artifact manifest tooling, the PRD fold gate, the PRD size gate, the context contract tooling, and the acceptance static gate
 - `scripts/promote.sh`, `scripts/test-promote.sh` — checkout wrappers for the bundled promotion

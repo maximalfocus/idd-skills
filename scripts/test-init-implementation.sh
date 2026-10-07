@@ -36,25 +36,23 @@ case "$1 $2" in
       url."$MOCK_REMOTE".pushInsteadOf https://github.com/example/widget.git
     touch "$MOCK_CREATED" ;;
   "api --method")
+    # The one write is integrating on dev; no protection or other settings (user, 2026-10-07).
     body="$(cat)"
-    if [[ "$body" == *default_branch* ]]; then echo dev > "$MOCK_DEFAULT"
-    else touch "$MOCK_PROTECTED"; fi ;;
+    [ "$body" = '{"default_branch":"dev","allow_merge_commit":true}' ] || {
+      echo "unexpected write: $* $body" >&2; exit 1; }
+    echo dev > "$MOCK_DEFAULT" ;;
   "api repos/example/widget/branches/"*)
     git --git-dir="$MOCK_REMOTE" rev-parse -q --verify "refs/heads/${2##*/}" >/dev/null || {
       echo "gh: Branch not found (HTTP 404)" >&2; exit 1; } ;;
   "api repos/example/widget")
-    if [[ "$*" == *.visibility* ]]; then echo private
-    elif [[ "$*" == *.default_branch* ]]; then default
-    elif [ -f "$MOCK_PROTECTED" ] && [ "$(default)" = dev ]; then
-      echo "true true false true PR_TITLE PR_BODY"
-    elif [ -f "$MOCK_PROTECTED" ]; then echo "true false false true PR_TITLE PR_BODY"
-    else echo "true true true false COMMIT_OR_PR_TITLE COMMIT_MESSAGES"; fi ;;
+    if [[ "$*" == *.default_branch* ]]; then default
+    else echo "unexpected repository read: $*" >&2; exit 1; fi ;;
   *) echo "unexpected gh call: $*" >&2; exit 1 ;;
 esac
 EOF
 chmod +x "$tmp/bin/gh"
 export PATH="$tmp/bin:$PATH" MOCK_CREATED="$tmp/created" MOCK_PARENT="$tmp"
-export MOCK_REMOTE="$tmp/remotes/widget.git" MOCK_PROTECTED="$tmp/protected"
+export MOCK_REMOTE="$tmp/remotes/widget.git"
 export MOCK_DEFAULT="$tmp/default"
 output="$(bash "$init_implementation_script" "$tmp/widget-prd" 2>/dev/null)"
 grep -q "^implementation=$tmp/widget$" <<<"$output"
@@ -68,8 +66,6 @@ subject="$(git -C "$tmp/widget" log -1 --format=%s)"
 pushed="$(git --git-dir="$tmp/remotes/widget.git" rev-parse main)"
 [ "$pushed" = "$(git -C "$tmp/widget" rev-parse HEAD)" ] || {
   echo "the initial commit must be pushed to main" >&2; exit 1; }
-[ -f "$tmp/protected" ] || {
-  echo "bootstrap must protect the implementation default branch" >&2; exit 1; }
 grep -q '^integration=dev$' <<<"$output" || {
   echo "a new implementation repository must integrate on dev" >&2; exit 1; }
 [ "$(git -C "$tmp/widget" branch --show-current)" = dev ] || {
@@ -78,7 +74,7 @@ grep -q '^integration=dev$' <<<"$output" || {
   echo "dev must start at the initial commit" >&2; exit 1; }
 
 # --single-branch records the opt-out, so later phases never integrate on dev.
-rm -rf "$tmp/widget" "$tmp/created" "$tmp/protected" "$tmp/default" "$tmp/remotes/widget.git"
+rm -rf "$tmp/widget" "$tmp/created" "$tmp/default" "$tmp/remotes/widget.git"
 git init -q --bare "$tmp/remotes/widget.git"
 output="$(bash "$init_implementation_script" --single-branch "$tmp/widget-prd" 2>/dev/null)"
 grep -q '^integration=main$' <<<"$output" || { echo "--single-branch must keep main" >&2; exit 1; }
@@ -86,5 +82,6 @@ grep -q '^integration=main$' <<<"$output" || { echo "--single-branch must keep m
   echo "--single-branch must record the opt-out" >&2; exit 1; }
 ! git --git-dir="$tmp/remotes/widget.git" rev-parse -q --verify dev >/dev/null || {
   echo "--single-branch must not create dev" >&2; exit 1; }
-[ -f "$tmp/protected" ] || { echo "a single-branch bootstrap must still protect main" >&2; exit 1; }
+[ ! -f "$tmp/default" ] || {
+  echo "--single-branch must not change the default branch" >&2; exit 1; }
 echo "IDD implementation bootstrap valid"

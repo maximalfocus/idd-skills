@@ -47,6 +47,6 @@ fi
 
 readback="$(gh repo view "$repo" --json nameWithOwner,visibility,url --jq '[.nameWithOwner,.visibility,.url]|@tsv')"
 [[ "$readback" == "$repo"$'\tPRIVATE\t'* ]] || { echo "Private remote verification failed: $readback" >&2; exit 1; }
-# From here on the default branch changes only through a squash-merged pull request.
-bash "$here/protect-main.sh" apply "$repo" >&2
+# From here on the default branch changes through a squash-merged pull request, by practice:
+# no branch protection is applied (user, 2026-10-07).
 printf 'repository=%s\ncommit=%s\n' "${readback##*$'\t'}" "$(git -C "$target" rev-parse HEAD)"

@@ -13,7 +13,7 @@ repo="$1"; issue="$2"; pr="$3"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 plan_scripts="$here/../../idd-plan/scripts"
-[ -f "$plan_scripts/line-width.sh" ] && [ -f "$plan_scripts/protect-main.sh" ] || {
+[ -f "$plan_scripts/line-width.sh" ] || {
   echo "Sibling idd-plan scripts are missing: incomplete installation" >&2; exit 1; }
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repository" >&2; exit 1; }
 cd "$root"
@@ -91,13 +91,6 @@ if [ "$state" = OPEN ]; then
   pr_title="$(gh pr view "$pr" --repo "$repo" --json title --jq .title)"
   [ "$pr_title" = "$issue_title" ] || {
     echo "PR title differs from the issue title (N-2); edit the issue first, then match the PR" >&2
-    exit 1
-  }
-  # Its stderr names any drift and the apply that repairs it; apply changes repository
-  # settings, so landing never runs it.
-  bash "$plan_scripts/protect-main.sh" verify "$repo" >/dev/null || {
-    echo "Landing stops before any mutation; adopt default-branch protection on the user's" \
-      "instruction (idd-plan/references/conventions.md, Adopting an existing repository)" >&2
     exit 1
   }
 fi

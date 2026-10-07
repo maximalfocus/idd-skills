@@ -58,8 +58,8 @@ else
 fi
 [ -d "$impl/.git" ] || { echo "Implementation clone was not created: $impl" >&2; exit 1; }
 # Pull requests integrate on dev and main becomes the release branch, unless opted out; from here
-# on each changes only through a pull request.
-(cd "$impl" && bash "$here/protect-main.sh" ensure "$impl_repo" >&2)
+# on each changes through a pull request, by practice (no branch protection, user 2026-10-07).
+(cd "$impl" && bash "$here/integration-branch.sh" ensure "$impl_repo" >&2)
 pair="$(bash "$(dirname "${BASH_SOURCE[0]}")/resolve-prd-pair.sh" "$prd")"
 expected="implementation=$impl
 prd=$prd"
@@ -75,8 +75,6 @@ default_branch="${readback##*$'\t'}"
 [ -n "$default_branch" ] && [ "$(git -C "$impl" branch --show-current)" = "$default_branch" ] || {
   echo "Implementation default branch checkout mismatch" >&2; exit 1;
 }
-# ensure leaves an opted-out repository as it found it; protection is unconditional.
-bash "$here/protect-main.sh" apply "$impl_repo" >&2
 printf 'implementation=%s\nrepository=%s\nvisibility=%s\ncommit=%s\ncreated=%s\nintegration=%s\n' \
   "$impl" "$(cut -f3 <<<"$readback")" "$(cut -f2 <<<"$readback")" \
   "$(git -C "$impl" rev-parse HEAD)" "$created" "$default_branch"

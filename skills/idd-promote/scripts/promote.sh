@@ -16,17 +16,15 @@ open_only=false
 repo="${1:-}"
 [ -n "$repo" ] || repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 [[ "$repo" == */* ]] || usage
-protect="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../idd-plan/scripts" && pwd)/protect-main.sh"
-[ -f "$protect" ] || { echo "Missing sibling idd-plan/scripts/protect-main.sh" >&2; exit 1; }
+branch="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../idd-plan/scripts" && pwd)/integration-branch.sh"
+[ -f "$branch" ] || { echo "Missing sibling idd-plan/scripts/integration-branch.sh" >&2; exit 1; }
 
-branches="$(bash "$protect" show "$repo")"
+branches="$(bash "$branch" show "$repo")"
 echo "$branches"
 integration="$(sed -n 's/^integration=\([^ ]*\) .*/\1/p' <<<"$branches")"
 release="${branches##*release=}"
 [ "$release" != none ] || {
   echo "$repo integrates on $integration with no release branch; nothing to promote" >&2; exit 1; }
-bash "$protect" verify "$repo" >/dev/null || {
-  echo "Promotion stops before any mutation: $repo branch protection drifted" >&2; exit 1; }
 
 title="chore(release): promote $integration to $release"
 pr="$(gh pr list --repo "$repo" --base "$release" --head "$integration" --state open \
@@ -56,7 +54,7 @@ field() { gh pr view "$pr" --repo "$repo" --json "$1" --jq ".$1"; }
 merge_state="$(field mergeStateStatus)"
 case "$merge_state" in
   CLEAN) ;;
-  BLOCKED) echo "PR #$pr is BLOCKED by a repository rule:" \
+  BLOCKED) echo "PR #$pr is BLOCKED on GitHub:" \
     "resolve its reviews and threads, then rerun" >&2; exit 1;;
   *) echo "PR #$pr merge state is $merge_state, not CLEAN;" \
     "rerun once GitHub reports it clean" >&2; exit 1;;

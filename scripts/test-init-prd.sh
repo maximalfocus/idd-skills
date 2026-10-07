@@ -18,23 +18,17 @@ case "$1 $2" in
     while [ "$#" -gt 0 ]; do case "$1" in --source) source="$2"; shift 2;; *) shift;; esac; done
     git -C "$source" remote add origin "$MOCK_REMOTE"
     git -C "$source" push -q -u origin main ;;
-  "api --method") cat >/dev/null; touch "$MOCK_PROTECTED" ;;
-  "api repos/example/demo-prd")
-    if [[ "$*" == *.visibility* ]]; then echo private
-    elif [[ "$*" == *.default_branch* ]]; then echo main
-    elif [ -f "$MOCK_PROTECTED" ]; then echo "true false false true PR_TITLE PR_BODY"
-    else echo "true true true false COMMIT_OR_PR_TITLE COMMIT_MESSAGES"; fi ;;
   *) echo "unexpected gh call: $*" >&2; exit 1 ;;
 esac
 EOF
 chmod +x "$tmp/bin/gh"
+# No gh api handler: bootstrap applies no branch protection or repository settings
+# (user, 2026-10-07), so any such call fails the run.
 export PATH="$tmp/bin:$PATH" MOCK_CREATED="$tmp/created" MOCK_REMOTE="$tmp/remote.git"
-export MOCK_PROTECTED="$tmp/protected"
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.com
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.com
 output="$(bash "$init_prd_script" "$tmp/demo-prd" example/demo-prd 2>/dev/null)"
 grep -q '^repository=https://github.com/example/demo-prd$' <<<"$output"
-[ -f "$tmp/protected" ] || { echo "Bootstrap must protect the PRD default branch" >&2; exit 1; }
 # The one direct push a repository gets carries no line over the shared width.
 mkdir "$tmp/wide-prd"; printf '%0101d\n' 0 >"$tmp/wide-prd/PRD.md"; : >"$tmp/wide-prd/PROGRESS.md"
 if err="$(bash "$init_prd_script" "$tmp/wide-prd" example/wide-prd 2>&1)"; then

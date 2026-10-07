@@ -7,7 +7,8 @@ mkdir "$tmp/bin"
 export PROMOTE_TEST_ROOT="$tmp" PATH="$tmp/bin:$PATH"
 
 # A fake gh over state files: the repository integrates on dev with main as its
-# private release branch, so protect-main.sh verifies the merge settings alone.
+# release branch. It answers no rulesets or settings read: promotion checks no branch
+# protection (user, 2026-10-07), so such a call fails the run.
 cat > "$tmp/bin/gh" <<'FAKE'
 #!/usr/bin/env bash
 set -e
@@ -45,8 +46,7 @@ case "$1 $2" in
   "api repos/example/app")
     case "$key" in
       .default_branch) cat "$root/default";;
-      .visibility) echo private;;
-      *) echo "true true false true PR_TITLE PR_BODY";;
+      *) echo "unexpected repository read: $*" >&2; exit 2;;
     esac;;
   "api repos/example/app/branches/main") echo main;;
   "api repos/example/app/compare/main...dev")
@@ -101,7 +101,7 @@ case "$out" in *"NOTHING to promote"*) ;; *) echo "nothing ahead: $out" >&2; exi
 fresh; echo main > "$tmp/default"
 refuses "a single-branch repository" "nothing to promote" bash "$script" example/app
 fresh; echo BLOCKED > "$tmp/merge-state"
-refuses "a blocked PR" "BLOCKED by a repository rule" bash "$script" example/app
+refuses "a blocked PR" "is BLOCKED on GitHub" bash "$script" example/app
 [ ! -f "$tmp/merge-method" ] || { echo "a blocked PR must not merge" >&2; exit 1; }
 fresh; echo CHANGES_REQUESTED > "$tmp/review"
 refuses "requested changes" "requested changes" bash "$script" example/app
