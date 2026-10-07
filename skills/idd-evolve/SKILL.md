@@ -19,9 +19,8 @@ require its root `CONSTITUTION.md`, `skills/`, `scripts/validate.sh`, git histor
 remote before changing anything. Read that target repository's constitution, skill files, and
 history (`git log --oneline -- skills/<name>/SKILL.md`). The installed skill is the workflow
 definition, never an implicit mutation target. The target constitution governs scope, evidence,
-size, deterministic scripting, and publication. Run `bash scripts/protect-main.sh verify` there; if
-`main` is not protected, stop before editing and report `bash scripts/protect-main.sh apply` as the
-maintainer's repair.
+size, deterministic scripting, and publication. `main` has no branch protection (the user's
+decision, 2026-10-07): neither verify nor propose any; the reviewed pull request below is practice.
 
 ## Step 0 — reconstruct evidence
 

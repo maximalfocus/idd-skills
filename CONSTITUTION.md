@@ -168,9 +168,9 @@ the explicit task-owned paths on `evolve/<slug>` from the current `origin/main`,
 opens the PR whose title is the N-4 commit subject and whose body its body, and returns the checkout
 to `main`. After review — the maintainer's own or `/peerreview`'s — only the maintainer's explicit
 instruction authorizes `scripts/land-evolution.sh` to squash-merge that PR with its title as subject
-and delete its branch locally and on origin; nothing else writes `main`. `scripts/protect-main.sh`
-makes GitHub enforce that shape — pull request required, squash only, linear history, no force-push,
-no deletion, no bypass — and `/idd-evolve` verifies it before editing anything. Stage only explicit
+and delete its branch locally and on origin; nothing else writes `main`. That shape is practice,
+not enforcement: the user's repositories have no branch protection (their decision, 2026-10-07), so
+`/idd-evolve` neither verifies nor proposes it. Stage only explicit
 task-owned paths; never `git add -A`. Never force-push. Greenfield `/idd-plan` authorizes the
 initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land`,
 `/idd-auto`, `/idd-publish`, or direct `--reconcile` authority permits automatic verified

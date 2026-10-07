@@ -88,11 +88,16 @@ Contributor validation runs offline with `bash scripts/validate.sh`; the protect
 
 ## Reviewed evolutions in another repository
 
-The three scripts run against whatever checkout they are invoked in, so a sibling `*-skills` repository adopts the same reviewed path without copying them:
+The two scripts run against whatever checkout they are invoked in, so a sibling `*-skills`
+repository adopts the same reviewed path without copying them:
 
-1. `bash <idd-skills>/scripts/protect-main.sh apply OWNER/REPO` — on a public repository this installs the ruleset and the squash-only settings; on a private one GitHub Free enforces no ruleset, so it sets the settings and reports the ruleset as deferred (branch and PR discipline only).
-2. In that repository's constitution and evolve skill, publish through `bash <idd-skills>/scripts/propose.sh <slug> <message-file> <paths...>` and land on explicit instruction through `bash <idd-skills>/scripts/land-evolution.sh <PR>`; never write its default branch directly. Both scripts use `gh` for the repository and default branch and require the same N-3 `evolve/<slug>` and N-4 subject conventions.
-3. Gate the evolve skill on `bash <idd-skills>/scripts/protect-main.sh verify`. It passes on a private repository whose settings are right, and starts failing the moment the repository becomes public until `apply` is rerun, which completes the protection.
+1. In that repository's constitution and evolve skill, publish through `bash
+   <idd-skills>/scripts/propose.sh <slug> <message-file> <paths...>` and land on explicit
+   instruction through `bash <idd-skills>/scripts/land-evolution.sh <PR>`; never write its default
+   branch directly. Both scripts use `gh` for the repository and default branch and require the same
+   N-3 `evolve/<slug>` and N-4 subject conventions.
+2. Do not gate the evolve skill on branch protection: the user's repositories have none (their
+   decision, 2026-10-07), so the reviewed pull request is practice.
 
 Development fallback for contributors working from a persistent checkout:
 
@@ -127,7 +132,9 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-acceptance/SKILL.md` — final integrated user-boundary acceptance workflow
 - `skills/idd-publish/SKILL.md` — fail-closed implementation-repository publication workflow
 - `skills/idd-promote/SKILL.md` — optional explicit `dev`→`main` release promotion workflow
-- `CONSTITUTION.md` — evolution law and size gates; every kept evolution is proposed by `scripts/propose.sh` as a PR, squash-merged after review by `scripts/land-evolution.sh`, and `scripts/protect-main.sh` makes GitHub refuse anything else on `main`
+- `CONSTITUTION.md` — evolution law and size gates; every kept evolution is proposed by
+  `scripts/propose.sh` as a PR, and squash-merged after review by `scripts/land-evolution.sh`; no
+  branch protection enforces it
 - `skills/idd-plan/references/conventions.md` — the naming, default-branch, and line-width
   conventions every managed repository shares
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them

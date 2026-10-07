@@ -228,7 +228,8 @@ grep -q 'contexts/' "$root/CONSTITUTION.md" || { echo "constitution must admit c
 has_phrase "$root/CONSTITUTION.md" 'Depends on' || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }
 
 has_phrase "$root/CONSTITUTION.md" 'only through a pull request' || { echo "constitution must route kept evolutions through a reviewed pull request" >&2; exit 1; }
-has_phrase "$root/skills/idd-evolve/SKILL.md" 'scripts/protect-main.sh verify' || { echo "idd-evolve must verify the default branch is protected before editing" >&2; exit 1; }
+! grep -q 'protect-main' "$root/skills/idd-evolve/SKILL.md" || {
+  echo "idd-evolve must not gate on or suggest branch protection (user, 2026-10-07)" >&2; exit 1; }
 grep -q 'scripts/propose.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must publish through propose.sh" >&2; exit 1; }
 grep -q 'scripts/land-evolution.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must land a reviewed PR only through land-evolution.sh" >&2; exit 1; }
 has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit instruction' || { echo "idd-evolve landing must require the maintainer's explicit instruction" >&2; exit 1; }
