@@ -66,9 +66,8 @@ Change visibility only after all gates pass, using the provider's explicit visib
 `{project}`. Do not change `{project}-prd`. Verify anonymous HTML/raw/clone access for the
 implementation repository and anonymous denial for the PRD; verify public issue/PR pages contain no
 private links. Enable repository security reporting only when required by the accepted publication
-requirements. Then rerun the sibling `idd-plan/scripts/protect-main.sh apply` for the now-public
-implementation repository, so GitHub enforces the default-branch ruleset it deferred while private,
-and require `verify` to pass.
+requirements. Apply no branch protection to the now-public repository: the user's repositories
+have none (their decision, 2026-10-07).
 
 ## GATE — fail closed or finish
 

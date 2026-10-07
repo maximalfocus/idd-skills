@@ -53,7 +53,7 @@ Evolution stays in `/idd-evolve`. Prefer repository-native tests and git/PR hist
 ## Branch strategy
 
 This methodology repository stays single-branch on `main` (Constitution Article 6); the line below
-keeps `protect-main.sh ensure` from integrating it on `dev`:
+keeps `integration-branch.sh ensure` from integrating it on `dev`:
 
 Integration-branch: main
 

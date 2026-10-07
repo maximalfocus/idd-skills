@@ -27,10 +27,10 @@ that inject none, the user's request. Default repository: the current one. One r
 
 ## Step 0 — establish a safe issue boundary
 
-1. First run the sibling `idd-plan/scripts/protect-main.sh ensure` and print its `integration=…
-   release=…` line: the integration branch (`dev` unless opted out) is the default branch every PR
-   targets. Resolve repo root, remotes, current branch, and status. Read root `AGENTS.md`/
-   `CLAUDE.md` plus the instructions they reference. Never overwrite or stage unrelated work.
+1. First run the sibling `idd-plan/scripts/integration-branch.sh ensure` and print its
+   `integration=… release=…` line: the integration branch (`dev` unless opted out) is the default
+   branch every PR targets. Resolve repo root, remotes, current branch, and status. Read root
+   `AGENTS.md`/`CLAUDE.md` and what they reference. Never overwrite or stage unrelated work.
 2. Fetch the issue with body **and comments** (`gh issue view … --json
    number,title,body,comments,labels,state,url`); require `OPEN` and require its repository to match
    the checkout's remote (otherwise ask for the correct local checkout). Comments are intent only

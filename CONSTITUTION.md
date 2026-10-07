@@ -100,9 +100,9 @@ remains for judgment.
 - `skills/idd-promote/SKILL.md` ≤ 60 lines.
 - Every line of `skills/*/SKILL.md`, `CONSTITUTION.md`, `CLAUDE.md`, and
   `skills/idd-plan/references/conventions.md` ≤ 100 characters.
-- The shared conventions are scripted where mechanical: bootstrap applies default-branch
-  protection; `land.sh` refuses an unlisted N-4 type, an N-2 title mismatch, a non-N-3 head,
-  drifted protection, or an added line over the width; `progress-pr.sh`, `propose.sh`, and
+- The shared conventions are scripted where mechanical: `land.sh` refuses an unlisted N-4 type, an
+  N-2 title mismatch, a non-N-3 head, or an added line over the width; no script applies, checks,
+  or suggests branch protection (user, 2026-10-07); `progress-pr.sh`, `propose.sh`, and
   `land-evolution.sh` gate their subjects and added lines.
 - Every skill has valid Agent Skills frontmatter, an interface hint, orientation before action, and
   a quality gate.
@@ -146,11 +146,11 @@ remains for judgment.
   scripted exposure audit covering every commit message and retained pull-request ref with denylist
   terms matched by bare stem, implementation-only visibility mutation, anonymous readback, and
   private PRD verification.
-- `/idd-promote` requires explicit invocation, a verified release branch, the bundled
+- `/idd-promote` requires explicit invocation, a release branch, the bundled
   `promote.sh`, one integration-to-release PR merged only in a clean state as a merge commit, and
   no squash, rebase, direct push, or force-push onto either branch.
-- `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` begin with the bundled `protect-main.sh
-  ensure` and print its `integration=… release=…` line before any other step.
+- `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` begin with the bundled
+  `integration-branch.sh ensure` and print its `integration=… release=…` line before any other step.
 - `/idd-acceptance` requires an exact completed pair, a real product boundary, complete applicable
   journeys, readiness and teardown evidence, manifest rows verified by existence and identity
   without executing goldens, failure classification, and no deployment or residual acceptance.
@@ -168,26 +168,27 @@ the explicit task-owned paths on `evolve/<slug>` from the current `origin/main`,
 opens the PR whose title is the N-4 commit subject and whose body its body, and returns the checkout
 to `main`. After review — the maintainer's own or `/peerreview`'s — only the maintainer's explicit
 instruction authorizes `scripts/land-evolution.sh` to squash-merge that PR with its title as subject
-and delete its branch locally and on origin; nothing else writes `main`. That shape is practice,
-not enforcement: the user's repositories have no branch protection (their decision, 2026-10-07), so
-`/idd-evolve` neither verifies nor proposes it. Stage only explicit
-task-owned paths; never `git add -A`. Never force-push. Greenfield `/idd-plan` authorizes the
-initial private PRD commit/push unless the user requests draft-only output; explicit `/idd-land`,
-`/idd-auto`, `/idd-publish`, or direct `--reconcile` authority permits automatic verified
-`PROGRESS.md` commits to the exact associated PRD's one open `progress/` batch and that batch's
-squash merge at a milestone. Failure after merge is disclosed and resumable. Every repository IDD
-manages — this one, each implementation repository, and its `{project}-prd` — shares one naming
-convention, a default branch that changes only through a squash-merged pull request, and a
-100-character width for every added line outside declared formatter-owned paths and Markdown table
-rows, as `skills/idd-plan/references/conventions.md` defines; bootstrap applies that protection, an
-existing repository adopts it once on the user's instruction or through the integration below, and
-landing verifies it. An implementation repository integrates on `dev`, its GitHub default branch,
-whatever `main`'s history: every issue PR targets and squash-merges into `dev`, and `main` is the
-release branch, changed after its initial commit only by `/idd-promote`. Bootstrap creates `dev`;
-any other repository is integrated by the first IDD flow that starts in it, which retargets its open
-pull requests to `dev`. A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts a
-repository out, keeping `main` as its single default branch; a `{project}-prd` and this methodology
-repository stay single-branch. A project's own review policy governs everything else.
+and delete its branch locally and on origin; nothing else writes `main`. That shape is practice, not
+enforcement: the user's repositories have no branch protection (their decision, 2026-10-07), so
+`/idd-evolve` neither verifies nor proposes it. Stage only explicit task-owned paths; never `git add
+-A`. Never force-push. Greenfield `/idd-plan` authorizes the initial private PRD commit/push unless
+the user requests draft-only output; explicit `/idd-land`, `/idd-auto`, `/idd-publish`, or direct
+`--reconcile` authority permits automatic verified `PROGRESS.md` commits to the exact associated
+PRD's one open `progress/` batch and that batch's squash merge at a milestone. Failure after merge
+is disclosed and resumable. Every repository IDD manages — this one, each implementation repository,
+and its `{project}-prd` — shares one naming convention, a default branch that changes only through a
+squash-merged pull request, and a 100-character width for every added line outside declared
+formatter-owned paths and Markdown table rows, as `skills/idd-plan/references/conventions.md`
+defines; that default-branch rule is practice, since no repository has branch protection, and an
+existing repository adopts the conventions from its next change or through the integration below. An
+implementation repository integrates on `dev`, its GitHub default branch, whatever `main`'s history:
+every issue PR targets and squash-merges into `dev`, and `main` is the release branch, changed after
+its initial commit only by `/idd-promote`. Bootstrap creates `dev`; any other repository is
+integrated by the first IDD flow that starts in it. Every `ensure` run retargets open main-based
+issue PRs to `dev` and switches a clean checkout on `main` to `dev`, retrying partial adoption.
+A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts a repository out, keeping
+`main` as its single default branch; a `{project}-prd` and this methodology repository stay
+single-branch. A project's own review policy governs everything else.
 
 ## Article 7 — Preserve conceptual integrity
 

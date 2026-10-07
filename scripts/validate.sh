@@ -55,22 +55,23 @@ for script in skills/idd-land/scripts/land.sh skills/idd-plan/scripts/progress-p
   grep -q 'line-width.sh' "$root/$script" || {
     echo "$script must gate the shared line width" >&2; exit 1; }
 done
-grep -q 'protect-main.sh" verify' "$root/skills/idd-land/scripts/land.sh" || {
-  echo "land.sh must verify default-branch protection" >&2; exit 1; }
 for name in idd idd-implement idd-land idd-auto; do
-  has_phrase "$root/skills/$name/SKILL.md" 'protect-main.sh ensure' || {
+  has_phrase "$root/skills/$name/SKILL.md" 'integration-branch.sh ensure' || {
     echo "$name must start by ensuring and printing the branch strategy" >&2; exit 1; }
 done
-grep -q 'protect-main.sh" ensure' "$root/skills/idd-plan/scripts/init-implementation.sh" || {
+grep -q 'integration-branch.sh" ensure' "$root/skills/idd-plan/scripts/init-implementation.sh" || {
   echo "init-implementation.sh must integrate a new implementation repository on dev" >&2; exit 1; }
 grep -q -- '--merge --match-head-commit' "$root/skills/idd-promote/scripts/promote.sh" || {
   echo "promote.sh must promote with a merge commit bound to the reviewed head" >&2; exit 1; }
 grep -q '^Integration-branch: main$' "$root/CLAUDE.md" || {
   echo "this methodology repository must opt out of the dev integration branch" >&2; exit 1; }
-for script in init-prd init-implementation; do
-  grep -q 'protect-main.sh" apply' "$root/skills/idd-plan/scripts/$script.sh" || {
-    echo "$script.sh must protect the new default branch" >&2; exit 1; }
-done
+# No branch protection anywhere: nothing applies, checks, or suggests it (user, 2026-10-07).
+# The fakes in test-*.sh name rulesets only to refuse such a call.
+if git -C "$root" grep -n 'protect-main' -- . ':!scripts/validate.sh' ||
+  git -C "$root" grep -n 'rulesets' -- . ':!scripts/validate.sh' ':!*test-*.sh'; then
+  echo "no branch protection: remove the protect-main/rulesets use above (user, 2026-10-07)" >&2
+  exit 1
+fi
 has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit target or current checkout' || { echo "idd-evolve must resolve the target methodology checkout" >&2; exit 1; }
 
 install_home="$(mktemp -d)"
@@ -189,7 +190,8 @@ grep -q -- '--accept-residuals' "$root/skills/idd-land/SKILL.md" || { echo "idd-
 grep -q '^land_main "\$@"; exit \$?$' "$root/skills/idd-land/scripts/land.sh" || { echo "land.sh must run as one parsed function" >&2; exit 1; }
 bash "$root/scripts/test-land.sh"
 
-for name in tracker-gate manifest prd-fold-gate prd-size-gate contract progress-pr protect-main \
+for name in tracker-gate manifest prd-fold-gate prd-size-gate contract progress-pr \
+  integration-branch \
   line-width propose land-evolution promote; do
   bash -n "$root/scripts/$name.sh"
   bash -n "$root/scripts/test-$name.sh"
@@ -228,8 +230,6 @@ grep -q 'contexts/' "$root/CONSTITUTION.md" || { echo "constitution must admit c
 has_phrase "$root/CONSTITUTION.md" 'Depends on' || { echo "constitution must bound cross-context dependencies" >&2; exit 1; }
 
 has_phrase "$root/CONSTITUTION.md" 'only through a pull request' || { echo "constitution must route kept evolutions through a reviewed pull request" >&2; exit 1; }
-! grep -q 'protect-main' "$root/skills/idd-evolve/SKILL.md" || {
-  echo "idd-evolve must not gate on or suggest branch protection (user, 2026-10-07)" >&2; exit 1; }
 grep -q 'scripts/propose.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must publish through propose.sh" >&2; exit 1; }
 grep -q 'scripts/land-evolution.sh' "$root/skills/idd-evolve/SKILL.md" || { echo "idd-evolve must land a reviewed PR only through land-evolution.sh" >&2; exit 1; }
 has_phrase "$root/skills/idd-evolve/SKILL.md" 'explicit instruction' || { echo "idd-evolve landing must require the maintainer's explicit instruction" >&2; exit 1; }
