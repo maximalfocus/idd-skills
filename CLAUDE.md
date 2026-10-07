@@ -45,10 +45,10 @@ Evolution stays in `/idd-evolve`. Prefer repository-native tests and git/PR hist
 - Kept evolve changes reach `main` only through a PR opened by `scripts/propose.sh` on
   `evolve/<slug>` and squash-merged by `scripts/land-evolution.sh` on the maintainer's explicit
   instruction after review — practice, since no branch protection enforces it (user's decision,
-  2026-10-07). Only explicit
-  `/idd-land` or `/idd-auto` authority, or `/idd-publish` authority for its one preparation PR, may
-  merge a project PR; a PRD's `progress/` batch PR merges only at a milestone reconcile under that
-  authority or a direct `/idd-plan --reconcile`; nothing may force-push.
+  2026-10-07). Only explicit `/idd-land` or `/idd-auto` authority, or `/idd-publish` authority for
+  its one preparation PR, may merge a project PR; a PRD's `progress/` batch PR merges only at a
+  milestone reconcile under that authority or a direct `/idd-plan --reconcile`; nothing may
+  force-push.
 
 ## Branch strategy
 

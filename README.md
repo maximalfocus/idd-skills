@@ -134,7 +134,7 @@ The same runner-specific forms apply to `idd-evolve`. Restart an already-running
 - `skills/idd-promote/SKILL.md` — optional explicit `dev`→`main` release promotion workflow
 - `CONSTITUTION.md` — evolution law and size gates; every kept evolution is proposed by
   `scripts/propose.sh` as a PR, and squash-merged after review by `scripts/land-evolution.sh`; no
-  branch protection enforces it
+  branch protection enforces it (the user's decision, 2026-10-07)
 - `skills/idd-plan/references/conventions.md` — the naming, default-branch, and line-width
   conventions every managed repository shares
 - `skills/*/scripts/` — runtime resources bundled with the skills that own them
