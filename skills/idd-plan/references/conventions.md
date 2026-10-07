@@ -47,8 +47,8 @@ creates `dev` from it, and makes `dev` the default branch, so every issue pull r
 squash-merges into `dev` and `Closes #N` still closes on merge. `main` is the release branch: it
 changes only through a merge-commit pull request from `dev`, opened and merged by the explicit,
 optional `/idd-promote`; a squash or rebase there would make `main` diverge from `dev`.
-`integration-branch.sh ensure` begins every IDD flow and prints `integration=<branch>
-release=<main|none>`. In a repository not yet integrated it creates `dev` from `main` whatever
+`/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` start with `integration-branch.sh ensure`,
+which prints `integration=<branch> release=<main|none>`. It creates `dev` from `main` regardless of
 `main`'s history, makes it the default (allowing the merge commits promotion needs), retargets open
 pull requests from `main`, and switches a clean checkout on `main` to `dev`. A root `AGENTS.md` or
 `CLAUDE.md` line opts out and keeps `main` the single default branch:
@@ -91,7 +91,7 @@ opted out runs `ensure`, which integrates it on `dev`. Before landing:
 1. **Formatter-owned paths.** Before the first landing that adds formatter-laid lines over 100
    characters, declare those paths in a reviewed change to `AGENTS.md` or `CLAUDE.md`. A `Types:`
    line binds nothing any more and may go in the same change.
-3. **Open pull requests.** Retitle each to its issue title (N-2) and declare an N-4
+2. **Open pull requests.** Retitle each to its issue title (N-2) and declare an N-4
    `Delivery-Type`. One whose head is not `issue/<N>-<slug>` (N-3) is replaced: push the same
    commits to that branch, open a pull request from it, and close the old one.
 

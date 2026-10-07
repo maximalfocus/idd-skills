@@ -40,6 +40,11 @@ case "$1 $2" in
       *) echo "unexpected pr view: $*" >&2; exit 2;;
     esac;;
   "pr merge")
+    case " $* " in
+      *' --match-head-commit headsha '*) ;;
+      *) echo "merge must match the reviewed head" >&2; exit 2;;
+    esac
+    case " $* " in *' --squash '*|*' --rebase '*) exit 2;; esac
     for arg in "$@"; do [ "$arg" != --merge ] || touch "$root/merge-method"; done
     while [ "$#" -gt 0 ]; do [ "$1" = --subject ] && echo "$2" > "$root/subject"; shift; done
     echo MERGED > "$root/state";;

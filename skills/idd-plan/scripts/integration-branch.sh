@@ -17,8 +17,8 @@ set -euo pipefail
 # ensure is the first step of every delivery phase. An implementation repository
 # integrates on dev whatever main's history; a root AGENTS.md or CLAUDE.md line
 # `Integration-branch: main` in the checkout opts out, and a {project}-prd always
-# stays single-branch. Integrating retargets open pull requests from main to dev
-# and puts this checkout on dev.
+# stays single-branch. Integrating retargets open pull requests from main to dev;
+# ensure also switches a clean checkout on main to dev.
 
 usage() {
   echo "usage: integration-branch.sh show|integrate|ensure [OWNER/REPO]" >&2; exit 64
@@ -53,8 +53,14 @@ if [ "$mode" = ensure ]; then
   want=dev
   top="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   if [ -n "$top" ]; then
-    line="$(cat "$top/AGENTS.md" "$top/CLAUDE.md" 2>/dev/null |
-      grep -m1 '^Integration-branch:' || true)"
+    instructions=""
+    for file in "$top/AGENTS.md" "$top/CLAUDE.md"; do
+      if [ -e "$file" ] || [ -L "$file" ]; then
+        content="$(cat "$file")"
+        instructions+="$content"$'\n'
+      fi
+    done
+    line="$(awk '/^Integration-branch:/ { print; exit }' <<<"$instructions")"
     [ -z "$line" ] || want="$(awk '{print $2}' <<<"$line" | tr -d '`')"
   fi
   case "$want" in
@@ -85,8 +91,9 @@ strategy
   echo "integrate read back integration=$integration release=$release, not dev and main" >&2
   exit 1; }
 # Open work keeps flowing to the integration branch, never straight to the release branch.
-for pr in $(gh pr list --repo "$repo" --base main --state open --json number,headRefName \
-  --jq '.[] | select(.headRefName != "dev") | .number'); do
+prs="$(gh pr list --repo "$repo" --base main --state open --json number,headRefName \
+  --jq '.[] | select(.headRefName != "dev") | .number')"
+for pr in $prs; do
   gh pr edit "$pr" --repo "$repo" --base dev >/dev/null
   echo "retargeted $repo#$pr from main to dev" >&2
 done
@@ -94,10 +101,12 @@ summary="$repo integrates on dev; main is the release branch"
 if [ "$ensured" = false ]; then echo "$summary"; exit 0; fi
 # ensure also moves a clean checkout on main to dev.
 echo "$summary" >&2
-if [ -n "$top" ] && git -C "$top" fetch -q origin dev 2>/dev/null; then
+if [ -n "$top" ]; then
+  git -C "$top" fetch -q origin dev
   git -C "$top" show-ref --verify --quiet refs/heads/dev ||
     git -C "$top" branch -q --track dev origin/dev
-  if [ "$(git -C "$top" branch --show-current)" = main ] &&
-    [ -z "$(git -C "$top" status --porcelain)" ]; then git -C "$top" switch -q dev; fi
+  current="$(git -C "$top" branch --show-current)"
+  status="$(git -C "$top" status --porcelain)"
+  if [ "$current" = main ] && [ -z "$status" ]; then git -C "$top" switch -q dev; fi
 fi
 echo "integration=$integration release=$release"

@@ -61,7 +61,7 @@ elif [ "$1 $2" = "issue view" ]; then
 elif [ "$1 $2" = "issue close" ]; then echo CLOSED > "$root/issue-state"
 elif [ "$1" = api ]; then
   # Landing reads no branch protection or merge settings (user, 2026-10-07).
-  case "$*" in *rulesets*|*allow_squash_merge*|*--method*)
+  case "$*" in *rulesets*|*/protection*|*allow_squash_merge*|*--method*)
     echo "unexpected protection call: gh $*" >&2; exit 2;; esac
   key="${*: -1}"
   case "$key" in

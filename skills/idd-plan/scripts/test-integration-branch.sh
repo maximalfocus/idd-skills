@@ -6,6 +6,7 @@ tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
 command -v jq >/dev/null || { echo "integration-branch tests require jq" >&2; exit 1; }
 mkdir -p "$tmp/bin"
 export BRANCH_TEST_ROOT="$tmp"
+export BRANCH_TEST_GIT="$(command -v git)"
 export PATH="$tmp/bin:$PATH"
 
 # A fake gh keyed on the API path: GETs answer from state files, mutations record
@@ -16,8 +17,14 @@ cat > "$tmp/bin/gh" <<'FAKE'
 set -e
 root="${BRANCH_TEST_ROOT:?}"
 if [ "$1 $2" = "repo view" ]; then echo maximalfocus/current; exit 0; fi
-if [ "$1 $2" = "pr list" ]; then cat "$root/open-prs" 2>/dev/null || true; exit 0; fi
-if [ "$1 $2" = "pr edit" ]; then echo "$3 $*" >> "$root/retargeted"; exit 0; fi
+if [ "$1 $2" = "pr list" ]; then
+  [ ! -f "$root/refuse-list" ] || { echo "PR list denied" >&2; exit 1; }
+  cat "$root/open-prs" 2>/dev/null || true; exit 0
+fi
+if [ "$1 $2" = "pr edit" ]; then
+  [ ! -f "$root/refuse-edit" ] || { echo "PR edit denied" >&2; exit 1; }
+  echo "$3 $*" >> "$root/retargeted"; exit 0
+fi
 [ "$1" = api ] || { echo "unexpected gh: $*" >&2; exit 2; }
 shift
 method=GET; path=""; jq=""
@@ -35,7 +42,7 @@ if [ "$method" != GET ] && [ -f "$root/refuse-writes" ]; then
   echo "gh: Resource not accessible by integration (HTTP 403)" >&2; exit 1
 fi
 case "$method $path" in
-  *rulesets*) echo "unexpected rulesets call: $method $path" >&2; exit 2;;
+  *rulesets*|*/protection*) echo "unexpected protection call: $method $path" >&2; exit 2;;
   "PATCH repos/"*)
     body="$(cat)"; printf '%s' "$body" > "$root/patch-body"
     jq -r .default_branch <<<"$body" > "$root/default-branch";;
@@ -53,10 +60,22 @@ case "$method $path" in
 esac
 FAKE
 chmod +x "$tmp/bin/gh"
+cat > "$tmp/bin/git" <<'FAKE'
+#!/usr/bin/env bash
+for operation in fetch current status; do
+  [ -f "$BRANCH_TEST_ROOT/refuse-$operation" ] || continue
+  case "$operation $*" in
+    fetch*' fetch '*|current*' branch --show-current'|status*' status --porcelain')
+      echo "git $operation failed" >&2; exit 1;;
+  esac
+done
+exec "$BRANCH_TEST_GIT" "$@"
+FAKE
+chmod +x "$tmp/bin/git"
 
 fresh() {
   rm -f "$tmp"/{calls,patch-body,refuse-writes,default-branch,ref-body,open-prs,retargeted} \
-    "$tmp"/branch-*
+    "$tmp"/branch-* "$tmp"/refuse-*
   touch "$tmp/branch-main"
 }
 fail() { echo "$*" >&2; exit 1; }
@@ -117,13 +136,22 @@ refuses "a refused write" "HTTP 403" bash "$script" integrate example/open
 [ ! -f "$tmp/default-branch" ] || fail "a refused write must not move the default branch"
 fresh; rm "$tmp/branch-main"; echo dev > "$tmp/default-branch"; touch "$tmp/branch-dev"
 refuses "dev without main" "not dev and main" bash "$script" integrate example/open
+for operation in list edit; do
+  fresh; echo 5 > "$tmp/open-prs"; touch "$tmp/refuse-$operation"
+  refuses "a failed PR $operation" "PR $operation denied" bash "$script" integrate example/open
+done
 
 # --- ensure integrates a brownfield repository unless it opts out ---------------
 fresh
 git init -q "$tmp/co"; git -C "$tmp/co" commit -q --allow-empty -m base
+git -C "$tmp/co" branch -M main
+git init -q --bare "$tmp/origin.git"
+git -C "$tmp/co" remote add origin "$tmp/origin.git"
+git -C "$tmp/co" push -q origin main main:dev
 ensure() { (cd "$tmp/co" && bash "$script" ensure "$@"); }
 out="$(ensure example/open 2>/dev/null)"
 [ "$out" = "integration=dev release=main" ] || fail "ensure must integrate by default: $out"
+[ "$(git -C "$tmp/co" branch --show-current)" = dev ] || fail "ensure must switch main to dev"
 rm "$tmp/calls"
 out="$(ensure example/open 2>/dev/null)"
 [ "$out" = "integration=dev release=main" ] || fail "ensure must be idempotent: $out"
@@ -140,5 +168,16 @@ out="$(ensure example/open-prd)"
 [ "$out" = "integration=main release=none" ] && [ ! -f "$tmp/default-branch" ] ||
   fail "a -prd repository stays single-branch: $out"
 no_writes "a -prd ensure"
+
+fresh; mkdir "$tmp/co/AGENTS.md"
+refuses "unreadable instructions" "AGENTS.md" ensure example/open
+no_writes "unreadable instructions"
+rmdir "$tmp/co/AGENTS.md"
+for operation in fetch current status; do
+  fresh; git -C "$tmp/co" switch -q main; touch "$tmp/refuse-$operation"
+  refuses "a failed checkout $operation" "git $operation failed" ensure example/open
+  rm "$tmp/refuse-$operation"
+  [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "failed read must not switch"
+done
 
 echo "integration-branch tests passed"

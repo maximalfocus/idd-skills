@@ -5,6 +5,7 @@ init_implementation_script="${INIT_IMPLEMENTATION_SCRIPT:-$root/scripts/init-imp
 tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
 export GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.com
 export GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.com
+export MOCK_GIT="$(command -v git)" GIT_ALLOW_PROTOCOL=file
 mkdir "$tmp/bin" "$tmp/widget-prd" "$tmp/remotes"
 git -C "$tmp/widget-prd" init -q -b main
 : >"$tmp/widget-prd/PRD.md"; : >"$tmp/widget-prd/PROGRESS.md"
@@ -51,6 +52,16 @@ case "$1 $2" in
 esac
 EOF
 chmod +x "$tmp/bin/gh"
+cat > "$tmp/bin/git" <<'EOF'
+#!/usr/bin/env bash
+# Rewrite fetches only, so remote get-url still verifies the GitHub identity.
+case " $* " in
+  *' fetch '*)
+    exec "$MOCK_GIT" -c "url.$MOCK_REMOTE.insteadOf=https://github.com/example/widget.git" "$@";;
+esac
+exec "$MOCK_GIT" "$@"
+EOF
+chmod +x "$tmp/bin/git"
 export PATH="$tmp/bin:$PATH" MOCK_CREATED="$tmp/created" MOCK_PARENT="$tmp"
 export MOCK_REMOTE="$tmp/remotes/widget.git"
 export MOCK_DEFAULT="$tmp/default"
