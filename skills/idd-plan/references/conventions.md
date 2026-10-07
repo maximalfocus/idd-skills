@@ -49,9 +49,10 @@ changes only through a merge-commit pull request from `dev`, opened and merged b
 optional `/idd-promote`; a squash or rebase there would make `main` diverge from `dev`.
 `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` start with `integration-branch.sh ensure`,
 which prints `integration=<branch> release=<main|none>`. It creates `dev` from `main` regardless of
-`main`'s history, makes it the default (allowing the merge commits promotion needs), retargets open
-pull requests from `main`, and switches a clean checkout on `main` to `dev`. A root `AGENTS.md` or
-`CLAUDE.md` line opts out and keeps `main` the single default branch:
+`main`'s history and makes it the default (allowing the merge commits promotion needs). Every run
+retargets open main-based PRs except the promotion PR and switches a clean checkout on `main` to
+`dev`, so a retry completes partial adoption. A root `AGENTS.md` or `CLAUDE.md` line opts out and
+keeps `main` the single default branch:
 
 ```
 Integration-branch: main

@@ -37,7 +37,8 @@ changed only by the explicit, optional `/idd-promote` through one merge-commit `
 request. `/idd`, `/idd-implement`, `/idd-land`, and `/idd-auto` start with
 `integration-branch.sh ensure`, which prints `integration=… release=…` and integrates an existing
 repository on first use whatever `main`'s history: it creates `dev`, makes it default (allowing the
-merge commits promotion needs), and retargets open PRs.
+merge commits promotion needs). Every run retargets open main-based issue PRs and switches a clean
+checkout on `main` to `dev`, completing any work left by a failed earlier run.
 A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts out. A `{project}-prd` and
 this methodology repository stay single-branch on `main`.
 

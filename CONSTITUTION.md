@@ -184,7 +184,8 @@ existing repository adopts the conventions from its next change or through the i
 implementation repository integrates on `dev`, its GitHub default branch, whatever `main`'s history:
 every issue PR targets and squash-merges into `dev`, and `main` is the release branch, changed after
 its initial commit only by `/idd-promote`. Bootstrap creates `dev`; any other repository is
-integrated by the first IDD flow that starts in it, which retargets its open pull requests to `dev`.
+integrated by the first IDD flow that starts in it. Every `ensure` run retargets open main-based
+issue PRs to `dev` and switches a clean checkout on `main` to `dev`, retrying partial adoption.
 A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts a repository out, keeping
 `main` as its single default branch; a `{project}-prd` and this methodology repository stay
 single-branch. A project's own review policy governs everything else.

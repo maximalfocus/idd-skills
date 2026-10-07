@@ -18,7 +18,8 @@ set -euo pipefail
 # integrates on dev whatever main's history; a root AGENTS.md or CLAUDE.md line
 # `Integration-branch: main` in the checkout opts out, and a {project}-prd always
 # stays single-branch. Integrating retargets open pull requests from main to dev;
-# ensure also switches a clean checkout on main to dev.
+# ensure also switches a clean checkout on main to dev. Both modes retry retargeting
+# on every run; ensure retries the checkout work even when dev is already default.
 
 usage() {
   echo "usage: integration-branch.sh show|integrate|ensure [OWNER/REPO]" >&2; exit 64
@@ -68,7 +69,7 @@ if [ "$mode" = ensure ]; then
     *) echo "Integration-branch must be dev or main, not '$want'" >&2; exit 1;;
   esac
   [[ "$repo" != *-prd ]] || want=main
-  if [ "$want" = main ] || [ "$integration $release" = "dev main" ]; then
+  if [ "$want" = main ]; then
     echo "integration=$integration release=$release"; exit 0
   fi
   ensured=true

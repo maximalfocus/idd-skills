@@ -20,11 +20,13 @@ cat >"$tmp/bin/gh" <<'EOF'
 set -euo pipefail
 default() { cat "$MOCK_DEFAULT" 2>/dev/null || echo main; }
 case "$1 $2" in
-  "pr list") ;;
+  "pr list")
+    [ ! -f "$MOCK_PARENT/fail-ensure" ] || { echo "PR list denied" >&2; exit 1; } ;;
   "auth status") exit 0 ;;
   "repo view")
     if [ -f "$MOCK_CREATED" ]; then
       if [[ "$*" == *"--json"* ]]; then
+        [ ! -f "$MOCK_PARENT/fail-readback" ] || { echo "readback denied" >&2; exit 1; }
         printf 'example/widget\tPRIVATE\thttps://github.com/example/widget\t%s\n' "$(default)"; fi
       exit 0
     fi
@@ -95,4 +97,23 @@ grep -q '^integration=main$' <<<"$output" || { echo "--single-branch must keep m
   echo "--single-branch must not create dev" >&2; exit 1; }
 [ ! -f "$tmp/default" ] || {
   echo "--single-branch must not change the default branch" >&2; exit 1; }
+
+# A failure after remote adoption is never mistaken for a completed bootstrap on rerun.
+for stage in ensure readback; do
+  rm -rf "$tmp/widget" "$tmp/created" "$tmp/default" "$tmp/remotes/widget.git"
+  git init -q --bare "$tmp/remotes/widget.git"
+  touch "$tmp/fail-$stage"
+  if err="$(bash "$init_implementation_script" "$tmp/widget-prd" 2>&1)"; then
+    echo "bootstrap accepted a failed $stage" >&2; exit 1
+  fi
+  case "$stage" in ensure) message='PR list denied';; readback) message='readback denied';; esac
+  [[ "$err" == *"$message"* ]] || { echo "wrong $stage failure: $err" >&2; exit 1; }
+  [ "$(cat "$tmp/default")" = dev ] || { echo "must fail after adoption" >&2; exit 1; }
+  rm "$tmp/fail-$stage"
+  if err="$(bash "$init_implementation_script" "$tmp/widget-prd" 2>&1)"; then
+    echo "bootstrap must refuse its existing partial checkout" >&2; exit 1
+  fi
+  [[ "$err" == *'Implementation path already exists:'* ]] || {
+    echo "wrong bootstrap retry failure: $err" >&2; exit 1; }
+done
 echo "IDD implementation bootstrap valid"

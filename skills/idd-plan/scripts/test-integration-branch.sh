@@ -22,7 +22,13 @@ if [ "$1 $2" = "pr list" ]; then
   cat "$root/open-prs" 2>/dev/null || true; exit 0
 fi
 if [ "$1 $2" = "pr edit" ]; then
-  [ ! -f "$root/refuse-edit" ] || { echo "PR edit denied" >&2; exit 1; }
+  if [ -f "$root/refuse-edit" ] &&
+    { [ ! -s "$root/refuse-edit" ] || [ "$(cat "$root/refuse-edit")" = "$3" ]; }; then
+    echo "PR edit denied" >&2; exit 1
+  fi
+  echo "EDIT PR $3" >> "$root/calls"
+  awk -v pr="$3" '$0 != pr' "$root/open-prs" > "$root/remaining-prs"
+  mv "$root/remaining-prs" "$root/open-prs"
   echo "$3 $*" >> "$root/retargeted"; exit 0
 fi
 [ "$1" = api ] || { echo "unexpected gh: $*" >&2; exit 2; }
@@ -62,10 +68,10 @@ FAKE
 chmod +x "$tmp/bin/gh"
 cat > "$tmp/bin/git" <<'FAKE'
 #!/usr/bin/env bash
-for operation in fetch current status; do
+for operation in fetch current status switch; do
   [ -f "$BRANCH_TEST_ROOT/refuse-$operation" ] || continue
   case "$operation $*" in
-    fetch*' fetch '*|current*' branch --show-current'|status*' status --porcelain')
+    fetch*' fetch '*|current*' --show-current'|status*' --porcelain'|switch*' switch '*)
       echo "git $operation failed" >&2; exit 1;;
   esac
 done
@@ -139,6 +145,10 @@ refuses "dev without main" "not dev and main" bash "$script" integrate example/o
 for operation in list edit; do
   fresh; echo 5 > "$tmp/open-prs"; touch "$tmp/refuse-$operation"
   refuses "a failed PR $operation" "PR $operation denied" bash "$script" integrate example/open
+  rm "$tmp/refuse-$operation" "$tmp/calls"
+  bash "$script" integrate example/open >/dev/null
+  [ ! -s "$tmp/open-prs" ] || fail "integrate retry must finish retargeting"
+  ! grep -qE '^(POST|PATCH) ' "$tmp/calls" || fail "retry must not recreate dev or reset default"
 done
 
 # --- ensure integrates a brownfield repository unless it opts out ---------------
@@ -168,6 +178,35 @@ out="$(ensure example/open-prd)"
 [ "$out" = "integration=main release=none" ] && [ ! -f "$tmp/default-branch" ] ||
   fail "a -prd repository stays single-branch: $out"
 no_writes "a -prd ensure"
+
+# Even an already-integrated opt-out or PRD must not retarget PRs or fetch.
+echo dev > "$tmp/default-branch"; touch "$tmp/branch-dev" "$tmp/refuse-fetch"
+echo 9 > "$tmp/open-prs"
+printf 'Integration-branch: main\n' > "$tmp/co/AGENTS.md"
+ensure example/open >/dev/null
+no_writes "an already-integrated opt-out"
+rm "$tmp/co/AGENTS.md"
+ensure example/open-prd >/dev/null
+no_writes "an already-integrated -prd"
+[ "$(cat "$tmp/open-prs")" = 9 ] || fail "opt-out and PRD must leave PRs alone"
+
+# Partial adoption is retried even after GitHub already reports dev/main.
+for operation in edit fetch switch; do
+  fresh; git -C "$tmp/co" switch -q main
+  printf '5\n6\n' > "$tmp/open-prs"
+  echo 6 > "$tmp/refuse-$operation"
+  case "$operation" in edit) message='PR edit denied';; *) message="git $operation failed";; esac
+  refuses "partial adoption at $operation" "$message" ensure example/open
+  [ "$(cat "$tmp/default-branch")" = dev ] || fail "failure must follow default-branch change"
+  [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "failure must leave main"
+  rm "$tmp/refuse-$operation" "$tmp/calls"
+  out="$(ensure example/open)"
+  [ "$out" = 'integration=dev release=main' ] || fail "retry summary: $out"
+  [ ! -s "$tmp/open-prs" ] || fail "ensure retry must finish PR retargeting after $operation"
+  [ "$(git -C "$tmp/co" branch --show-current)" = dev ] || fail "retry must switch to dev"
+  [ "$(wc -l < "$tmp/retargeted" | tr -d ' ')" = 2 ] || fail "retarget each PR exactly once"
+  ! grep -qE '^(POST|PATCH) ' "$tmp/calls" || fail "ensure retry must not reset remote branches"
+done
 
 fresh; mkdir "$tmp/co/AGENTS.md"
 refuses "unreadable instructions" "AGENTS.md" ensure example/open
