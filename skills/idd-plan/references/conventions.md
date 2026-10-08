@@ -7,7 +7,8 @@ and name the rule they refuse; the rest is review. Cite the rule IDs in issues a
 ## Naming
 
 - **Issue title (N-1).** Imperative outcome, sentence case. No type prefix, no trailing period, no
-  issue number, no requirement/slice ID. Say what is true when the issue closes, not only the
+  issue number, no requirement/slice ID. Short enough that the landed subject `<type>: <title>`
+  fits N-4's 72 characters (66 for `feat`). Say what is true when the issue closes, not only the
   symptom. One coherent outcome per issue — a conjunction alone is not a reason to split; split only
   when the joined parts are independently deliverable and verifiable. This is a review rule, not a
   mechanical grammar.

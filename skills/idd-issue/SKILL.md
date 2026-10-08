@@ -34,7 +34,8 @@ next-issue contract. A request to draft, review, or suggest does not.
 Follow the repository template. If none exists, use only the sections that add information:
 
 - an N-1 title: the imperative outcome true when the issue closes, in sentence case, with no type
-  prefix, trailing period, issue number, or requirement/slice ID;
+  prefix, trailing period, issue number, or requirement/slice ID, and short enough that its landed
+  subject `<type>: <title>` fits N-4's 72 characters for the type it will likely land as;
 - problem and concrete evidence;
 - proposed outcome or scope boundary;
 - testable acceptance criteria;
