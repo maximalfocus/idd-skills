@@ -11,7 +11,8 @@ export LC_ALL=C
 # so its cells answer to their own budgets (the tracker gate's) instead of this width.
 #
 #   line-width.sh check BASE            lines the change in hand adds since its merge base:
-#                                       the working tree when it is dirty, else HEAD
+#                                       the working tree (new files included) when it
+#                                       is dirty, else HEAD
 #   line-width.sh check BASE REV        lines REV adds since its merge base
 #   line-width.sh check BASE --cached   lines the index adds to BASE
 #   line-width.sh check --root [REV]    every line of REV's tracked text files
@@ -79,7 +80,17 @@ else
   range=("$merge_base" "$rev")
   # Asked about the change in hand, measure the change in hand. With no REV the old default
   # was HEAD, so running this while still working passed on the previous commit and reported
-  # a width no one had checked; the same content failed once committed.
+  # a width no one had checked; the same content failed once committed. A new file is part
+  # of that change before it is staged: a scratch copy of the index marks every untracked,
+  # unignored file intent-to-add, so the diff sees it and the real index stays untouched.
+  if [ -z "$given_rev" ]; then
+    real_index="$(git rev-parse --git-path index)"
+    export GIT_INDEX_FILE="$scratch/index"
+    if [ -f "$real_index" ]; then cp "$real_index" "$GIT_INDEX_FILE"; fi
+    git ls-files -z --others --exclude-standard > "$scratch/untracked"
+    [ ! -s "$scratch/untracked" ] ||
+      xargs -0 git add --intent-to-add -- < "$scratch/untracked"
+  fi
   if [ -z "$given_rev" ] && [ -n "$(git diff --name-only "$rev" -- . 2>/dev/null)" ]; then
     range=("$merge_base"); measured=" (working tree)"
   fi
