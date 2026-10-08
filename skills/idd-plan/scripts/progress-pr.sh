@@ -192,7 +192,16 @@ merge_default() {
 }
 
 checkout() { # permit only verified local default-import merges beyond origin
-  local b="$1" local_oid expected_oid
+  local b="$1" local_oid expected_oid worktrees
+  # A branch another worktree holds is that checkout's state: moving its ref here would leave
+  # that tree showing the new commits reversed, and switching to it would fail anyway.
+  if [ "$(git symbolic-ref -q HEAD || true)" != "refs/heads/$b" ]; then
+    worktrees="$(git worktree list --porcelain)" || {
+      echo "Cannot read the worktree list" >&2; exit 1; }
+    case $'\n'"$worktrees"$'\n' in *$'\n'"branch refs/heads/$b"$'\n'*)
+      echo "$b is checked out in another worktree; run this in that checkout instead" >&2
+      exit 1;; esac
+  fi
   git fetch -q --prune origin
   git rev-parse -q --verify "refs/remotes/origin/$b" >/dev/null || { echo "origin has no $b" >&2; exit 1; }
   expected_oid="$(git rev-parse "origin/$b")"

@@ -1011,4 +1011,17 @@ git -C "$prd" push -q origin progress/batch
 refuses "a wide reviewed batch head" "over 100 characters: PROGRESS.md:3" \
   run merge "$prd" 'docs(progress): milestone'
 
+# A linked worktree must not move the default branch another checkout holds.
+fresh
+git -C "$prd" worktree add -q --detach "$tmp/linked" HEAD
+git clone -q "$tmp/origin.git" "$tmp/advance" 2>/dev/null
+printf 'later\n' >> "$tmp/advance/PRD.md"
+git -C "$tmp/advance" commit -qam "docs: later" && git -C "$tmp/advance" push -q origin main
+held="$(git -C "$prd" rev-parse main)"
+refuses "sync in a worktree while another holds main" "checked out in another worktree" \
+  run sync "$tmp/linked"
+[ "$(git -C "$prd" rev-parse main)" = "$held" ] && [ -z "$(git -C "$prd" status --porcelain)" ] || {
+  echo "sync from a linked worktree moved the other checkout's branch" >&2; exit 1; }
+git -C "$prd" worktree remove --force "$tmp/linked"; rm -rf "$tmp/advance"
+
 echo "IDD progress batch valid"
