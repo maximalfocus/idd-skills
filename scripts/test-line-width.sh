@@ -113,6 +113,14 @@ passes "a clean tree with nothing wide" "$tip"
 wide w 140 >> "$tmp/repo/notes.md"
 refuses "an unstaged wide line" "notes.md:3" "$tip"
 git -C "$tmp/repo" checkout -q HEAD -- notes.md
+# A new file is in hand before it is staged; an ignored one is not, and the index is untouched.
+wide u 130 > "$tmp/repo/untracked.md"
+refuses "a wide line in an untracked file" "untracked.md:1" "$tip"
+[ -z "$(git -C "$tmp/repo" ls-files -- untracked.md)" ] || {
+  echo "line-width staged an untracked file" >&2; exit 1; }
+mkdir -p "$tmp/repo/.git/info"; printf 'untracked.md\n' >> "$tmp/repo/.git/info/exclude"
+passes "a wide line in an ignored file" "$tip"
+rm "$tmp/repo/untracked.md"
 
 # Working-tree content uses working-tree formatter declarations, including their removal.
 printf '# rules\n' > "$rules"

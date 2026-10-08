@@ -81,7 +81,8 @@ Formatter-owned: `*.py` `*.go` `package-lock.json` `tests/fixtures/`
 The bundled `idd-plan/scripts/line-width.sh check <base> [<rev>|--cached]` is the gate: landing,
 tracker batches, and evolution proposals run it. Only added lines count, so a change never inherits
 the debt of lines it leaves alone. With no revision it measures the change in hand — the working
-tree while it is dirty — so running it before committing cannot pass on the previous commit.
+tree while it is dirty, untracked files included — so running it before committing or staging
+cannot pass on the previous commit.
 
 ## Adopting an existing repository
 
