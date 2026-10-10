@@ -11,7 +11,7 @@ compatibility: "Requires git and GitHub CLI (gh); works with Claude Code, Codex,
 `/idd-implement` stops at an open PR; `/idd-land` is the separate destructive lifecycle step. An
 explicit invocation (directly or through `/idd`, per Constitution Article 5), an active explicitly
 invoked `/idd-auto` run for its one current accepted PR, or an explicit `/idd-publish` run for its
-one accepted preparation PR authorizes squash merge, issue closure, default-branch refresh, deletion
+one accepted preparation PR authorizes squash merge, closure, integration-branch refresh, deletion
 of that PR's same-repository remote and local feature branch, and automatic progress reconciliation
 in an exact convention-linked sibling `{project}-prd` repository when present — never force-push,
 bypassing failed checks/reviews/conflicts, deployment, or landing any other issue.
@@ -24,7 +24,7 @@ mismatch, or a dirty tree.
 ## Step 0 — resolve and fail closed
 
 1. First run the sibling `idd-plan/scripts/integration-branch.sh ensure` and print its
-   `integration=… release=…` line; landing merges into the integration (default) branch and never
+   `integration=… release=…` line; landing merges into the integration branch it prints and never
    promotes. Resolve repo root, `origin`, current branch, and status. Require a clean working tree
    and `gh auth status`; require the issue repository to match `gh repo view --json nameWithOwner`.
 2. Read the live issue and comments. Allow `OPEN`; allow `CLOSED` only when resuming a partially
@@ -33,7 +33,7 @@ mismatch, or a dirty tree.
    same-repository PR unless `--pr N` was supplied, verify the chosen PR actually references the
    issue, and never guess between candidates.
 4. Read the chosen PR's body, reviews, checks, merge state, draft state, base/head refs, and linked
-   issue. Require `OPEN` or already `MERGED`, a same-repository head branch, the expected default
+   issue. Require `OPEN` or already `MERGED`, a same-repository head branch, the printed integration
    base, no requested changes, `mergeable=MERGEABLE`, and every reported check completed
    successfully/skipped/neutral. A closed-unmerged PR stops.
 5. Resolve the sibling `idd-plan` skill in the same installation root and run its bundled
@@ -92,7 +92,7 @@ that rewrites its source mid-landing cannot change the running sequence.
 ## Step 2 — verify the landed state
 
 Require from the script, and independently read back: the PR `MERGED` with a squash merge commit;
-the issue `CLOSED` after the merge; the local checkout on the updated default branch with a clean
+the issue `CLOSED` after the merge; the local checkout on the updated integration branch, a clean
 tree; the same-repository remote and local feature refs absent; and, when this invocation performed
 the merge, the composed landed subject. The script is resumable after a partial failure: an
 already-merged PR skips merging and continues closure/cleanup without re-checking a subject it did
@@ -115,6 +115,6 @@ invocation; without an associated PRD, report `PRD reconciliation: not configure
 
 ## Completion output
 
-Return only the issue/PR URLs, squash commit, closure state, deleted branch names, current default
+Return only the issue/PR URLs, squash commit, closure state, deleted branches, current integration
 branch, accepted residuals (if any), PRD batch PR and commit/push/merge state, any stale-requirement
 report, and any incomplete postcondition.

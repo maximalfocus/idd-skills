@@ -77,5 +77,5 @@ PRD `PROGRESS.md` row with issue/PR/squash and public/private readback evidence;
 lifecycle status only when the tracker's own definitions and every requirement represented by that
 row are satisfied. Execute `idd-plan` Reconcile mode with that evidence and its tracker/contract
 checks, batch push, and milestone merge. A review refusal is `PRD batch awaiting review`; disclose
-any completed visibility change and preserve resumability. Verify both trees and default branches
-are clean and synchronized. Return URLs, final commits, visibility evidence, and `complete`.
+any completed visibility change and preserve resumability. Verify clean trees and synchronized
+integration and PRD default branches. Return URLs, commits, visibility evidence, and `complete`.

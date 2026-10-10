@@ -16,7 +16,9 @@ cat > "$tmp/bin/gh" <<'FAKE'
 #!/usr/bin/env bash
 set -e
 root="${BRANCH_TEST_ROOT:?}"
-if [ "$1 $2" = "repo view" ]; then echo maximalfocus/current; exit 0; fi
+if [ "$1 $2" = "repo view" ]; then
+  touch "$root/repo-viewed"; echo maximalfocus/current; exit 0
+fi
 if [ "$1 $2" = "pr list" ]; then
   [ ! -f "$root/refuse-list" ] || { echo "PR list denied" >&2; exit 1; }
   cat "$root/open-prs" 2>/dev/null || true; exit 0
@@ -54,8 +56,11 @@ case "$method $path" in
     jq -r .default_branch <<<"$body" > "$root/default-branch";;
   "POST repos/"*"/git/refs") cat > "$root/ref-body"; touch "$root/branch-dev";;
   "GET repos/"*"/branches/"*)
-    [ -f "$root/branch-${path##*/}" ] || { echo "gh: Branch not found (HTTP 404)" >&2; exit 1; }
-    echo "${path##*/}";;
+    name="${path#*/branches/}" # a branch name may hold slashes
+    # An empty name selects the list endpoint, not a missing branch.
+    [ -n "$name" ] || { echo '[]'; exit 0; }
+    [ -f "$root/branch-${name//\//_}" ] || { echo "gh: Branch not found (HTTP 404)" >&2; exit 1; }
+    echo "$name";;
   "GET repos/"*"/git/ref/heads/"*) echo 0123abc;;
   "GET repos/"*)
     case "$jq" in
@@ -68,11 +73,14 @@ FAKE
 chmod +x "$tmp/bin/gh"
 cat > "$tmp/bin/git" <<'FAKE'
 #!/usr/bin/env bash
-for operation in fetch current status switch; do
+for operation in fetch current status switch config discovery; do
   [ -f "$BRANCH_TEST_ROOT/refuse-$operation" ] || continue
   case "$operation $*" in
-    fetch*' fetch '*|current*' --show-current'|status*' --porcelain'|switch*' switch '*)
-      echo "git $operation failed" >&2; exit 1;;
+    fetch*' fetch '*|current*' --show-current'|status*' --porcelain'|switch*' switch '*|\
+      config*' config '*|discovery*' rev-parse --git-dir')
+      echo "git $operation failed" >&2
+      [ "$operation" != config ] || exit 128 # exit 1 would mean an unset key
+      exit 1;;
   esac
 done
 exec "$BRANCH_TEST_GIT" "$@"
@@ -81,7 +89,7 @@ chmod +x "$tmp/bin/git"
 
 fresh() {
   rm -f "$tmp"/{calls,patch-body,refuse-writes,default-branch,ref-body,open-prs,retargeted} \
-    "$tmp"/branch-* "$tmp"/refuse-*
+    "$tmp"/branch-* "$tmp"/refuse-* "$tmp/repo-viewed"
   touch "$tmp/branch-main"
 }
 fail() { echo "$*" >&2; exit 1; }
@@ -158,7 +166,8 @@ git -C "$tmp/co" branch -M main
 git init -q --bare "$tmp/origin.git"
 git -C "$tmp/co" remote add origin "$tmp/origin.git"
 git -C "$tmp/co" push -q origin main main:dev
-ensure() { (cd "$tmp/co" && bash "$script" ensure "$@"); }
+ensure_mode() { (cd "$tmp/co" && bash "$script" "$@"); }
+ensure() { ensure_mode ensure "$@"; }
 out="$(ensure example/open 2>/dev/null)"
 [ "$out" = "integration=dev release=main" ] || fail "ensure must integrate by default: $out"
 [ "$(git -C "$tmp/co" branch --show-current)" = dev ] || fail "ensure must switch main to dev"
@@ -218,5 +227,147 @@ for operation in fetch current status; do
   rm "$tmp/refuse-$operation"
   [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "failed read must not switch"
 done
+
+# --- a checkout that names its integration branch is read, never reshaped ---------
+# Every write path is armed to fail or be seen: an open main-based PR, a refused PR
+# list, fetch, and switch. The only call allowed is the read of the named branch.
+named() { git -C "$tmp/co" config --local idd.integrationBranch "$1"; }
+fresh; git -C "$tmp/co" switch -q main
+named ai/work; touch "$tmp/branch-ai_work"
+echo 5 > "$tmp/open-prs"; touch "$tmp/refuse-list" "$tmp/refuse-fetch" "$tmp/refuse-switch"
+for mode in ensure show; do
+  out="$(ensure_mode "$mode" example/open)"
+  [ "$out" = "integration=ai/work release=none" ] || fail "named $mode: $out"
+done
+[ "$(cat "$tmp/calls")" = "GET repos/example/open/branches/ai/work
+GET repos/example/open/branches/ai/work" ] ||
+  fail "a named branch allows only its own read: $(cat "$tmp/calls")"
+[ ! -f "$tmp/default-branch" ] && [ ! -f "$tmp/branch-dev" ] && [ ! -f "$tmp/retargeted" ] ||
+  fail "a named branch must leave the repository as it is"
+[ "$(cat "$tmp/open-prs")" = 5 ] || fail "a named branch must leave open PRs alone"
+[ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "a named branch must not switch"
+refuses "integrate in a naming checkout" "integrate refuses" ensure_mode integrate example/open
+refuses "a named branch on a -prd" "stays single-branch" ensure_mode ensure example/open-prd
+rm "$tmp/branch-ai_work"
+for mode in show ensure; do
+  refuses "a named branch the repository lacks in $mode" "does not have" \
+    ensure_mode "$mode" example/open
+done
+named ""
+for mode in show ensure; do
+  refuses "an empty named branch in $mode" "does not have" ensure_mode "$mode" example/open
+done
+named ai/work; touch "$tmp/branch-ai_work" "$tmp/refuse-config"
+for mode in show ensure integrate; do
+  refuses "an unreadable git config in $mode" "Cannot read idd.integrationBranch" \
+    ensure_mode "$mode" example/open
+done
+no_writes "every refused naming checkout"
+[ ! -f "$tmp/default-branch" ] || fail "a refused naming checkout must not move the default branch"
+
+# Unsetting the key restores integration on dev.
+fresh; git -C "$tmp/co" config --local --unset idd.integrationBranch
+out="$(ensure example/open 2>/dev/null)"
+[ "$out" = "integration=dev release=main" ] || fail "an unset key must integrate again: $out"
+grep -q '^PATCH repos/example/open$' "$tmp/calls" || fail "an unset key must make dev default"
+
+# Explicit repository arguments still work outside any local repository.
+mkdir "$tmp/outside"
+for mode in show integrate ensure; do
+  fresh; touch "$tmp/refuse-fetch" "$tmp/refuse-switch"
+  out="$(cd "$tmp/outside" && bash "$script" "$mode" example/open 2>/dev/null)"
+  case "$mode" in
+    show) [ "$out" = "integration=main release=none" ] || fail "outside show: $out"
+      no_writes "outside show";;
+    integrate) [ "$out" = "example/open integrates on dev; main is the release branch" ] ||
+      fail "outside integrate: $out";;
+    ensure) [ "$out" = "integration=dev release=main" ] || fail "outside ensure: $out";;
+  esac
+  if [ "$mode" != show ]; then
+    [ "$(cat "$tmp/default-branch")" = dev ] || fail "outside $mode must adopt dev"
+    [ -f "$tmp/ref-body" ] || fail "outside $mode must create dev"
+  fi
+done
+
+# A bare repository has local config even though show-toplevel cannot succeed.
+fresh; git init -q --bare "$tmp/bare"
+git -C "$tmp/bare" config --local idd.integrationBranch ai/work
+touch "$tmp/branch-ai_work" "$tmp/refuse-fetch" "$tmp/refuse-switch"
+bare_mode() { (cd "$tmp/bare" && bash "$script" "$@"); }
+refuses "integrate in a bare naming repository" "integrate refuses" \
+  bare_mode integrate example/open
+for mode in show ensure; do
+  out="$(bare_mode "$mode" example/open)"
+  [ "$out" = "integration=ai/work release=none" ] || fail "bare $mode: $out"
+done
+no_writes "a bare naming repository"
+[ ! -f "$tmp/default-branch" ] && [ ! -f "$tmp/ref-body" ] || fail "bare must not adopt"
+
+# Failed discovery is not absence; every mode stops before any GitHub call.
+fresh; named ai/work; touch "$tmp/branch-ai_work" "$tmp/refuse-discovery"
+for mode in show ensure integrate; do
+  refuses "failed repository discovery in $mode" "Cannot discover the git repository" \
+    ensure_mode "$mode" example/open
+done
+no_writes "failed repository discovery"
+[ ! -s "$tmp/calls" ] || fail "failed discovery must stop before GitHub"
+rm "$tmp/refuse-discovery"
+
+# Unsafe names stop before any GitHub call, even without an explicit repository.
+git -C "$tmp/co" switch -q main
+for branch in 'ai#work' 'ai?work' 'ai%work' 'ai..work' 'ai//work' 'ai.lock' \
+  '-work' '/work' '.work' 'ai:work' 'ai work' $'ai\nwork' \
+  $'ai/work\n' $'ai/work\n\n' $'\n' $'ai/work\r\n'; do
+  fresh; named "$branch"; touch "$tmp/branch-ai_work"
+  for mode in show ensure integrate; do
+    refuses "unsafe name in $mode" "Unsafe idd.integrationBranch" \
+      ensure_mode "$mode" example/open
+    refuses "unsafe name before repository resolution in $mode" "Unsafe idd.integrationBranch" \
+      ensure_mode "$mode"
+  done
+  [ ! -s "$tmp/calls" ] && [ ! -f "$tmp/repo-viewed" ] ||
+    fail "unsafe names must stop before GitHub"
+  [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "unsafe name switched checkout"
+done
+fresh; named ai/work.v1_test-2; touch "$tmp/branch-ai_work.v1_test-2"
+out="$(ensure_mode show example/open)"
+[ "$out" = "integration=ai/work.v1_test-2 release=none" ] || fail "safe name: $out"
+
+# Prove the regex runs in C even where no hostile locale is installed. POSIX always exists.
+cat > "$tmp/locale-proof" <<'PROOF'
+check_branch_locale() {
+  case "$BASH_COMMAND" in
+    '[[ "$named" =~ '*)
+      [ "${LC_ALL:-}" = C ] || { echo "branch regex must run in C" >&2; exit 1; }
+      touch "$BRANCH_TEST_ROOT/locale-checked";;
+  esac
+}
+trap check_branch_locale DEBUG
+PROOF
+locale_mode() {
+  (cd "$tmp/co" && LC_ALL=POSIX BASH_ENV="$tmp/locale-proof" bash "$script" "$@")
+}
+fresh; named ai/work; touch "$tmp/branch-ai_work"
+for mode in show ensure; do
+  out="$(locale_mode "$mode" example/open)"
+  [ "$out" = "integration=ai/work release=none" ] || fail "C validation changed a safe name"
+done
+[ -f "$tmp/locale-checked" ] || fail "locale proof did not observe the branch regex"
+for branch in 'é' $'\351'; do
+  fresh; named "$branch"; rm "$tmp/locale-checked"
+  for mode in show ensure integrate; do
+    refuses "non-ASCII branch in $mode" "Unsafe idd.integrationBranch" locale_mode "$mode"
+  done
+  [ -f "$tmp/locale-checked" ] || fail "non-ASCII validation was not observed"
+  [ ! -s "$tmp/calls" ] && [ ! -f "$tmp/repo-viewed" ] || fail "non-ASCII name reached GitHub"
+done
+
+# A malformed local config is also a read error, not an unset key.
+fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"
+for mode in show ensure integrate; do
+  refuses "malformed local config in $mode" "Cannot" ensure_mode "$mode" example/open
+done
+no_writes "malformed local config"
+[ ! -s "$tmp/calls" ] || fail "malformed config must stop before GitHub"
 
 echo "integration-branch tests passed"

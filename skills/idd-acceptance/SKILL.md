@@ -19,7 +19,7 @@ failures.
 
 1. Resolve the exact `{project}` ↔ `{project}-prd` pair with the sibling `idd-plan` skill's bundled
    `scripts/resolve-prd-pair.sh`; a missing sibling is an incomplete installation and stops.
-   Require a clean implementation default branch, no active feature branch or open implementation
+   Require a clean implementation integration branch, no live feature branch or open implementation
    issue/PR, and a clean PRD. Run `idd-plan/scripts/progress-pr.sh sync` before reading contracts
    or trackers. An open batch requires an authorized `/idd-plan --reconcile` milestone first;
    report that prerequisite and stop, since acceptance supplies no merge authority. Then read
@@ -87,5 +87,5 @@ rejects fixed waits and brittle class-based locators.
 
 Completion requires every applicable journey and whole-product model check to pass, no
 contradiction, out-of-domain surplus, or surprise path, no skipped required outcome, teardown
-confirmation, and a clean default branch. Report `PASS` or `FAIL` with the boundary, commands,
+confirmation, and a clean integration branch. Report `PASS` or `FAIL` with the boundary, commands,
 evidence, failure class (if any), and exactly one next action.

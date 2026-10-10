@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Name, and on first use set up, the branch every pull request of a repository
-# targets. The default branch is the integration branch; when it is not main and
+# targets. Without local naming, the default branch is integration; when it is not main and
 # a main branch exists, main is the release branch, which changes only through
 # /idd-promote's merge-commit pull request from the integration branch.
 #
@@ -20,6 +20,12 @@ set -euo pipefail
 # stays single-branch. Integrating retargets open pull requests from main to dev;
 # ensure also switches a clean checkout on main to dev. Both modes retry retargeting
 # on every run; ensure retries the checkout work even when dev is already default.
+#
+# A checkout of a repository IDD may not reshape names its integration branch in its
+# own git config instead: git config --local idd.integrationBranch <branch>. Every
+# mode run there then only reads: show and ensure print that branch with release=none.
+# IDD names no release branch and promotes nothing. Integrate refuses; no dev branch,
+# default branch, merge setting, pull-request base, or checked-out branch is changed.
 
 usage() {
   echo "usage: integration-branch.sh show|integrate|ensure [OWNER/REPO]" >&2; exit 64
@@ -27,10 +33,6 @@ usage() {
 [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage
 mode="$1"; repo="${2:-}"
 case "$mode" in show|integrate|ensure) ;; *) usage;; esac
-if [ -z "$repo" ]; then
-  repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
-fi
-[[ "$repo" == */* ]] || usage
 has_branch() { # $1 = branch; a failed lookup other than not-found is not absence
   local err
   err="$(gh api "repos/$repo/branches/$1" --jq .name 2>&1 >/dev/null)" && return 0
@@ -47,6 +49,44 @@ write() { # $1 = method, $2 = path, stdin = JSON body
   err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)" || { echo "$err" >&2; exit 1; }
 }
 
+# Local config also belongs to bare repositories; worktree discovery is not a key read.
+named=""; named_rc=1
+if discovery="$(LC_ALL=C git rev-parse --git-dir 2>&1)"; then
+  named_rc=0
+  # The sentinel preserves value newlines; remove only Git's one output newline.
+  named="$(git config --local --get idd.integrationBranch; rc=$?; printf .; exit "$rc")" ||
+    named_rc=$?
+  named="${named%.}"; named="${named%$'\n'}"
+else
+  case "$discovery" in
+    "fatal: not a git repository (or any "*) ;;
+    *) echo "Cannot discover the git repository: $discovery" >&2; exit 1;;
+  esac
+fi
+# A failed read is not an unset key: it must never fall through to integrating.
+[ "$named_rc" -le 1 ] || { echo "Cannot read idd.integrationBranch" >&2; exit 1; }
+if [ "$named_rc" = 0 ]; then
+  [ -n "$named" ] || {
+    echo "idd.integrationBranch names '$named', a branch $repo does not have" >&2; exit 1; }
+  # Keep the API path, output fields, and Git arguments literal and unambiguous.
+  export LC_ALL=C
+  [[ "$named" =~ ^[a-zA-Z0-9_][a-zA-Z0-9._/-]*$ ]] &&
+    git check-ref-format --branch "$named" >/dev/null 2>&1 || {
+      echo "Unsafe idd.integrationBranch: '$named'" >&2; exit 1; }
+fi
+if [ -z "$repo" ]; then
+  repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+fi
+[[ "$repo" == */* ]] || usage
+if [ "$named_rc" = 0 ]; then
+  [ "$mode" != integrate ] || {
+    echo "This repository names its integration branch ($named): integrate refuses" >&2; exit 1; }
+  [[ "$repo" != *-prd ]] || {
+    echo "A -prd repository stays single-branch: unset idd.integrationBranch" >&2; exit 1; }
+  has_branch "$named" || {
+    echo "idd.integrationBranch names '$named', a branch $repo does not have" >&2; exit 1; }
+  echo "integration=$named release=none"; exit 0
+fi
 strategy
 if [ "$mode" = show ]; then echo "integration=$integration release=$release"; exit 0; fi
 ensured=false; top=""

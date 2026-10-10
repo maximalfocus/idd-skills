@@ -28,8 +28,8 @@ that inject none, the user's request. Default repository: the current one. One r
 ## Step 0 — establish a safe issue boundary
 
 1. First run the sibling `idd-plan/scripts/integration-branch.sh ensure` and print its
-   `integration=… release=…` line: the integration branch (`dev` unless opted out) is the default
-   branch every PR targets. Resolve repo root, remotes, current branch, and status. Read root
+   `integration=… release=…` line: every issue branch starts from, and every PR targets,
+   the integration branch it prints. Resolve repo root, remotes, branch, and status. Read root
    `AGENTS.md`/`CLAUDE.md` and what they reference. Never overwrite or stage unrelated work.
 2. Fetch the issue with body **and comments** (`gh issue view … --json
    number,title,body,comments,labels,state,url`); require `OPEN` and require its repository to match
@@ -40,8 +40,8 @@ that inject none, the user's request. Default repository: the current one. One r
 3. Reject or ask to split an epic that cannot be reviewed and verified as one coherent change. For a
    bug, locate the reproduction; for a feature/change, locate the affected user or system boundary.
 4. If the working tree is dirty, do not discard or absorb it. Ask whether it is a prerequisite;
-   otherwise create a sibling worktree from the current committed base. If clean, create the N-3
-   branch `issue/<number>-<slug>` before the first write. Never implement on the default branch.
+   otherwise create a sibling worktree from the integration branch. If clean, create the N-3
+   branch `issue/<number>-<slug>` before the first write. Never implement on the integration one.
 5. Confirm GitHub auth and that push access or the repository's fork workflow is available. A
    tooling failure is a disclosed blocker, not a reason to bypass policy.
 
@@ -130,7 +130,7 @@ implementation may still open a non-closing PR.
    text are permanent provider surfaces no later publication can purge — retained pull-request refs
    outlive any history rewrite — so never name a private companion repository, document, or section
    in them; give the rationale generically instead. Then run the sibling
-   `idd-plan/scripts/line-width.sh check origin/<default>`: rewrap every reported line to 100
+   `idd-plan/scripts/line-width.sh check origin/<integration>`: rewrap every reported line to 100
    characters, or list its path on the repository's `Formatter-owned:` line only when a formatter,
    generator, package manager, or recorder lays it out.
 2. Push the dedicated branch. Open a focused PR into the integration branch, never the release

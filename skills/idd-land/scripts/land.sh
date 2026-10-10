@@ -23,12 +23,16 @@ git remote get-url origin >/dev/null
 actual_repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 [ "$actual_repo" = "$repo" ] || { echo "Checkout is $actual_repo, not $repo" >&2; exit 1; }
 
-default_branch="$(gh repo view "$repo" --json defaultBranchRef --jq .defaultBranchRef.name)"
+# The integration branch is the default branch unless the checkout names its own.
+branches="$(bash "$plan_scripts/integration-branch.sh" show "$repo")"
+integration="$(sed -n 's/^integration=\([^ ]*\) .*/\1/p' <<<"$branches")"
+[ -n "$integration" ] || { echo "Cannot read the integration branch of $repo" >&2; exit 1; }
 state="$(gh pr view "$pr" --repo "$repo" --json state --jq .state)"
 head="$(gh pr view "$pr" --repo "$repo" --json headRefName --jq .headRefName)"
 base="$(gh pr view "$pr" --repo "$repo" --json baseRefName --jq .baseRefName)"
 [ "$head" != "$base" ] || { echo "Refusing to delete the base branch" >&2; exit 1; }
-[ "$base" = "$default_branch" ] || { echo "PR base $base is not default branch $default_branch" >&2; exit 1; }
+[ "$base" = "$integration" ] || {
+  echo "PR base $base is not integration branch $integration" >&2; exit 1; }
 [[ "$head" =~ ^issue/$issue-[a-z0-9]+(-[a-z0-9]+)*$ ]] || {
   echo "PR head $head is not an issue/$issue-<slug> branch (N-3)" >&2; exit 1; }
 initial_issue_state="$(gh issue view "$issue" --repo "$repo" --json state --jq .state)"
@@ -96,14 +100,15 @@ if [ "$state" = OPEN ]; then
 fi
 
 # The post-merge refresh is ff-only. Prove it can succeed before mutating GitHub; otherwise a
-# local-only default-branch commit would let the remote merge/issue closure happen and fail cleanup.
-git fetch -q origin "$default_branch"
+# local-only integration commit would let the remote merge/issue closure happen and fail cleanup.
+git fetch -q origin "refs/heads/$integration"
 default_oid="$(git rev-parse FETCH_HEAD)"
-git show-ref --verify --quiet "refs/heads/$default_branch" || {
-  echo "Local default branch $default_branch does not exist" >&2; exit 1;
+git show-ref --verify --quiet "refs/heads/$integration" || {
+  echo "Local integration branch $integration does not exist" >&2; exit 1;
 }
-git merge-base --is-ancestor "refs/heads/$default_branch" "$default_oid" || {
-  echo "Local $default_branch cannot fast-forward to origin/$default_branch; reconcile it before landing" >&2
+git merge-base --is-ancestor "refs/heads/$integration" "$default_oid" || {
+  echo "Local $integration cannot fast-forward to origin/$integration;" \
+    "reconcile it before landing" >&2
   exit 1
 }
 
@@ -165,8 +170,8 @@ elif [ "$issue_state" != "CLOSED" ]; then
   exit 1
 fi
 
-git checkout "$default_branch"
-git pull --ff-only origin "$default_branch"
+git checkout "$integration"
+git pull --ff-only origin "refs/heads/$integration"
 if git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1; then
   git push origin --delete "$head"
 fi
@@ -177,13 +182,14 @@ git fetch --prune origin
 
 tree="$(git status --porcelain)" || { echo "Cannot read the working tree state after landing" >&2; exit 1; }
 [ -z "$tree" ] || { echo "Working tree is dirty after landing" >&2; exit 1; }
-[ "$(git branch --show-current)" = "$default_branch" ] || { echo "Not on $default_branch" >&2; exit 1; }
+[ "$(git branch --show-current)" = "$integration" ] || { echo "Not on $integration" >&2; exit 1; }
 [ "$(gh pr view "$pr" --repo "$repo" --json state --jq .state)" = "MERGED" ] || { echo "PR postcondition failed" >&2; exit 1; }
 [ "$(gh issue view "$issue" --repo "$repo" --json state --jq .state)" = "CLOSED" ] || { echo "Issue postcondition failed" >&2; exit 1; }
 ! git show-ref --verify --quiet "refs/heads/$head" || { echo "Local branch still exists" >&2; exit 1; }
 ! git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1 || { echo "Remote branch still exists" >&2; exit 1; }
 
-printf 'LANDED issue=%s pr=%s squash=%s base=%s deleted=%s subject=%s\n' "$issue" "$pr" "$merge_oid" "$default_branch" "$head" "$squash_subject"
+printf 'LANDED issue=%s pr=%s squash=%s base=%s deleted=%s subject=%s\n' \
+  "$issue" "$pr" "$merge_oid" "$integration" "$head" "$squash_subject"
 }
 
 land_main "$@"; exit $?

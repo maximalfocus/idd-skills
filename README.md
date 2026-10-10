@@ -40,7 +40,11 @@ repository on first use whatever `main`'s history: it creates `dev`, makes it de
 merge commits promotion needs). Every run retargets open main-based issue PRs and switches a clean
 checkout on `main` to `dev`, completing any work left by a failed earlier run.
 A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts out. A `{project}-prd` and
-this methodology repository stay single-branch on `main`.
+this methodology repository stay single-branch on `main`. For a repository IDD may not reshape,
+`git config --local idd.integrationBranch <branch>` in the checkout names the branch instead: the
+script then only reads, and issue PRs target and land only on that branch. IDD names no release
+branch for this checkout (`release=none`), so IDD promotes nothing there. Names must use the safe
+branch syntax defined in conventions.md; unsafe names are refused before any GitHub call.
 
 A product too large for one coherent contract partitions its `{project}-prd` into `contexts/<name>/PRD.md` and `PROGRESS.md` beneath a root index and portfolio panel. Each context owns a scope of implementation paths, names the contexts it depends on without restating them, and is admitted only when work is planned there: `/idd-plan --reconstruct --scope <paths> --context <name>` reconstructs one, issues carry the context name as their label, changed files must resolve to the issue's context, and every gate runs over the index and each context.
 

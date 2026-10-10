@@ -99,7 +99,7 @@ case "$out" in
   *) fail "rerun: $out";;
 esac
 
-# --- nothing ahead, no release branch, or a blocked PR stop without merging -------
+# --- nothing ahead, no IDD release branch, or a blocked PR stop without merging -------
 fresh; echo 0 > "$tmp/ahead"
 out="$(bash "$script" example/app)"
 case "$out" in *"NOTHING to promote"*) ;; *) echo "nothing ahead: $out" >&2; exit 1;; esac
