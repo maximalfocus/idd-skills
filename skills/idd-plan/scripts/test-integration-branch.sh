@@ -55,6 +55,8 @@ case "$method $path" in
   "POST repos/"*"/git/refs") cat > "$root/ref-body"; touch "$root/branch-dev";;
   "GET repos/"*"/branches/"*)
     name="${path#*/branches/}" # a branch name may hold slashes
+    # An empty name selects the list endpoint, not a missing branch.
+    [ -n "$name" ] || { echo '[]'; exit 0; }
     [ -f "$root/branch-${name//\//_}" ] || { echo "gh: Branch not found (HTTP 404)" >&2; exit 1; }
     echo "$name";;
   "GET repos/"*"/git/ref/heads/"*) echo 0123abc;;
@@ -69,11 +71,11 @@ FAKE
 chmod +x "$tmp/bin/gh"
 cat > "$tmp/bin/git" <<'FAKE'
 #!/usr/bin/env bash
-for operation in fetch current status switch config; do
+for operation in fetch current status switch config discovery; do
   [ -f "$BRANCH_TEST_ROOT/refuse-$operation" ] || continue
   case "$operation $*" in
     fetch*' fetch '*|current*' --show-current'|status*' --porcelain'|switch*' switch '*|\
-      config*' config '*)
+      config*' config '*|discovery*' rev-parse --git-dir')
       echo "git $operation failed" >&2
       [ "$operation" != config ] || exit 128 # exit 1 would mean an unset key
       exit 1;;
@@ -245,12 +247,19 @@ GET repos/example/open/branches/ai/work" ] ||
 refuses "integrate in a naming checkout" "integrate refuses" ensure_mode integrate example/open
 refuses "a named branch on a -prd" "stays single-branch" ensure_mode ensure example/open-prd
 rm "$tmp/branch-ai_work"
-refuses "a named branch the repository lacks" "does not have" ensure_mode ensure example/open
+for mode in show ensure; do
+  refuses "a named branch the repository lacks in $mode" "does not have" \
+    ensure_mode "$mode" example/open
+done
 named ""
-refuses "an empty named branch" "does not have" ensure_mode ensure example/open
+for mode in show ensure; do
+  refuses "an empty named branch in $mode" "does not have" ensure_mode "$mode" example/open
+done
 named ai/work; touch "$tmp/branch-ai_work" "$tmp/refuse-config"
-refuses "an unreadable git config" "Cannot read idd.integrationBranch" \
-  ensure_mode ensure example/open
+for mode in show ensure integrate; do
+  refuses "an unreadable git config in $mode" "Cannot read idd.integrationBranch" \
+    ensure_mode "$mode" example/open
+done
 no_writes "every refused naming checkout"
 [ ! -f "$tmp/default-branch" ] || fail "a refused naming checkout must not move the default branch"
 
@@ -259,5 +268,55 @@ fresh; git -C "$tmp/co" config --local --unset idd.integrationBranch
 out="$(ensure example/open 2>/dev/null)"
 [ "$out" = "integration=dev release=main" ] || fail "an unset key must integrate again: $out"
 grep -q '^PATCH repos/example/open$' "$tmp/calls" || fail "an unset key must make dev default"
+
+# Explicit repository arguments still work outside any local repository.
+mkdir "$tmp/outside"
+for mode in show integrate ensure; do
+  fresh; touch "$tmp/refuse-fetch" "$tmp/refuse-switch"
+  out="$(cd "$tmp/outside" && bash "$script" "$mode" example/open 2>/dev/null)"
+  case "$mode" in
+    show) [ "$out" = "integration=main release=none" ] || fail "outside show: $out"
+      no_writes "outside show";;
+    integrate) [ "$out" = "example/open integrates on dev; main is the release branch" ] ||
+      fail "outside integrate: $out";;
+    ensure) [ "$out" = "integration=dev release=main" ] || fail "outside ensure: $out";;
+  esac
+  if [ "$mode" != show ]; then
+    [ "$(cat "$tmp/default-branch")" = dev ] || fail "outside $mode must adopt dev"
+    [ -f "$tmp/ref-body" ] || fail "outside $mode must create dev"
+  fi
+done
+
+# A bare repository has local config even though show-toplevel cannot succeed.
+fresh; git init -q --bare "$tmp/bare"
+git -C "$tmp/bare" config --local idd.integrationBranch ai/work
+touch "$tmp/branch-ai_work" "$tmp/refuse-fetch" "$tmp/refuse-switch"
+bare_mode() { (cd "$tmp/bare" && bash "$script" "$@"); }
+refuses "integrate in a bare naming repository" "integrate refuses" \
+  bare_mode integrate example/open
+for mode in show ensure; do
+  out="$(bare_mode "$mode" example/open)"
+  [ "$out" = "integration=ai/work release=none" ] || fail "bare $mode: $out"
+done
+no_writes "a bare naming repository"
+[ ! -f "$tmp/default-branch" ] && [ ! -f "$tmp/ref-body" ] || fail "bare must not adopt"
+
+# Failed discovery is not absence; every mode stops before any GitHub call.
+fresh; named ai/work; touch "$tmp/branch-ai_work" "$tmp/refuse-discovery"
+for mode in show ensure integrate; do
+  refuses "failed repository discovery in $mode" "Cannot discover the git repository" \
+    ensure_mode "$mode" example/open
+done
+no_writes "failed repository discovery"
+[ ! -s "$tmp/calls" ] || fail "failed discovery must stop before GitHub"
+rm "$tmp/refuse-discovery"
+
+# A malformed local config is also a read error, not an unset key.
+fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"
+for mode in show ensure integrate; do
+  refuses "malformed local config in $mode" "Cannot" ensure_mode "$mode" example/open
+done
+no_writes "malformed local config"
+[ ! -s "$tmp/calls" ] || fail "malformed config must stop before GitHub"
 
 echo "integration-branch tests passed"

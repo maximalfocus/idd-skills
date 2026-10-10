@@ -53,16 +53,22 @@ write() { # $1 = method, $2 = path, stdin = JSON body
   err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)" || { echo "$err" >&2; exit 1; }
 }
 
-top="$(git rev-parse --show-toplevel 2>/dev/null || true)"; named=""; named_rc=1
-if [ -n "$top" ]; then
+# Local config also belongs to bare repositories; worktree discovery is not a key read.
+named=""; named_rc=1
+if discovery="$(LC_ALL=C git rev-parse --git-dir 2>&1)"; then
   named_rc=0
-  named="$(git -C "$top" config --local --get idd.integrationBranch)" || named_rc=$?
+  named="$(git config --local --get idd.integrationBranch)" || named_rc=$?
+else
+  case "$discovery" in
+    "fatal: not a git repository (or any "*) ;;
+    *) echo "Cannot discover the git repository: $discovery" >&2; exit 1;;
+  esac
 fi
 # A failed read is not an unset key: it must never fall through to integrating.
-[ "$named_rc" -le 1 ] || { echo "Cannot read idd.integrationBranch in $top" >&2; exit 1; }
+[ "$named_rc" -le 1 ] || { echo "Cannot read idd.integrationBranch" >&2; exit 1; }
 if [ "$named_rc" = 0 ]; then
   [ "$mode" != integrate ] || {
-    echo "$top names its integration branch ($named): integrate refuses" >&2; exit 1; }
+    echo "This repository names its integration branch ($named): integrate refuses" >&2; exit 1; }
   [[ "$repo" != *-prd ]] || {
     echo "A -prd repository stays single-branch: unset idd.integrationBranch" >&2; exit 1; }
   [ -n "$named" ] && has_branch "$named" || {
@@ -71,9 +77,10 @@ if [ "$named_rc" = 0 ]; then
 fi
 strategy
 if [ "$mode" = show ]; then echo "integration=$integration release=$release"; exit 0; fi
-ensured=false
+ensured=false; top=""
 if [ "$mode" = ensure ]; then
   want=dev
+  top="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   if [ -n "$top" ]; then
     instructions=""
     for file in "$top/AGENTS.md" "$top/CLAUDE.md"; do
