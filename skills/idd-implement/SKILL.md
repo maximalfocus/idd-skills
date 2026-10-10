@@ -40,7 +40,7 @@ that inject none, the user's request. Default repository: the current one. One r
 3. Reject or ask to split an epic that cannot be reviewed and verified as one coherent change. For a
    bug, locate the reproduction; for a feature/change, locate the affected user or system boundary.
 4. If the working tree is dirty, do not discard or absorb it. Ask whether it is a prerequisite;
-   otherwise create a sibling worktree from the current committed base. If clean, create the N-3
+   otherwise create a sibling worktree from the integration branch. If clean, create the N-3
    branch `issue/<number>-<slug>` before the first write. Never implement on the integration one.
 5. Confirm GitHub auth and that push access or the repository's fork workflow is available. A
    tooling failure is a disclosed blocker, not a reason to bypass policy.

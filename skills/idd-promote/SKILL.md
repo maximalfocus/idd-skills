@@ -22,7 +22,7 @@ current checkout. `--open-only` opens the PR for review and stops; a rerun resum
 1. Resolve this installed skill directory and the sibling `idd-plan` skill; a missing sibling stops.
 2. Run `idd-plan/scripts/integration-branch.sh show` and print its `integration=… release=…` line
    first, so the user sees which branch is which before anything changes. `release=none` means the
-   repository opted out with `Integration-branch: main` or was never integrated: stop and say so.
+   checkout has no release branch, including when it names its integration branch: stop and say so.
 3. Read root `AGENTS.md`/`CLAUDE.md`. A project's own release policy (required approvals, a release
    checklist, a freeze window) governs whether to merge now; when it demands review first, use
    `--open-only`.
