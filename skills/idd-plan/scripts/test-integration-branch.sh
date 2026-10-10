@@ -316,8 +316,9 @@ rm "$tmp/refuse-discovery"
 # Unsafe names stop before any GitHub call, even without an explicit repository.
 git -C "$tmp/co" switch -q main
 for branch in 'ai#work' 'ai?work' 'ai%work' 'ai..work' 'ai//work' 'ai.lock' \
-  '-work' '/work' '.work' 'ai:work' 'ai work' $'ai\nwork'; do
-  fresh; named "$branch"
+  '-work' '/work' '.work' 'ai:work' 'ai work' $'ai\nwork' \
+  $'ai/work\n' $'ai/work\n\n' $'\n' $'ai/work\r\n'; do
+  fresh; named "$branch"; touch "$tmp/branch-ai_work"
   for mode in show ensure integrate; do
     refuses "unsafe name in $mode" "Unsafe idd.integrationBranch" \
       ensure_mode "$mode" example/open
@@ -331,6 +332,35 @@ done
 fresh; named ai/work.v1_test-2; touch "$tmp/branch-ai_work.v1_test-2"
 out="$(ensure_mode show example/open)"
 [ "$out" = "integration=ai/work.v1_test-2 release=none" ] || fail "safe name: $out"
+
+# Prove the regex runs in C even where no hostile locale is installed. POSIX always exists.
+cat > "$tmp/locale-proof" <<'PROOF'
+check_branch_locale() {
+  case "$BASH_COMMAND" in
+    '[[ "$named" =~ '*)
+      [ "${LC_ALL:-}" = C ] || { echo "branch regex must run in C" >&2; exit 1; }
+      touch "$BRANCH_TEST_ROOT/locale-checked";;
+  esac
+}
+trap check_branch_locale DEBUG
+PROOF
+locale_mode() {
+  (cd "$tmp/co" && LC_ALL=POSIX BASH_ENV="$tmp/locale-proof" bash "$script" "$@")
+}
+fresh; named ai/work; touch "$tmp/branch-ai_work"
+for mode in show ensure; do
+  out="$(locale_mode "$mode" example/open)"
+  [ "$out" = "integration=ai/work release=none" ] || fail "C validation changed a safe name"
+done
+[ -f "$tmp/locale-checked" ] || fail "locale proof did not observe the branch regex"
+for branch in 'é' $'\351'; do
+  fresh; named "$branch"; rm "$tmp/locale-checked"
+  for mode in show ensure integrate; do
+    refuses "non-ASCII branch in $mode" "Unsafe idd.integrationBranch" locale_mode "$mode"
+  done
+  [ -f "$tmp/locale-checked" ] || fail "non-ASCII validation was not observed"
+  [ ! -s "$tmp/calls" ] && [ ! -f "$tmp/repo-viewed" ] || fail "non-ASCII name reached GitHub"
+done
 
 # A malformed local config is also a read error, not an unset key.
 fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"

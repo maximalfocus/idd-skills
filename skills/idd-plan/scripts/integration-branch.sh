@@ -53,7 +53,10 @@ write() { # $1 = method, $2 = path, stdin = JSON body
 named=""; named_rc=1
 if discovery="$(LC_ALL=C git rev-parse --git-dir 2>&1)"; then
   named_rc=0
-  named="$(git config --local --get idd.integrationBranch)" || named_rc=$?
+  # The sentinel preserves value newlines; remove only Git's one output newline.
+  named="$(git config --local --get idd.integrationBranch; rc=$?; printf .; exit "$rc")" ||
+    named_rc=$?
+  named="${named%.}"; named="${named%$'\n'}"
 else
   case "$discovery" in
     "fatal: not a git repository (or any "*) ;;
@@ -66,6 +69,7 @@ if [ "$named_rc" = 0 ]; then
   [ -n "$named" ] || {
     echo "idd.integrationBranch names '$named', a branch $repo does not have" >&2; exit 1; }
   # Keep the API path, output fields, and Git arguments literal and unambiguous.
+  export LC_ALL=C
   [[ "$named" =~ ^[a-zA-Z0-9_][a-zA-Z0-9._/-]*$ ]] &&
     git check-ref-format --branch "$named" >/dev/null 2>&1 || {
       echo "Unsafe idd.integrationBranch: '$named'" >&2; exit 1; }
