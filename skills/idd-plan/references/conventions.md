@@ -64,11 +64,15 @@ A `{project}-prd` never integrates on `dev`; its tracker and contract changes me
 A repository IDD may not reshape keeps its default branch, settings, and files untouched: the
 checkout names the branch issue pull requests target in its own git config, and the script then
 only reads, printing `integration=<branch> release=none`. `/idd-land` refuses a pull request with
-any other base, and with no release branch nothing promotes:
+any other base. IDD names no release branch for that checkout, so IDD promotes nothing there:
 
 ```
 git config --local idd.integrationBranch <branch>
 ```
+
+The name starts with an ASCII letter, digit, or underscore; the remaining characters are letters,
+digits, `_`, `.`, `/`, or `-`. It must be a valid Git branch name and contain no `..`. Unsafe names
+are refused before any GitHub call; they are not URL-encoded or interpreted as Git options.
 
 ## Line width
 

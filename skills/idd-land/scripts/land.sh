@@ -100,8 +100,8 @@ if [ "$state" = OPEN ]; then
 fi
 
 # The post-merge refresh is ff-only. Prove it can succeed before mutating GitHub; otherwise a
-# local-only default-branch commit would let the remote merge/issue closure happen and fail cleanup.
-git fetch -q origin "$integration"
+# local-only integration commit would let the remote merge/issue closure happen and fail cleanup.
+git fetch -q origin "refs/heads/$integration"
 default_oid="$(git rev-parse FETCH_HEAD)"
 git show-ref --verify --quiet "refs/heads/$integration" || {
   echo "Local integration branch $integration does not exist" >&2; exit 1;
@@ -171,7 +171,7 @@ elif [ "$issue_state" != "CLOSED" ]; then
 fi
 
 git checkout "$integration"
-git pull --ff-only origin "$integration"
+git pull --ff-only origin "refs/heads/$integration"
 if git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1; then
   git push origin --delete "$head"
 fi

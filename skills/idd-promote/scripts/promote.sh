@@ -24,7 +24,7 @@ echo "$branches"
 integration="$(sed -n 's/^integration=\([^ ]*\) .*/\1/p' <<<"$branches")"
 release="${branches##*release=}"
 [ "$release" != none ] || {
-  echo "$repo integrates on $integration with no release branch; nothing to promote" >&2; exit 1; }
+  echo "IDD names no release branch for $repo ($integration); nothing to promote" >&2; exit 1; }
 
 title="chore(release): promote $integration to $release"
 pr="$(gh pr list --repo "$repo" --base "$release" --head "$integration" --state open \

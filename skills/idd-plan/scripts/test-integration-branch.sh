@@ -16,7 +16,9 @@ cat > "$tmp/bin/gh" <<'FAKE'
 #!/usr/bin/env bash
 set -e
 root="${BRANCH_TEST_ROOT:?}"
-if [ "$1 $2" = "repo view" ]; then echo maximalfocus/current; exit 0; fi
+if [ "$1 $2" = "repo view" ]; then
+  touch "$root/repo-viewed"; echo maximalfocus/current; exit 0
+fi
 if [ "$1 $2" = "pr list" ]; then
   [ ! -f "$root/refuse-list" ] || { echo "PR list denied" >&2; exit 1; }
   cat "$root/open-prs" 2>/dev/null || true; exit 0
@@ -87,7 +89,7 @@ chmod +x "$tmp/bin/git"
 
 fresh() {
   rm -f "$tmp"/{calls,patch-body,refuse-writes,default-branch,ref-body,open-prs,retargeted} \
-    "$tmp"/branch-* "$tmp"/refuse-*
+    "$tmp"/branch-* "$tmp"/refuse-* "$tmp/repo-viewed"
   touch "$tmp/branch-main"
 }
 fail() { echo "$*" >&2; exit 1; }
@@ -310,6 +312,25 @@ done
 no_writes "failed repository discovery"
 [ ! -s "$tmp/calls" ] || fail "failed discovery must stop before GitHub"
 rm "$tmp/refuse-discovery"
+
+# Unsafe names stop before any GitHub call, even without an explicit repository.
+git -C "$tmp/co" switch -q main
+for branch in 'ai#work' 'ai?work' 'ai%work' 'ai..work' 'ai//work' 'ai.lock' \
+  '-work' '/work' '.work' 'ai:work' 'ai work' $'ai\nwork'; do
+  fresh; named "$branch"
+  for mode in show ensure integrate; do
+    refuses "unsafe name in $mode" "Unsafe idd.integrationBranch" \
+      ensure_mode "$mode" example/open
+    refuses "unsafe name before repository resolution in $mode" "Unsafe idd.integrationBranch" \
+      ensure_mode "$mode"
+  done
+  [ ! -s "$tmp/calls" ] && [ ! -f "$tmp/repo-viewed" ] ||
+    fail "unsafe names must stop before GitHub"
+  [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "unsafe name switched checkout"
+done
+fresh; named ai/work.v1_test-2; touch "$tmp/branch-ai_work.v1_test-2"
+out="$(ensure_mode show example/open)"
+[ "$out" = "integration=ai/work.v1_test-2 release=none" ] || fail "safe name: $out"
 
 # A malformed local config is also a read error, not an unset key.
 fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"

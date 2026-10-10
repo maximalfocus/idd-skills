@@ -191,8 +191,9 @@ A root `AGENTS.md` or `CLAUDE.md` line `Integration-branch: main` opts a reposit
 single-branch. A repository IDD may not reshape is delivered from a checkout whose local git config
 names the branch (`git config --local idd.integrationBranch <branch>`), with nothing written to the
 repository: `integration-branch.sh` run there only reads, so no `dev`, default branch, merge
-setting, or PR base changes; issue PRs target and land only on the named branch; and it has no
-release branch, so nothing promotes. A project's own review policy governs everything else.
+setting, or PR base changes; issue PRs target and land only on the named branch. IDD names no
+release branch for that checkout (`release=none`), so IDD promotes nothing there. A project's own
+review policy governs everything else.
 
 ## Article 7 — Preserve conceptual integrity
 

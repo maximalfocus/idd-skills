@@ -77,7 +77,7 @@ queue, speculative backlog, or hidden progress file.
    branch; stop on an unrelated required red gate, conflict, requested changes needing user intent,
    or unproved acceptance.
 5. **Land and reconcile.** When every acceptance item and required check is green, execute
-   `idd-land` without residual acceptance. Verify squash merge, closure, default-branch refresh,
+   `idd-land` without residual acceptance. Verify squash merge, closure, integration-branch refresh,
    local/remote branch deletion, and automatic PRD reconciliation, then begin the next iteration
    from fresh live state.
 6. When `idd-plan` reports no remaining implementation outcome, merge the open progress batch
