@@ -17,6 +17,7 @@ printf 'Test the landing subject' > "$tmp/issue-title"
 printf 'Test the landing subject' > "$tmp/pr-title"; echo issue/3-test > "$tmp/pr-head"
 : > "$tmp/merge-subject"
 : > "$tmp/merge-count"
+echo main > "$tmp/pr-base"
 
 cat > "$tmp/bin/gh" <<'FAKE'
 #!/usr/bin/env bash
@@ -30,11 +31,11 @@ elif [ "$1 $2" = "pr view" ]; then
     .state) cat "$root/pr-state";;
     .headRefName) cat "$root/pr-head";;
     .title) cat "$root/pr-title";;
-    .baseRefName) echo main;;
+    .baseRefName) cat "$root/pr-base";;
     .isCrossRepository|.isDraft) echo false;;
     '.reviewDecision // ""') echo APPROVED;;
     .mergeable) echo MERGEABLE;;
-    .mergeCommit.oid) git rev-parse origin/main;;
+    .mergeCommit.oid) git rev-parse "origin/$(cat "$root/pr-base")";;
     '.body // ""') cat "$root/pr-body";;
     *) echo '{}';;
   esac
@@ -51,7 +52,7 @@ elif [ "$1 $2" = "pr merge" ]; then
     printf '%s' "$subject" > "$root/merge-subject"
   fi
   printf 'x' >> "$root/merge-count"
-  git push -q origin issue/3-test:main; echo MERGED > "$root/pr-state"
+  git push -q origin "issue/3-test:$(cat "$root/pr-base")"; echo MERGED > "$root/pr-state"
 elif [ "$1 $2" = "issue view" ]; then
   key="${*: -1}"
   case "$key" in
@@ -66,6 +67,8 @@ elif [ "$1" = api ]; then
   key="${*: -1}"
   case "$key" in
     .commit.message) cat "$root/merge-subject";;
+    .name) [ -f "$root/has-named-branch" ] || {
+      echo "gh: Branch not found (HTTP 404)" >&2; exit 1; };;
     .default_branch) echo main;;
     *) echo 1;;
   esac
@@ -92,6 +95,7 @@ fresh() { # rebuild the work/origin pair and reset every recorded state file
   printf 'Test the landing subject' > "$tmp/issue-title"
   printf 'Test the landing subject' > "$tmp/pr-title"; echo issue/3-test > "$tmp/pr-head"
   : > "$tmp/merge-subject"; : > "$tmp/merge-count"
+  echo main > "$tmp/pr-base"; rm -f "$tmp/has-named-branch"
 }
 
 run() { PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 >/dev/null; }
@@ -198,6 +202,31 @@ after_first="$(merges)"
 printf 'A completely different title written after landing' > "$tmp/issue-title"
 run
 [ "$(merges)" = "$after_first" ] || { echo "resume merged a second time" >&2; exit 1; }
+
+# --- a checkout that names its integration branch lands only there -----------
+# The repository's default branch stays main; the checkout's git config names
+# another branch, so a main-based PR is refused and one based on it lands on it.
+fresh
+git branch -q ai/work main; git push -q origin ai/work 2>/dev/null
+git config --local idd.integrationBranch ai/work
+refuses "a named branch the repository lacks" "does not have"
+touch "$tmp/has-named-branch"
+refuses "a PR whose base is not the named integration branch" \
+  "PR base main is not integration branch ai/work"
+[ "$(merges)" = 0 ] || { echo "idd-land merged a PR with another base" >&2; exit 1; }
+echo ai/work > "$tmp/pr-base"
+out="$(PATH="$tmp/bin:$PATH" LAND_TEST_ROOT="$tmp" bash "$land_script" maximalfocus/test 3 13 \
+  2>/dev/null)" || { echo "idd-land rejected a PR based on the named branch" >&2; exit 1; }
+case "$out" in
+  *"LANDED issue=3 pr=13 "*" base=ai/work "*) ;;
+  *) echo "landing on a named branch reported: $out" >&2; exit 1;;
+esac
+[ "$(git branch --show-current)" = ai/work ] || { echo "landing must end on ai/work" >&2; exit 1; }
+[ "$(git rev-parse origin/main)" = "$(git rev-parse main)" ] &&
+  [ "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse main)" ] || {
+  echo "landing on a named branch moved main" >&2; exit 1; }
+[ "$(git ls-remote origin refs/heads/ai/work | cut -f1)" != "$(git rev-parse main)" ] || {
+  echo "landing on a named branch did not move it" >&2; exit 1; }
 
 # --- landing from a mutable source ------------------------------------------
 # When the installed skill resolves into the repository being landed, the

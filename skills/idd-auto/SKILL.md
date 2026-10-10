@@ -39,7 +39,7 @@ pair.
    binds it uniquely to the one active issue.
 3. Run the sibling `idd-plan/scripts/integration-branch.sh ensure` in the implementation checkout
    and print its `integration=… release=…` line first; never promote (`/idd-promote` is never
-   invoked). Pull the clean implementation default branch with `--ff-only` and run the sibling
+   invoked). Pull the clean implementation integration branch with `--ff-only` and run the sibling
    `idd-plan/scripts/progress-pr.sh sync` on the PRD. Read `PRD.md`, `PROGRESS.md`, every context
    contract when the pair is partitioned (an optional `--context <name>` narrows selection to one
    context while the pair still keeps one active issue), live issues/comments, PRs/reviews/checks,
@@ -104,7 +104,7 @@ Never end with a checkpoint or progress report. If the final audit finds remaini
 scope and no permitted blocker, start the next iteration. Declare completion only after the audit
 proves the completion target and the integrated product matches its coherent model with no
 contradictions, out-of-domain surplus, surprise paths, or unrecorded fragmenting decisions; both
-repositories must be clean and synchronized on their default branches, no run feature branch or open
+repositories must be clean and in sync on their integration branches, no run feature branch or open
 progress batch may remain, and `PROGRESS.md` must contain verified issue/PR/squash evidence. Return
 the created and landed issue/PR URLs, final implementation and PRD commits, verification state, and
 either `complete` or the single resumable blocker. Completion — or a blocker that ends the run —

@@ -61,6 +61,15 @@ Integration-branch: main
 
 A `{project}-prd` never integrates on `dev`; its tracker and contract changes merge to `main`.
 
+A repository IDD may not reshape keeps its default branch, settings, and files untouched: the
+checkout names the branch issue pull requests target in its own git config, and the script then
+only reads, printing `integration=<branch> release=none`. `/idd-land` refuses a pull request with
+any other base, and with no release branch nothing promotes:
+
+```
+git config --local idd.integrationBranch <branch>
+```
+
 ## Line width
 
 No change adds a line over 100 characters to a tracked text file — prose, code, and configuration

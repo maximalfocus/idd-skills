@@ -111,7 +111,7 @@ request, as does a successful `/idd-land`. No mode creates a PLAN file or a spec
 
 ## Reconcile mode — persist verified progress
 
-1. Pull the clean implementation default branch with `--ff-only`, run the bundled
+1. Pull the clean implementation integration branch with `--ff-only`, run the bundled
    `scripts/progress-pr.sh sync <contract-path>`, and re-read every tracker-linked issue, PR, and
    commit the changed rows need. When called by `/idd-land`, bind the supplied issue, PR, and squash
    commit to the matching slice; stop rather than guess when that mapping is ambiguous.

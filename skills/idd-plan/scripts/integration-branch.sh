@@ -20,6 +20,12 @@ set -euo pipefail
 # stays single-branch. Integrating retargets open pull requests from main to dev;
 # ensure also switches a clean checkout on main to dev. Both modes retry retargeting
 # on every run; ensure retries the checkout work even when dev is already default.
+#
+# A checkout of a repository IDD may not reshape names its integration branch in its
+# own git config instead: git config --local idd.integrationBranch <branch>. Every
+# mode run there then only reads: show and ensure print that branch with release=none
+# (so nothing promotes), integrate refuses, and no dev branch, default branch, merge
+# setting, pull-request base, or checked-out branch is changed.
 
 usage() {
   echo "usage: integration-branch.sh show|integrate|ensure [OWNER/REPO]" >&2; exit 64
@@ -47,12 +53,27 @@ write() { # $1 = method, $2 = path, stdin = JSON body
   err="$(gh api --method "$1" "$2" --input - 2>&1 >/dev/null)" || { echo "$err" >&2; exit 1; }
 }
 
+top="$(git rev-parse --show-toplevel 2>/dev/null || true)"; named=""; named_rc=1
+if [ -n "$top" ]; then
+  named_rc=0
+  named="$(git -C "$top" config --local --get idd.integrationBranch)" || named_rc=$?
+fi
+# A failed read is not an unset key: it must never fall through to integrating.
+[ "$named_rc" -le 1 ] || { echo "Cannot read idd.integrationBranch in $top" >&2; exit 1; }
+if [ "$named_rc" = 0 ]; then
+  [ "$mode" != integrate ] || {
+    echo "$top names its integration branch ($named): integrate refuses" >&2; exit 1; }
+  [[ "$repo" != *-prd ]] || {
+    echo "A -prd repository stays single-branch: unset idd.integrationBranch" >&2; exit 1; }
+  [ -n "$named" ] && has_branch "$named" || {
+    echo "idd.integrationBranch names '$named', a branch $repo does not have" >&2; exit 1; }
+  echo "integration=$named release=none"; exit 0
+fi
 strategy
 if [ "$mode" = show ]; then echo "integration=$integration release=$release"; exit 0; fi
-ensured=false; top=""
+ensured=false
 if [ "$mode" = ensure ]; then
   want=dev
-  top="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   if [ -n "$top" ]; then
     instructions=""
     for file in "$top/AGENTS.md" "$top/CLAUDE.md"; do

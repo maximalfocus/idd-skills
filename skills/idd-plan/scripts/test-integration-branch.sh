@@ -54,8 +54,9 @@ case "$method $path" in
     jq -r .default_branch <<<"$body" > "$root/default-branch";;
   "POST repos/"*"/git/refs") cat > "$root/ref-body"; touch "$root/branch-dev";;
   "GET repos/"*"/branches/"*)
-    [ -f "$root/branch-${path##*/}" ] || { echo "gh: Branch not found (HTTP 404)" >&2; exit 1; }
-    echo "${path##*/}";;
+    name="${path#*/branches/}" # a branch name may hold slashes
+    [ -f "$root/branch-${name//\//_}" ] || { echo "gh: Branch not found (HTTP 404)" >&2; exit 1; }
+    echo "$name";;
   "GET repos/"*"/git/ref/heads/"*) echo 0123abc;;
   "GET repos/"*)
     case "$jq" in
@@ -68,11 +69,14 @@ FAKE
 chmod +x "$tmp/bin/gh"
 cat > "$tmp/bin/git" <<'FAKE'
 #!/usr/bin/env bash
-for operation in fetch current status switch; do
+for operation in fetch current status switch config; do
   [ -f "$BRANCH_TEST_ROOT/refuse-$operation" ] || continue
   case "$operation $*" in
-    fetch*' fetch '*|current*' --show-current'|status*' --porcelain'|switch*' switch '*)
-      echo "git $operation failed" >&2; exit 1;;
+    fetch*' fetch '*|current*' --show-current'|status*' --porcelain'|switch*' switch '*|\
+      config*' config '*)
+      echo "git $operation failed" >&2
+      [ "$operation" != config ] || exit 128 # exit 1 would mean an unset key
+      exit 1;;
   esac
 done
 exec "$BRANCH_TEST_GIT" "$@"
@@ -158,7 +162,8 @@ git -C "$tmp/co" branch -M main
 git init -q --bare "$tmp/origin.git"
 git -C "$tmp/co" remote add origin "$tmp/origin.git"
 git -C "$tmp/co" push -q origin main main:dev
-ensure() { (cd "$tmp/co" && bash "$script" ensure "$@"); }
+ensure_mode() { (cd "$tmp/co" && bash "$script" "$@"); }
+ensure() { ensure_mode ensure "$@"; }
 out="$(ensure example/open 2>/dev/null)"
 [ "$out" = "integration=dev release=main" ] || fail "ensure must integrate by default: $out"
 [ "$(git -C "$tmp/co" branch --show-current)" = dev ] || fail "ensure must switch main to dev"
@@ -218,5 +223,41 @@ for operation in fetch current status; do
   rm "$tmp/refuse-$operation"
   [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "failed read must not switch"
 done
+
+# --- a checkout that names its integration branch is read, never reshaped ---------
+# Every write path is armed to fail or be seen: an open main-based PR, a refused PR
+# list, fetch, and switch. The only call allowed is the read of the named branch.
+named() { git -C "$tmp/co" config --local idd.integrationBranch "$1"; }
+fresh; git -C "$tmp/co" switch -q main
+named ai/work; touch "$tmp/branch-ai_work"
+echo 5 > "$tmp/open-prs"; touch "$tmp/refuse-list" "$tmp/refuse-fetch" "$tmp/refuse-switch"
+for mode in ensure show; do
+  out="$(ensure_mode "$mode" example/open)"
+  [ "$out" = "integration=ai/work release=none" ] || fail "named $mode: $out"
+done
+[ "$(cat "$tmp/calls")" = "GET repos/example/open/branches/ai/work
+GET repos/example/open/branches/ai/work" ] ||
+  fail "a named branch allows only its own read: $(cat "$tmp/calls")"
+[ ! -f "$tmp/default-branch" ] && [ ! -f "$tmp/branch-dev" ] && [ ! -f "$tmp/retargeted" ] ||
+  fail "a named branch must leave the repository as it is"
+[ "$(cat "$tmp/open-prs")" = 5 ] || fail "a named branch must leave open PRs alone"
+[ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "a named branch must not switch"
+refuses "integrate in a naming checkout" "integrate refuses" ensure_mode integrate example/open
+refuses "a named branch on a -prd" "stays single-branch" ensure_mode ensure example/open-prd
+rm "$tmp/branch-ai_work"
+refuses "a named branch the repository lacks" "does not have" ensure_mode ensure example/open
+named ""
+refuses "an empty named branch" "does not have" ensure_mode ensure example/open
+named ai/work; touch "$tmp/branch-ai_work" "$tmp/refuse-config"
+refuses "an unreadable git config" "Cannot read idd.integrationBranch" \
+  ensure_mode ensure example/open
+no_writes "every refused naming checkout"
+[ ! -f "$tmp/default-branch" ] || fail "a refused naming checkout must not move the default branch"
+
+# Unsetting the key restores integration on dev.
+fresh; git -C "$tmp/co" config --local --unset idd.integrationBranch
+out="$(ensure example/open 2>/dev/null)"
+[ "$out" = "integration=dev release=main" ] || fail "an unset key must integrate again: $out"
+grep -q '^PATCH repos/example/open$' "$tmp/calls" || fail "an unset key must make dev default"
 
 echo "integration-branch tests passed"
