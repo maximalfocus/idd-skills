@@ -122,6 +122,17 @@ fi
   echo "$mode would change $repo, resolved from the current directory:" \
     "pass the issue's OWNER/REPO" >&2
   exit 1; }
+# ensure switches the checkout it runs in, so that checkout must be one of the named repository.
+if [ -n "$top" ]; then
+  url="$(git -C "$top" config --get remote.origin.url)" || url="" # as configured, not rewritten
+  github='^(https://github\.com/|git@github\.com:|ssh://git@github\.com/)([^/]+/[^/]+)$'
+  here="$(sed -nE "s#$github#\\2#p" <<<"${url%.git}")"
+  [ -n "$here" ] || {
+    echo "Cannot tell which GitHub repository the checkout $top belongs to (origin)" >&2; exit 1; }
+  [ "$(tr '[:upper:]' '[:lower:]' <<<"$here")" = "$(tr '[:upper:]' '[:lower:]' <<<"$repo")" ] || {
+    echo "The checkout $top belongs to $here, not $repo: run ensure from a checkout of $repo" >&2
+    exit 1; }
+fi
 # Adoption changes the branch every pull request targets: an explicit integrate or ensure only.
 case "$integration" in
   dev) ;;

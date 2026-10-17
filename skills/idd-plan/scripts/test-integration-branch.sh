@@ -166,6 +166,9 @@ git -C "$tmp/co" branch -M main
 git init -q --bare "$tmp/origin.git"
 git -C "$tmp/co" remote add origin "$tmp/origin.git"
 git -C "$tmp/co" push -q origin main main:dev
+# The checkout is one of example/open: its GitHub origin URL is served by the local bare.
+git -C "$tmp/co" remote set-url origin https://github.com/example/open.git
+git -C "$tmp/co" config url."$tmp/origin.git".insteadOf https://github.com/example/open.git
 ensure_mode() { (cd "$tmp/co" && bash "$script" "$@"); }
 ensure() { ensure_mode ensure "$@"; }
 out="$(ensure example/open 2>/dev/null)"
@@ -378,6 +381,17 @@ no_writes "a change without OWNER/REPO"
 [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "the checkout must not switch"
 out="$(ensure_mode show)"
 [ "$out" = "integration=dev release=main" ] || fail "show still reads the checkout: $out"
+
+# A named run switches only a checkout of the named repository.
+fresh; rm -f "$tmp/branch-dev" "$tmp/default-branch"
+git -C "$tmp/co" remote set-url origin git@github.com:other/project.git
+git -C "$tmp/co" config url."$tmp/nowhere.git".insteadOf git@github.com:other/project.git
+git -C "$tmp/co" switch -q main; echo 7 > "$tmp/open-prs"
+refuses "ensure from another repository's checkout" "belongs to other/project, not example/open" \
+  ensure example/open
+no_writes "ensure from another repository's checkout"
+[ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "another checkout must not switch"
+git -C "$tmp/co" remote set-url origin https://github.com/example/open.git
 
 # A malformed local config is also a read error, not an unset key.
 fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"
