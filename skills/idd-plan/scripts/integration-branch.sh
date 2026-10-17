@@ -124,14 +124,28 @@ fi
   exit 1; }
 # ensure switches the checkout it runs in, so that checkout must be one of the named repository.
 if [ -n "$top" ]; then
-  url="$(git -C "$top" config --get remote.origin.url)" || url="" # as configured, not rewritten
-  github='^(https://github\.com/|git@github\.com:|ssh://git@github\.com/)([^/]+/[^/]+)$'
-  here="$(sed -nE "s#$github#\\2#p" <<<"${url%.git}")"
-  [ -n "$here" ] || {
-    echo "Cannot tell which GitHub repository the checkout $top belongs to (origin)" >&2; exit 1; }
-  [ "$(tr '[:upper:]' '[:lower:]' <<<"$here")" = "$(tr '[:upper:]' '[:lower:]' <<<"$repo")" ] || {
-    echo "The checkout $top belongs to $here, not $repo: run ensure from a checkout of $repo" >&2
-    exit 1; }
+  # Trust insteadOf/pushInsteadOf rewrites for mirrors; check every configured origin URL.
+  cannot_tell() {
+    echo "Cannot tell which GitHub repository the checkout $top belongs to (origin)" >&2
+    return 1
+  }
+  check_origins() {
+    local url here seen=false
+    local github='^(https://github\.com/|git@github\.com:|ssh://git@github\.com/)([^/]+/[^/]+)$'
+    while IFS= read -r -d '' url; do
+      seen=true
+      url="$(printf '%s' "$url" | LC_ALL=C tr '[:upper:]' '[:lower:]'; printf .)"
+      url="${url%.}"
+      [[ "${url%.git}" =~ $github ]] || { cannot_tell; return 1; }
+      here="${BASH_REMATCH[2]}"
+      [ "$here" = "$(LC_ALL=C tr '[:upper:]' '[:lower:]' <<<"$repo")" ] || {
+        echo "The checkout $top belongs to $here, not $repo:" \
+          "run ensure from a checkout of $repo" >&2
+        return 1; }
+    done
+    [ "$seen" = true ] || cannot_tell
+  }
+  git -C "$top" config --null --get-all remote.origin.url | check_origins || exit 1
 fi
 # Adoption changes the branch every pull request targets: an explicit integrate or ensure only.
 case "$integration" in

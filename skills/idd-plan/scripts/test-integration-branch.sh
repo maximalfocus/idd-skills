@@ -5,7 +5,7 @@ script="${INTEGRATION_BRANCH_SCRIPT:-$root/skills/idd-plan/scripts/integration-b
 tmp="$(mktemp -d)"; tmp="$(cd "$tmp" && pwd -P)"; trap 'rm -rf "$tmp"' EXIT
 command -v jq >/dev/null || { echo "integration-branch tests require jq" >&2; exit 1; }
 mkdir -p "$tmp/bin"
-export BRANCH_TEST_ROOT="$tmp"
+export BRANCH_TEST_ROOT="$tmp" GIT_ALLOW_PROTOCOL=file
 export BRANCH_TEST_GIT="$(command -v git)"
 export PATH="$tmp/bin:$PATH"
 
@@ -392,6 +392,41 @@ refuses "ensure from another repository's checkout" "belongs to other/project, n
 no_writes "ensure from another repository's checkout"
 [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "another checkout must not switch"
 git -C "$tmp/co" remote set-url origin https://github.com/example/open.git
+
+# Every origin value must identify this repository; missing/foreign origins fail closed.
+origin_refusal() {
+  fresh; git -C "$tmp/co" switch -q main; echo 7 > "$tmp/open-prs"
+  touch "$tmp/refuse-fetch" "$tmp/refuse-switch"
+  refuses "$1" "$2" ensure example/open
+  no_writes "$1"
+  [ ! -f "$tmp/ref-body" ] && [ ! -f "$tmp/retargeted" ] &&
+    [ "$(cat "$tmp/open-prs")" = 7 ] || fail "$1 created a branch or retargeted a PR"
+  [ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "$1 switched the checkout"
+}
+git -C "$tmp/co" config --unset-all remote.origin.url
+origin_refusal "no origin" "Cannot tell"
+git -C "$tmp/co" config remote.origin.url https://gitlab.com/example/open.git
+origin_refusal "a non-GitHub origin" "Cannot tell"
+for urls in foreign-first foreign-last; do
+  git -C "$tmp/co" config --unset-all remote.origin.url
+  if [ "$urls" = foreign-first ]; then
+    git -C "$tmp/co" config --add remote.origin.url git@github.com:other/project.git
+  fi
+  git -C "$tmp/co" config --add remote.origin.url https://github.com/example/open.git
+  if [ "$urls" = foreign-last ]; then
+    git -C "$tmp/co" config --add remote.origin.url git@github.com:other/project.git
+  fi
+  origin_refusal "$urls origins" "belongs to other/project, not example/open"
+done
+fresh; git -C "$tmp/co" config --unset-all remote.origin.url
+git -C "$tmp/co" config --add remote.origin.url https://github.com/example/open.git
+git -C "$tmp/co" config --add remote.origin.url https://GITHUB.COM/EXAMPLE/OPEN.git
+git -C "$tmp/co" config --add url."$tmp/origin.git".insteadOf https://GITHUB.COM/EXAMPLE/OPEN.git
+out="$(ensure example/open 2>/dev/null)"
+[ "$out" = "integration=dev release=main" ] || fail "uppercase origin: $out"
+[ "$(git -C "$tmp/co" branch --show-current)" = dev ] || fail "uppercase origin must switch"
+git -C "$tmp/co" config --unset-all remote.origin.url
+git -C "$tmp/co" config remote.origin.url https://github.com/example/open.git
 
 # A malformed local config is also a read error, not an unset key.
 fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"
