@@ -20,9 +20,9 @@ from the same installation root and execute it in full; this file restates no ph
 1. Resolve this installed skill directory and its `idd-*` siblings; a missing sibling the chosen
    route needs stops with its exact skill name. Take the request from the invocation arguments or,
    on runners that inject none, the user's message. Read root `AGENTS.md`/`CLAUDE.md`.
-2. In a GitHub checkout, first run `idd-plan/scripts/integration-branch.sh ensure` and print
-   its `integration=… release=…` line (Constitution Article 6); a failure stops. Then note only what
-   routing needs: an issue number or URL, an exact `{project}-prd` sibling, a phase named by words.
+2. In a GitHub checkout, first run `idd-plan/scripts/integration-branch.sh ensure OWNER/REPO` (the
+   issue's, else this checkout's) and print its `integration=… release=…` line; a failure stops.
+   Then note only what routing needs: an issue number or URL, a `{project}-prd` pair, a phase.
 
 ## Routing table
 

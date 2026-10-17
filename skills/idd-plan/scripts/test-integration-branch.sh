@@ -362,6 +362,23 @@ for branch in 'é' $'\351'; do
   [ ! -s "$tmp/calls" ] && [ ! -f "$tmp/repo-viewed" ] || fail "non-ASCII name reached GitHub"
 done
 
+# --- a change needs the repository named: the checkout's may be another project's ----
+# (2026-10-17: run from another project's checkout, a bare ensure integrated that repository.)
+fresh; git -C "$tmp/co" config --local --unset idd.integrationBranch || true
+rm -f "$tmp/co/AGENTS.md"; git -C "$tmp/co" switch -q main; echo 7 > "$tmp/open-prs"
+for mode in ensure integrate; do
+  refuses "$mode without OWNER/REPO" "pass the issue's OWNER/REPO" ensure_mode "$mode"
+done
+echo dev > "$tmp/default-branch"; touch "$tmp/branch-dev"
+refuses "an integrated ensure without OWNER/REPO" "pass the issue's OWNER/REPO" \
+  ensure_mode ensure
+no_writes "a change without OWNER/REPO"
+[ ! -f "$tmp/ref-body" ] && [ "$(cat "$tmp/open-prs")" = 7 ] ||
+  fail "without OWNER/REPO no branch is made and no PR retargeted"
+[ "$(git -C "$tmp/co" branch --show-current)" = main ] || fail "the checkout must not switch"
+out="$(ensure_mode show)"
+[ "$out" = "integration=dev release=main" ] || fail "show still reads the checkout: $out"
+
 # A malformed local config is also a read error, not an unset key.
 fresh; printf '\n[broken\n' >> "$tmp/co/.git/config"
 for mode in show ensure integrate; do

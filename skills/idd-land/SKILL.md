@@ -23,10 +23,10 @@ mismatch, or a dirty tree.
 
 ## Step 0 — resolve and fail closed
 
-1. First run the sibling `idd-plan/scripts/integration-branch.sh ensure` and print its
-   `integration=… release=…` line; landing merges into the integration branch it prints and never
-   promotes. Resolve repo root, `origin`, current branch, and status. Require a clean working tree
-   and `gh auth status`; require the issue repository to match `gh repo view --json nameWithOwner`.
+1. First run the sibling `idd-plan/scripts/integration-branch.sh ensure OWNER/REPO` (the issue's)
+   and print its `integration=… release=…` line; landing merges into that branch and never promotes.
+   Resolve repo root, `origin`, current branch, and status. Require a clean working tree and
+   `gh auth status`; require the issue repository to match `gh repo view --json nameWithOwner`.
 2. Read the live issue and comments. Allow `OPEN`; allow `CLOSED` only when resuming a partially
    completed landing whose linked PR is already merged.
 3. Resolve PRs from the issue's cross-references and closing references: require exactly one

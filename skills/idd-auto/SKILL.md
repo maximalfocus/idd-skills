@@ -37,14 +37,14 @@ pair.
    missing pair state still stops. Require matching GitHub origins, authentication, repository
    instructions, and clean trees; an existing clean issue branch may be resumed only when live state
    binds it uniquely to the one active issue.
-3. Run the sibling `idd-plan/scripts/integration-branch.sh ensure` in the implementation checkout
-   and print its `integration=… release=…` line first; never promote (`/idd-promote` is never
-   invoked). Pull the clean implementation integration branch with `--ff-only` and run the sibling
-   `idd-plan/scripts/progress-pr.sh sync` on the PRD. Read `PRD.md`, `PROGRESS.md`, every context
-   contract when the pair is partitioned (an optional `--context <name>` narrows selection to one
-   context while the pair still keeps one active issue), live issues/comments, PRs/reviews/checks,
-   closing links, and squash commits. GitHub owns lifecycle truth; the PRD owns accepted
-   requirements and dependency/release boundaries; the tracker is reconciled evidence, not
+3. Run the sibling `idd-plan/scripts/integration-branch.sh ensure OWNER/REPO` in the implementation
+   checkout and print its `integration=… release=…` line first; never promote (`/idd-promote` is
+   never invoked). Pull the clean implementation integration branch with `--ff-only` and run the
+   sibling `idd-plan/scripts/progress-pr.sh sync` on the PRD. Read `PRD.md`, `PROGRESS.md`, every
+   context contract when the pair is partitioned (an optional `--context <name>` narrows selection
+   to one context while the pair still keeps one active issue), live issues/comments,
+   PRs/reviews/checks, closing links, and squash commits. GitHub owns lifecycle truth; the PRD owns
+   accepted requirements and dependency/release boundaries; the tracker is reconciled evidence, not
    permission to skip either.
 4. Define completion as every accepted implementation requirement in the PRD, across every admitted
    context, mapped to landed or validated tracker evidence, with no corresponding open issue or PR.

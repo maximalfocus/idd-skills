@@ -13,6 +13,8 @@ set -euo pipefail
 #   integration-branch.sh show      [OWNER/REPO]   print integration=<branch> release=<main|none>
 #   integration-branch.sh integrate [OWNER/REPO]   create dev from main and make it default
 #   integration-branch.sh ensure    [OWNER/REPO]   integrate unless opted out, then print as show
+# Without OWNER/REPO the current directory names the repository, and only reads run: any
+# change (integrating, retargeting, switching the checkout) refuses.
 #
 # ensure is the first step of every delivery phase. An implementation repository
 # integrates on dev whatever main's history; a root AGENTS.md or CLAUDE.md line
@@ -31,7 +33,7 @@ usage() {
   echo "usage: integration-branch.sh show|integrate|ensure [OWNER/REPO]" >&2; exit 64
 }
 [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage
-mode="$1"; repo="${2:-}"
+mode="$1"; repo="${2:-}"; named_repo="$repo"
 case "$mode" in show|integrate|ensure) ;; *) usage;; esac
 has_branch() { # $1 = branch; a failed lookup other than not-found is not absence
   local err
@@ -114,6 +116,12 @@ if [ "$mode" = ensure ]; then
   fi
   ensured=true
 fi
+# Every change below is made only to a repository the caller named (the issue's): the
+# checkout's own repository may belong to another project than the one being delivered.
+[ -n "$named_repo" ] || {
+  echo "$mode would change $repo, resolved from the current directory:" \
+    "pass the issue's OWNER/REPO" >&2
+  exit 1; }
 # Adoption changes the branch every pull request targets: an explicit integrate or ensure only.
 case "$integration" in
   dev) ;;
