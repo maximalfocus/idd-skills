@@ -122,8 +122,13 @@ fi
   echo "$mode would change $repo, resolved from the current directory:" \
     "pass the issue's OWNER/REPO" >&2
   exit 1; }
-# ensure switches the checkout it runs in, so that checkout must be one of the named repository.
-if [ -n "$top" ]; then
+# A change runs only inside a checkout of the named repository (ensure also switches it):
+# a run from outside any checkout, or from another repository's, refuses.
+[ -n "$top" ] || top="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+[ -n "$top" ] || {
+  echo "$mode would change $repo from outside any checkout: run it in a checkout of $repo" >&2
+  exit 1; }
+{
   # Trust insteadOf/pushInsteadOf rewrites for mirrors; check every configured origin URL.
   cannot_tell() {
     echo "Cannot tell which GitHub repository the checkout $top belongs to (origin)" >&2
@@ -140,13 +145,13 @@ if [ -n "$top" ]; then
       here="${BASH_REMATCH[2]}"
       [ "$here" = "$(LC_ALL=C tr '[:upper:]' '[:lower:]' <<<"$repo")" ] || {
         echo "The checkout $top belongs to $here, not $repo:" \
-          "run ensure from a checkout of $repo" >&2
+          "run $mode from a checkout of $repo" >&2
         return 1; }
     done
     [ "$seen" = true ] || cannot_tell
   }
   git -C "$top" config --null --get-all remote.origin.url | check_origins || exit 1
-fi
+}
 # Adoption changes the branch every pull request targets: an explicit integrate or ensure only.
 case "$integration" in
   dev) ;;
