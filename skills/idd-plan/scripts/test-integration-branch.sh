@@ -128,9 +128,14 @@ for mode in apply verify enable; do
 done
 refuses "a bare repository name" "usage:" bash "$script" show open
 
+# integrate changes only a repository whose checkout it runs in (the 18:42 incident of
+# 2026-10-17 ran it from a folder outside any checkout): a checkout of example/open.
+git init -q "$tmp/ico"; git -C "$tmp/ico" remote add origin https://github.com/example/open.git
+integrate_in() { (cd "$tmp/ico" && bash "$script" integrate "$@"); }
+
 # --- integrate creates dev from main, makes it default, retargets open PRs ------
 fresh; printf '5\n' > "$tmp/open-prs"
-out="$(bash "$script" integrate example/open 2>"$tmp/err")" || fail "$(cat "$tmp/err")"
+out="$(integrate_in example/open 2>"$tmp/err")" || fail "$(cat "$tmp/err")"
 [ "$out" = "example/open integrates on dev; main is the release branch" ] ||
   fail "integrate summary: $out"
 [ "$(cat "$tmp/default-branch")" = dev ] || fail "integrate must make dev the default branch"
@@ -139,22 +144,22 @@ out="$(bash "$script" integrate example/open 2>"$tmp/err")" || fail "$(cat "$tmp
 grep -Fq '"ref":"refs/heads/dev","sha":"0123abc"' "$tmp/ref-body" ||
   fail "integrate must create dev at main"
 grep -q '^5 .*--base dev' "$tmp/retargeted" || fail "integrate must retarget open PRs to dev"
-rm "$tmp/ref-body" "$tmp/calls"; bash "$script" integrate example/open >/dev/null 2>&1
+rm "$tmp/ref-body" "$tmp/calls"; integrate_in example/open >/dev/null 2>&1
 [ ! -f "$tmp/ref-body" ] || fail "a second integrate must not recreate dev"
 no_writes "a second integrate"
 echo master > "$tmp/default-branch"
 refuses "integrating a non-main default" "integrate expects default branch main or dev" \
-  bash "$script" integrate example/open
+  integrate_in example/open
 fresh; touch "$tmp/refuse-writes"
-refuses "a refused write" "HTTP 403" bash "$script" integrate example/open
+refuses "a refused write" "HTTP 403" integrate_in example/open
 [ ! -f "$tmp/default-branch" ] || fail "a refused write must not move the default branch"
 fresh; rm "$tmp/branch-main"; echo dev > "$tmp/default-branch"; touch "$tmp/branch-dev"
-refuses "dev without main" "not dev and main" bash "$script" integrate example/open
+refuses "dev without main" "not dev and main" integrate_in example/open
 for operation in list edit; do
   fresh; echo 5 > "$tmp/open-prs"; touch "$tmp/refuse-$operation"
-  refuses "a failed PR $operation" "PR $operation denied" bash "$script" integrate example/open
+  refuses "a failed PR $operation" "PR $operation denied" integrate_in example/open
   rm "$tmp/refuse-$operation" "$tmp/calls"
-  bash "$script" integrate example/open >/dev/null
+  integrate_in example/open >/dev/null
   [ ! -s "$tmp/open-prs" ] || fail "integrate retry must finish retargeting"
   ! grep -qE '^(POST|PATCH) ' "$tmp/calls" || fail "retry must not recreate dev or reset default"
 done
@@ -274,23 +279,24 @@ out="$(ensure example/open 2>/dev/null)"
 [ "$out" = "integration=dev release=main" ] || fail "an unset key must integrate again: $out"
 grep -q '^PATCH repos/example/open$' "$tmp/calls" || fail "an unset key must make dev default"
 
-# Explicit repository arguments still work outside any local repository.
+# Outside any checkout only show runs; a change refuses before any write (2026-10-17 18:42).
 mkdir "$tmp/outside"
-for mode in show integrate ensure; do
-  fresh; touch "$tmp/refuse-fetch" "$tmp/refuse-switch"
-  out="$(cd "$tmp/outside" && bash "$script" "$mode" example/open 2>/dev/null)"
-  case "$mode" in
-    show) [ "$out" = "integration=main release=none" ] || fail "outside show: $out"
-      no_writes "outside show";;
-    integrate) [ "$out" = "example/open integrates on dev; main is the release branch" ] ||
-      fail "outside integrate: $out";;
-    ensure) [ "$out" = "integration=dev release=main" ] || fail "outside ensure: $out";;
-  esac
-  if [ "$mode" != show ]; then
-    [ "$(cat "$tmp/default-branch")" = dev ] || fail "outside $mode must adopt dev"
-    [ -f "$tmp/ref-body" ] || fail "outside $mode must create dev"
-  fi
+fresh
+out="$(cd "$tmp/outside" && bash "$script" show example/open 2>/dev/null)"
+[ "$out" = "integration=main release=none" ] || fail "outside show: $out"
+for mode in integrate ensure; do
+  echo 7 > "$tmp/open-prs"
+  refuses "outside $mode" "from outside any checkout" \
+    bash -c 'cd "$1" && shift && bash "$@"' _ "$tmp/outside" "$script" "$mode" example/open
 done
+no_writes "a change from outside any checkout"
+[ ! -f "$tmp/ref-body" ] && [ "$(cat "$tmp/open-prs")" = 7 ] ||
+  fail "outside any checkout no branch is made and no PR retargeted"
+# From a checkout of another repository, integrate refuses too.
+fresh
+refuses "integrate from another repository's checkout" "belongs to example/open, not other/x" \
+  integrate_in other/x
+no_writes "integrate from another repository's checkout"
 
 # A bare repository has local config even though show-toplevel cannot succeed.
 fresh; git init -q --bare "$tmp/bare"
